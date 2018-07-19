@@ -1,0 +1,253 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer reporting and remediation stack",
+    "Parameters": {
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "hammer-"
+        },
+        "InstanceType" : {
+            "Type" : "String",
+            "Default" : "t2.small",
+            "AllowedValues" : ["t2.small", "t2.medium", "t2.large", "t2.xlarge", "t2.2xlarge"]
+        },
+        "Vpcid": {
+            "Type": "AWS::EC2::VPC::Id"
+        },
+        "Subnet": {
+            "Type": "AWS::EC2::Subnet::Id"
+        },
+        "ReportingRemediationIAMRole": {
+            "Type": "String",
+            "Default": "cloudsec-master-ec2"
+        },
+        "KeyPair": {
+            "Description": "KeyPairName for the server",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "LambdaLogsForwarderArn": {
+            "Description": "ARN of LogsForwarder Lambda",
+            "Type": "String"
+        },
+        "SourceS3Bucket": {
+            "Description": "S3 bucket with Hammer reporting and remediation sources",
+            "Type": "String"
+        },
+        "SourceAMIInfo": {
+            "Description": "S3 key with Hammer ami info sources",
+            "Type": "String",
+            "Default": "ami-info.zip"
+        },
+        "SourceReportingRemediation": {
+            "Description": "S3 key with Hammer reporting and remediation sources",
+            "Type": "String",
+            "Default": "reporting-remediation.zip"
+        }
+    },
+    "Mappings": {
+        "NamingStandards": {
+            "LogGroupNameReportingRemediationErrors": {
+                "value": "reporting-remediation"
+            }
+        }
+    },
+    "Resources": {
+        "AMIInfoLambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "ami-info"] ]},
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["lambda.amazonaws.com"]},
+                        "Action": ["sts:AssumeRole"]
+                    }]
+                },
+                "Path": "/",
+                "Policies": [{
+                    "PolicyName": "root",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                            "Resource": "arn:aws:logs:*:*:*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": ["ec2:DescribeImages"],
+                            "Resource": "*"
+                        }]
+                    }
+                }]
+            }
+        },
+        "AMIInfoFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceAMIInfo" }
+                },
+                "FunctionName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "ami-info"] ]},
+                "Handler": "amiinfo.lambda_handler",
+                "Timeout": "300",
+                "Role": { "Fn::GetAtt" : ["AMIInfoLambdaExecutionRole", "Arn"] },
+                "Runtime": "python3.6"
+            }
+        },
+        "AMIInfo": {
+            "Type": "Custom::AMIInfo",
+            "Properties": {
+                "ServiceToken": { "Fn::GetAtt" : ["AMIInfoFunction", "Arn"] },
+                "Region": { "Ref": "AWS::Region" }
+            }
+        },
+
+
+        "LogGroupReportingRemediation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {
+                    "Fn::Join": ["", ["/aws/ec2/",
+                                      {"Ref": "ResourcesPrefix"},
+                                      {"Fn::FindInMap": ["NamingStandards", "LogGroupNameReportingRemediationErrors", "value"]}
+                                     ]
+                                ]},
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterReportingRemediation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LogGroupReportingRemediation"],
+            "Properties" : {
+                "DestinationArn" : { "Ref": "LambdaLogsForwarderArn" },
+                "FilterPattern" : "[level != START && level != END && level != REPORT && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupReportingRemediation" }
+            }
+        },
+
+        "DJPubAppServerInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [ {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                { "Ref": "ReportingRemediationIAMRole" }]
+                                         ]}]
+            }
+        },
+        "DJPubAppServer": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": ["DJPubAppServerInstanceProfile",
+                          "LogGroupReportingRemediation"],
+            "Properties": {
+                "InstanceType": { "Ref": "InstanceType" },
+                "KeyName": { "Ref": "KeyPair" },
+                "ImageId": { "Fn::GetAtt": [ "AMIInfo", "Id" ] },
+                "IamInstanceProfile": { "Ref": "DJPubAppServerInstanceProfile" },
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "true",
+                        "DeviceIndex": "0",
+                        "GroupSet": [ { "Ref": "AppServerSecurityGroup" } ],
+                        "SubnetId": { "Ref": "Subnet" }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "set -x\n",
+                                "set -e\n",
+                                "#rerun this script on each restart\n",
+                                "rm -fv /var/lib/cloud/instances/*/sem/config_scripts_user\n",
+                                "yum -y install yum-utils\n",
+                                "yum -y groupinstall development\n",
+                                "yum -y install openssl-devel\n",
+                                "# remove for following install to not fail\n",
+                                "yum -y remove ius-release\n",
+                                "yum -y install https://centos7.iuscommunity.org/ius-release.rpm\n",
+                                "yum -y install python36u python36u-pip python36u-devel\n",
+                                "pip3.6 install awscli\n",
+                                "rm -rf /hammer-correlation-engine\n",
+                                "mkdir -p /hammer-correlation-engine\n",
+                                "cd /hammer-correlation-engine\n",
+                                "aws s3 cp s3://", { "Ref": "SourceS3Bucket" }, "/", { "Ref": "SourceReportingRemediation" }, " .\n",
+                                "unzip -o \\*.zip\n",
+                                "rm -fv *.zip\n",
+                                "pip3.6 install -r requirements.txt\n",
+                                "echo LOG_GROUP=", { "Ref": "LogGroupReportingRemediation" }, " >> config.ini\n",
+                                "mkdir -p /var/log/hammer\n",
+                                "python3.6 -m cronjobs.automation_scheduler\n"
+                            ]
+                        ]
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "reporting-remediation-server" ] ] }
+                    }
+                ]
+            }
+        },
+        "AppServerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "remediation-server-sg" ] ] },
+                "GroupDescription": "Rules for hammer python reporting and remediation server SG",
+                "VpcId": {
+                    "Ref": "Vpcid"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "172.16.0.0/12"
+                    },
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "10.0.0.0/8"
+                    },
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "-1",
+                        "FromPort": "0",
+                        "ToPort": "65535",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "reporting-remediation-server-sg" ] ] }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "ReportingRemediationPublicIP": { "Value": { "Fn::GetAtt" : [ "DJPubAppServer", "PublicIp" ] } },
+        "ReportingRemediationPrivateIP": { "Value": { "Fn::GetAtt" : [ "DJPubAppServer", "PrivateIp" ] } }
+    }
+}

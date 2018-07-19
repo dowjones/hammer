@@ -1,0 +1,14 @@
+{
+    "account": {
+        "1234567890123": {
+            "jira_project": "AWSCORESEC",
+            "jira_owner": "",
+            "jira_parent_ticket": "AWSSEC-4321",
+            "slack_owner": "#hammer-dev"
+        }
+    },
+    "jira_project": "AWSSEC",
+    "jira_owner": "",
+    "jira_parent_ticket": "AWSSEC-1234",
+    "slack_owner": ["#hammer-dev"]
+}

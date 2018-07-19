@@ -1,0 +1,122 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer stack for reporting and remediation crossaccount role",
+    "Parameters": {
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "hammer-"
+        },
+        "MasterAccountID": {
+            "Type": "String",
+            "MinLength": "12"
+        },
+        "ReportingRemediationIAMCrossAccountRole": {
+            "Type": "String",
+            "Default": "cloudsec-crossact-ec2"
+        }
+    },
+    "Resources": {
+        "HammerCrossAccountReportingRemediationRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                 { "Ref": "ReportingRemediationIAMCrossAccountRole" }]
+                                          ]},
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {"Fn::Join": ["", ["arn:aws:iam::", {"Ref": "MasterAccountID"}, ":root"]]}
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "HammerCrossAccountReportingRemediationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "SecurityGroupIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeSecurityGroups",
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeRouteTables",
+                                        "ec2:DescribeSubnets",
+                                        "ec2:AuthorizeSecurityGroupIngress",
+                                        "ec2:RevokeSecurityGroupIngress"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "S3Issues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:ListAllMyBuckets",
+                                        "s3:GetBucketAcl",
+                                        "s3:GetBucketPolicy",
+                                        "s3:GetBucketTagging",
+                                        "s3:PutBucketAcl",
+                                        "s3:PutBucketPolicy"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "IamIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "iam:ListUsers",
+                                        "iam:ListAccessKeys",
+                                        "iam:GetAccessKeyLastUsed",
+                                        "iam:UpdateAccessKey"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "CloudTrailIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "cloudtrail:DescribeTrails",
+                                        "cloudtrail:GetTrailStatus",
+                                        "cloudtrail:GetEventSelectors"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "EBSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeVolumes",
+                                        "ec2:DescribeSnapshots",
+                                        "ec2:DescribeSnapshotAttribute",
+                                        "ec2:ModifySnapshotAttribute"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RdsSnapshot",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "rds:ListTagsForResource",
+                                        "rds:DescribeDBSnapshots",
+                                        "rds:DescribeDBClusterSnapshots",
+                                        "rds:ModifyDBClusterSnapshotAttribute",
+                                        "rds:ModifyDBSnapshotAttribute"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

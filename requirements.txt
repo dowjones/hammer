@@ -1,0 +1,6 @@
+pyflakes
+boto3
+moto
+watchtower
+pytest
+pytest-pythonpath

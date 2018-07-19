@@ -1,0 +1,192 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer stack for reporting and remediation role",
+    "Parameters": {
+        "SourceS3Bucket": {
+            "Type": "String",
+            "MinLength": "1"
+        },
+        "S3BackupBucket": {
+            "Type": "String",
+            "MinLength": "1"
+        },
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "hammer-"
+        },
+        "ReportingRemediationIAMRole": {
+            "Type": "String",
+            "Default": "cloudsec-master-ec2"
+        },
+        "ReportingRemediationIAMCrossAccountRole": {
+            "Type": "String",
+            "Default": "cloudsec-crossact-ec2"
+        }
+    },
+    "Resources": {
+        "HammerReportingRemediationEC2Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                 { "Ref": "ReportingRemediationIAMRole" }]
+                                          ]},
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "HammerMasterReportingRemediationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "S3RW",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Resource": [
+                                        {"Fn::Join" : ["", ["arn:aws:s3:::", { "Ref": "S3BackupBucket" }] ] },
+                                        {"Fn::Join" : ["", ["arn:aws:s3:::", { "Ref": "S3BackupBucket" }, "/", "*"] ] },
+                                        {"Fn::Join" : ["", ["arn:aws:s3:::", { "Ref": "SourceS3Bucket" }] ] },
+                                        {"Fn::Join" : ["", ["arn:aws:s3:::", { "Ref": "SourceS3Bucket" }, "/", "*"] ] }
+                                    ]
+                                },
+                                {
+                                    "Sid": "DynamoDbRO",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:ListTables",
+                                        "dynamodb:DescribeTable",
+                                        "dynamodb:ListTagsOfResource",
+                                        "dynamodb:ListBackups"
+
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "DynamoDbRW",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:*"
+                                    ],
+                                    "Resource": {"Fn::Join" : ["", ["arn:aws:dynamodb:*:*:table/", { "Ref": "ResourcesPrefix" }, "*"] ] }
+                                },
+                                {
+                                    "Sid": "CloudWatchLogs",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogGroup",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "EC2",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeRegions"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "SecurityGroupIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeSecurityGroups",
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeRouteTables",
+                                        "ec2:DescribeSubnets",
+                                        "ec2:AuthorizeSecurityGroupIngress",
+                                        "ec2:RevokeSecurityGroupIngress"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "S3Issues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:ListAllMyBuckets",
+                                        "s3:GetBucketAcl",
+                                        "s3:GetBucketPolicy",
+                                        "s3:GetBucketTagging",
+                                        "s3:PutBucketAcl",
+                                        "s3:PutBucketPolicy"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "IamIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "iam:ListUsers",
+                                        "iam:ListAccessKeys",
+                                        "iam:GetAccessKeyLastUsed",
+                                        "iam:UpdateAccessKey"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "CloudTrailIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "cloudtrail:DescribeTrails",
+                                        "cloudtrail:GetTrailStatus",
+                                        "cloudtrail:GetEventSelectors"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "EBSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeVolumes",
+                                        "ec2:DescribeSnapshots",
+                                        "ec2:DescribeSnapshotAttribute",
+                                        "ec2:ModifySnapshotAttribute"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RdsSnapshot",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "rds:ListTagsForResource",
+                                        "rds:DescribeDBSnapshots",
+                                        "rds:DescribeDBClusterSnapshots",
+                                        "rds:ModifyDBClusterSnapshotAttribute",
+                                        "rds:ModifyDBSnapshotAttribute"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "IAMassumeCrossAccountRole",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sts:AssumeRole"
+                                    ],
+                                    "Resource": {"Fn::Join": ["", ["arn:aws:iam::*:role/",
+                                                                   { "Ref": "ResourcesPrefix" },
+                                                                   { "Ref": "ReportingRemediationIAMCrossAccountRole" }
+                                                                  ]]}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
