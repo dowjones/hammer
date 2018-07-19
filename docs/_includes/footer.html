@@ -1,0 +1,9 @@
+<footer>
+            <div class="row">
+                <div class="col-lg-12 footer">
+                    &copy;{{ site.time | date: "%Y" }} <a href="mailto:{{ site.feedback_email }}">{{site.company_name}}</a>. All rights reserved. <br />
+{% if page.last_updated %}<span>Page last updated:</span> {{page.last_updated}}<br/>{% endif %}
+<p><img src="{{ "images/dow-jones-hammer-logo.png" }}" alt="Dow Jones Hammer"/></p>
+                </div>
+            </div>
+</footer>

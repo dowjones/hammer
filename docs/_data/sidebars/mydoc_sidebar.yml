@@ -1,0 +1,107 @@
+# This is your sidebar TOC. The sidebar code loops through sections here and provides the appropriate formatting.
+
+entries:
+- title: sidebar
+  product: Dow Jones Hammer documentation
+  version:
+  folders:
+
+  - title:
+    output: pdf
+    type: frontmatter
+    folderitems:
+    - title:
+      url: /titlepage.html
+      output: pdf
+      type: frontmatter
+    - title:
+      url: /tocpage.html
+      output: pdf
+      type: frontmatter
+
+  - title: User Guide
+    output: web, pdf
+    folderitems:
+
+    - title: What is Dow Jones Hammer?
+      url: /index.html
+      output: web, pdf
+      type: homepage
+    
+    - title: Security Features
+      url: /features.html
+      output: web, pdf
+
+    - title: Prerequisites
+      url: /prerequisites.html
+      output: web, pdf
+
+    - title: Configuration and Deployment Overview
+      url: /configuredeploy_overview.html
+      output: web, pdf
+
+    - title: Configuration Files
+      url: /editconfig.html
+      output: web, pdf
+
+    - title: Deploying with CloudFormation
+      url: /deployment_cloudformation.html
+      output: web, pdf
+
+    - title: Deploying with Terraform
+      url: /deployment_terraform.html
+      output: web, pdf
+
+    - title: Remediation Backup and Rollback
+      url: /remediation_backup_rollback.html
+      output: web, pdf
+
+    - title: Logging
+      url: /logging.html
+      output: web, pdf
+
+    - title: Contribution
+      url: /contribution.html
+      output: web, pdf
+
+  - title: Playbooks
+    output: web, pdf
+    folderitems:
+
+    - title: S3 ACL Public Access
+      url: /playbook1_s3_public_buckets_acl.html
+      output: web, pdf
+
+    - title: Insecure Services
+      url: /playbook2_insecure_services.html
+      output: web, pdf
+
+    - title: IAM User Inactive Keys
+      url: /playbook3_inactive_user_keys.html
+      output: web, pdf
+
+    - title: IAM User Key Rotation
+      url: /playbook4_keysrotation.html
+      output: web, pdf
+
+    - title: S3 Policy Public Access
+      url: /playbook5_s3_public_buckets_policy.html
+      output: web, pdf
+
+    - title: CloudTrail Logging Issues
+      url: /playbook6_cloudtrail.html
+      output: web, pdf
+
+    - title: EBS Unencrypted Volumes
+      url: /playbook7_ebs_unencrypted_volumes.html
+      output: web, pdf
+
+    - title: EBS Public Snapshots
+      url: /playbook8_ebs_snapshots_public.html
+      output: web, pdf
+
+    - title: RDS Public Snapshots
+      url: /playbook9_rds_snapshots_public.html
+      output: web, pdf
+
+
