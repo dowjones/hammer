@@ -1,7 +1,6 @@
 import logging
 import xlwt
 import sys
-import os
 
 
 from io import BytesIO
