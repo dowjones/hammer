@@ -3,6 +3,8 @@ import json
 import logging
 import configparser
 import re
+import os
+import requests
 
 
 from functools import lru_cache
@@ -346,6 +348,31 @@ class AWSConfig(BaseConfig):
     """ represents AWS configuration part in config.json """
     def __init__(self, config):
         super().__init__(config, "aws")
+
+    @property
+    @lru_cache()
+    def region(self):
+        """
+        Autodetection of current AWS region for AWS Lambda and EC2.
+
+        :return: string with AWS region the code is running in
+        """
+        # running in Lambda
+        region = os.environ.get("AWS_DEFAULT_REGION")
+        if region is not None:
+            return region
+
+        try:
+            # running in EC2
+            response = requests.get("http://169.254.169.254/latest/meta-data/placement/availability-zone", timeout=1)
+            if response.status_code == 200:
+                # remove AZ number from the end of the text
+                return response.text[:-1]
+        except Exception:
+            pass
+
+        # fallback to hardcoded in config region
+        return self._config["region"]
 
     @property
     @lru_cache()
