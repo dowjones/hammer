@@ -32,7 +32,7 @@ class CleanIAMUserStaleKeys:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.iamUserKeysRotation.remediation_accounts.items():
             logging.debug("* Account Name:" + account_name + " :::Account ID:::" + account_id)
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, IAMKeyRotationIssue)
             for issue in issues:
