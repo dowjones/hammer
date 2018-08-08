@@ -64,7 +64,7 @@ You should add ```provider``` sections for the master account and the slave acco
 
 **Note**: ```profile``` values in the `provider` sections have to match AWS CLI profile names you configured during [Configure AWS CLI Access Credentials](#2-configure-aws-cli-access-credentials) step.
 
-**Note**: `region` value have to match `aws.region` parameter you configured in [config.json](/editconfig.html#11-master-aws-account-settings).
+**Note**: `region` value has to match `aws.region` parameter you configured in [config.json](/editconfig.html#11-master-aws-account-settings).
 
 Sample configuration for the master account:
 
