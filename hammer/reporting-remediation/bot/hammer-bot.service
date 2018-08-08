@@ -6,7 +6,7 @@ After=basic.target
 WorkingDirectory=/hammer-correlation-engine
 ExecStart=/bin/python3.6 -m bot.run
 Type=simple
-Restart=always
+Restart=on-failure
 RestartSec=3
 
 [Install]
