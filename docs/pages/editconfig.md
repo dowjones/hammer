@@ -137,10 +137,14 @@ There are two groups of messages which you can configure to forward to Slack:
 * **hammer-internal** messages (logged to CloudWatch Logs) should be monitored to control Dow Jones Hammer functionality, [access problems](logging.html#6-logging-slave-account-access-problems), etc;
 * **issue-specific** messages should be used for reporting purposes during issue lifecycle.
 
+Also, in case Slack integration is enabled, Dow Jones Hammer Slack bot is launched. You can interact with it by sending direct messages or invite to any channel. Send `help` to get the list of supported commands. You can use it to check:
+* Dow Jones Hammer status;
+* configuration details.
+
 To configure Slack integration parameters, you should edit the following configuration files:
 
 1. The `config.json` file, **slack** section, following parameters:
-    * **enabled**: globally enables/disables Dow Jones Hammer and Slack integration (for both **hammer-internal** and **issue-specific** messages). The default value is `false`;
+    * **enabled**: globally enables/disables Dow Jones Hammer and Slack integration (for both **hammer-internal** and **issue-specific** messages, as well as for Dow Jones Hammer Slack bot). The default value is `false`;
     * **channels**: defines the patterns of **hammer-internal** messages that Dow Jones Hammer will post to Slack and the destination channels. The keys are Slack channels, the values are lists with PCRE regular expressions;
     * **ignore**: defines the patterns of **hammer-internal** messages that Dow Jones Hammer will not post to Slack channels. The keys are Slack channels, the values are lists with PCRE regular expressions;
     * **default_channel**: defines the default Slack channel where Dow Jones Hammer will post **hammer-internal** messages if there is no more specific message destination.
