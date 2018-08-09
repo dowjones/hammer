@@ -96,13 +96,14 @@ provider "aws" {
 You should include and configure a cross-account role module for each slave account.
 
 While editing this section, please note that:
+* module `name` in the block header has to be unique for each slave account
 * ```name``` value has to be unique for each slave account
 * ```providers.aws``` value has to match the provider alias configured during the [Configure Providers](#311-configure-providers) step.
 
 Sample configuration for two modules:
 
 ```
-module "roles-crossaccount" {
+module "roles-crossaccount1" {
      source = "modules/roles-crossaccount"
      name = "hammer-slave1"
      providers = {
@@ -114,7 +115,7 @@ module "roles-crossaccount" {
      resources-prefix = "${var.resources-prefix}"
 }
 
-module "roles-crossaccount" {
+module "roles-crossaccount2" {
      source = "modules/roles-crossaccount"
      name = "hammer-slave2"
      providers = {
