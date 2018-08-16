@@ -35,7 +35,8 @@
         "s3_backup_bucket": "hammer-backup-bucket",
         "accounts": {
             "123456789012": "master",
-            "210987654321": "slave1"
+            "210987654321": "slave1",
+            "654321210987": "slave2"
         }
     },
     "credentials": {
@@ -66,6 +67,7 @@
         ],
         "reporting": false,
         "remediation": false,
+        "remediation_accounts": ["210987654321", "654321210987"],
         "remediation_retention_period": 21
     },
     "user_inactivekeys": {
@@ -99,7 +101,7 @@
     "ebs_unencrypted_volume": {
         "enabled": true,
         "ddb.table_name": "hammer-ebs-volumes-unencrypted",
-        "accounts": ["210987654321"],
+        "accounts": ["123456789012", "210987654321"],
         "reporting": false
     },
     "ebs_public_snapshot": {
