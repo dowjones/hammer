@@ -20,7 +20,7 @@ You should add the following settings to the **aws** section of the `config.json
 
 **Required keys**
 * **main_account_id**: the ID of the master AWS account where you will deploy Dow Jones Hammer;
-* **region**: the region of the master AWS account where you will deploy Dow Jones Hammer;
+* **region**: the region of the master AWS account where you will deploy Dow Jones Hammer. This value is used only as a fallback when automatic detection of AWS deployment region is failed;
 * **role_name_identification**: name of the IAM cross-account role for the issues identification functionality. **Make sure** the value of this parameter matches the value you've used for `LambdaIAMCrossAccountRole` when deploying [IAM Cross-account Identification Role](deployment_cloudformation.html#411-iam-cross-account-identification-role);
 * **role_name_reporting**: name of the IAM cross-account role for the issues reporting and remediation functionality. **Make sure** the value of this parameter matches the value you've used for `EC2IAMCrossAccountRole` when deploying [IAM Cross-account Reporting/Remediation Role](deployment_cloudformation.html#412-iam-cross-account-reportingremediation-role);
 * **accounts**: IDs of slave AWS accounts that Dow Jones Hammer will check. In case you want Dow Jones Hammer to check master account - add master account ID here as well;
