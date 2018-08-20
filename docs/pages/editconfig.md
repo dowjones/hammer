@@ -205,6 +205,8 @@ Edit the **s3_bucket_acl** section of the `config.json` file to configure the ha
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write issue detection results. The default value is `hammer-s3-public-bucket-acl`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that must pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.
@@ -218,6 +220,8 @@ Edit the **secgrp_unrestricted_access** section of the `config.json` file to con
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write detected issues. The default value is `hammer-security-groups-unrestricted`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **restricted_ports**: a comma-separated list of ports in square brackets, which Dow Jones Hammer checks to be restricted;
 * **reporting**: defines whether reporting is on or off. The default value is `false`;
 * **remediation**: defines whether remediation is on or off. The default value is `false`.
@@ -232,6 +236,8 @@ Edit the **user_inactivekeys** section of the `config.json` file to configure th
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write issue detection results. The default value is `hammer-iam-user-keys-inactive`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **inactive_criteria_days**: the threshold amount of days when Dow Jones Hammer has not used the access keys to raise an alert. The default value is `1`;
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
@@ -246,6 +252,8 @@ Edit the **user_keysrotation** section of the `config.json` file to configure th
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write issue detection results. The default value is `hammer-iam-user-keys-rotation`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **rotation_criteria_days**: the threshold amount of days without key rotation that will trigger Dow Jones Hammer to raise an alert. The default value is `10` days.
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
@@ -260,6 +268,8 @@ Edit the **s3_bucket_policy** section of the `config.json` file to configure the
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write issue detection results. The default value is `hammer-s3-public-bucket-policy`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `7` days.
@@ -273,6 +283,7 @@ Edit the **cloudtrails** section of the `config.json` file to configure the hand
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will write issue detection results. The default value is `hammer-cloudtrails`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report to JIRA and/or Slack in case it has detected an issue. The default value is `false`.
 
 ### 2.7. EBS Unencrypted Volumes
@@ -284,7 +295,7 @@ Edit the **ebs_unencrypted_volume** of the `config.json` file to configure the h
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will put the detection results. The default value is `hammer-ebs-volumes-unencrypted`;
-* **accounts**: *optional* comma-separated list of accounts to check for issue in square brackets. Use this key to override accounts to check from **aws.accounts** in [config.json](#11-master-aws-account-settings); 
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`.
 
 ### 2.8. EBS Public Snapshots
@@ -296,6 +307,8 @@ Edit the **ebs_public_snapshot** section of the `config.json` file to configure 
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will put detection results. The default value is `hammer-ebs-snapshots-public`;
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its auomatic remediation by Dow Jones Hammer. The default value is `0`.
@@ -309,6 +322,8 @@ Edit the **rds_public_snapshot** section of the `config.json` file to configure 
 Parameters:
 * **enabled**: enables/disables issue identification. The default value is `true`;
 * **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will put detection results. The default value is `hammer-rds-public-snapshots`.
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.

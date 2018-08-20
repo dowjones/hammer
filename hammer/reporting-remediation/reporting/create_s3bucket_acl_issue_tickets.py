@@ -35,7 +35,7 @@ class CreateS3BucketsTickets:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3acl.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, S3AclIssue)
             for issue in issues:

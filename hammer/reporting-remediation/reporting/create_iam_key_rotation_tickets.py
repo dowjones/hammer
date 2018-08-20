@@ -29,7 +29,7 @@ class CreateTicketIamKeyRotation:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.iamUserKeysRotation.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, IAMKeyRotationIssue)
             for issue in issues:
