@@ -66,10 +66,6 @@ class CleanS3BucketPolicyPermissions:
                     product = issue.jira_details.product
 
                     try:
-                        if not batch and \
-                           not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket policy", False):
-                            continue
-
                         account = Account(id=account_id,
                                           name=account_name,
                                           role_name=self.config.aws.role_name_reporting)
@@ -84,6 +80,10 @@ class CleanS3BucketPolicyPermissions:
                         elif not s3bucket.public_by_policy:
                             logging.debug(f"Bucket {s3bucket.name} policy issue was remediated by user")
                         else:
+                            if not batch and \
+                               not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket policy", False):
+                                continue
+
                             logging.debug(f"Remediating '{s3bucket.name}' policy")
 
                             backup_path = s3bucket.backup_policy_s3(main_account.client("s3"), backup_bucket)

@@ -66,10 +66,6 @@ class CleanSecurityGroups(object):
                     product = issue.jira_details.product
 
                     try:
-                        if not batch and \
-                           not confirm(f"Do you want to remediate security group '{group_name} / {group_id}'", False):
-                            continue
-
                         account = Account(id=account_id,
                                           name=account_name,
                                           region=group_region,
@@ -88,6 +84,10 @@ class CleanSecurityGroups(object):
                         elif sg.status != RestrictionStatus.OpenCompletely:
                             logging.debug(f"Security group '{group_name} / {group_id}' is not completely open")
                         else:
+                            if not batch and \
+                               not confirm(f"Do you want to remediate security group '{group_name} / {group_id}'", False):
+                                continue
+
                             logging.debug(f"Remediating '{group_name} / {group_id}' rules")
 
                             backup_path = sg.backup_s3(main_account.client("s3"), backup_bucket)

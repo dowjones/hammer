@@ -66,10 +66,6 @@ class CleanS3BucketAclPermissions:
                     product = issue.jira_details.product
 
                     try:
-                        if not batch and \
-                           not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket ACL", False):
-                            continue
-
                         account = Account(id=account_id,
                                           name=account_name,
                                           role_name=self.config.aws.role_name_reporting)
@@ -85,6 +81,10 @@ class CleanS3BucketAclPermissions:
                         elif not s3bucket.public_by_acl:
                             logging.debug(f"Bucket {s3bucket.name} ACL issue was remediated by user")
                         else:
+                            if not batch and \
+                               not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket ACL", False):
+                                continue
+
                             logging.debug(f"Remediating '{s3bucket.name}' ACL")
 
                             backup_path = s3bucket.backup_acl_s3(main_account.client("s3"), backup_bucket)
