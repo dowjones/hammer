@@ -185,7 +185,7 @@
                                 "/bin/cp -f bot/hammer-bot.service /etc/systemd/system/\n",
                                 "systemctl daemon-reload\n",
                                 "systemctl enable hammer-bot\n",
-                                "systemctl start hammer-bot\n",
+                                "systemctl restart hammer-bot\n",
                                 "python3.6 -m cronjobs.automation_scheduler\n"
                             ]
                         ]
