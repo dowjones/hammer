@@ -1,5 +1,5 @@
 pyflakes
-boto3
+boto3==1.7.84
 moto
 watchtower
 pytest
