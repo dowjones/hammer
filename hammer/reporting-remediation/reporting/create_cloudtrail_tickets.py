@@ -10,6 +10,7 @@ from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, CloudTrailIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.utility import bool_converter, list_converter
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateCloudTrailLoggingTickets:
@@ -150,6 +151,11 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     try:
         obj = CreateCloudTrailLoggingTickets(config)

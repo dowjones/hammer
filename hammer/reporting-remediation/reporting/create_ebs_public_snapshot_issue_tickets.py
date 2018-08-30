@@ -12,6 +12,7 @@ from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, EBSPublicSnapshotIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateEBSPublicSnapshotTickets(object):
@@ -145,6 +146,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateEBSPublicSnapshotTickets(config)
         obj.create_tickets_ebs_public_snapshots()

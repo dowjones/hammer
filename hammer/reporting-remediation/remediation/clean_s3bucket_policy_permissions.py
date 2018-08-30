@@ -15,6 +15,7 @@ from library.ddb_issues import S3PolicyIssue
 from library.aws.s3 import S3BucketsPolicyChecker
 from library.aws.utility import Account
 from library.utility import confirm
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CleanS3BucketPolicyPermissions:
@@ -129,6 +130,11 @@ if __name__ == "__main__":
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch', action='store_true', help='Do not ask confirmation for remediation')

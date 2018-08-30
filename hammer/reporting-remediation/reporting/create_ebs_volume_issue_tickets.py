@@ -15,6 +15,7 @@ from library.aws.ec2 import EC2Operations
 from library.ddb_issues import IssueStatus, EBSUnencryptedVolumeIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.utility import empty_converter, list_converter
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateEBSUnencryptedVolumeTickets(object):
@@ -208,6 +209,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateEBSUnencryptedVolumeTickets(config)
         obj.create_tickets_ebsvolumes()
