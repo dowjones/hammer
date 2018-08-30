@@ -1,0 +1,13 @@
+[Unit]
+Description=Dow Jones Hammer bot
+After=basic.target
+
+[Service]
+WorkingDirectory=/hammer-correlation-engine
+ExecStart=/bin/python3.6 -m bot.run
+Type=simple
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
