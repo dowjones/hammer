@@ -509,7 +509,7 @@ class SecurityGroupsChecker(object):
                 return group
         return None
 
-    def check(self, ids=None):
+    def check(self, ids=None, tags=None):
         """
         Walk through security groups in the account/region and check them (restricted or not).
         Put all gathered groups to `self.groups`.
@@ -522,6 +522,12 @@ class SecurityGroupsChecker(object):
         args = {'DryRun': False}
         if ids:
             args['GroupIds'] = ids
+        if tags:
+            args['Filters'] = []
+            for key, value in tags.items():
+                args['Filters'].append(
+                    {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
+                )
         try:
             secgroups = self.account.client("ec2").describe_security_groups(**args)["SecurityGroups"]
         except ClientError as err:

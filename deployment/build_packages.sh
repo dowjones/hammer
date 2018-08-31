@@ -23,7 +23,7 @@ SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 PACKAGES_DIR="${SCRIPT_PATH}/packages/"
 LIBRARY="${SCRIPT_PATH}/../hammer/library"
 
-LAMBDAS="ami-info logs-forwarder ddb-tables-backup sg-issues-identification s3-acl-issues-identification s3-policy-issues-identification iam-keyrotation-issues-identification iam-user-inactive-keys-identification cloudtrails-issues-identification ebs-unencrypted-volume-identification ebs-public-snapshots-identification rds-public-snapshots-identification"
+LAMBDAS="ami-info logs-forwarder ddb-tables-backup sg-issues-identification s3-acl-issues-identification s3-policy-issues-identification iam-keyrotation-issues-identification iam-user-inactive-keys-identification cloudtrails-issues-identification ebs-unencrypted-volume-identification ebs-public-snapshots-identification rds-public-snapshots-identification api"
 
 pushd "${SCRIPT_PATH}" > /dev/null
 pushd ../hammer/identification/lambdas > /dev/null
