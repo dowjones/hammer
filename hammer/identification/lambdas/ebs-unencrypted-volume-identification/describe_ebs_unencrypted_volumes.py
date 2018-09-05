@@ -50,21 +50,22 @@ def lambda_handler(event, context):
         checker = EBSUnencryptedVolumesChecker(account=account)
         if checker.check():
             for volume in checker.volumes:
-                issue = EBSUnencryptedVolumeIssue(account_id, volume.id)
-                issue.issue_details.name = volume.name
-                issue.issue_details.region = volume.account.region
-                issue.issue_details.state = volume.state
-                issue.issue_details.attachments = volume.attachments
-                issue.issue_details.tags = volume.tags
-                if config.ebsVolume.in_whitelist(account_id, volume.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
-                logging.debug(f"Setting {volume.id} status {issue.status}")
-                IssueOperations.update(ddb_table, issue)
-                # remove issue id from issues_list_from_db (if exists)
-                # as we already checked it
-                open_issues.pop(volume.id, None)
+                if not volume.encrypted:
+                    issue = EBSUnencryptedVolumeIssue(account_id, volume.id)
+                    issue.issue_details.name = volume.name
+                    issue.issue_details.region = volume.account.region
+                    issue.issue_details.state = volume.state
+                    issue.issue_details.attachments = volume.attachments
+                    issue.issue_details.tags = volume.tags
+                    if config.ebsVolume.in_whitelist(account_id, volume.id):
+                        issue.status = IssueStatus.Whitelisted
+                    else:
+                        issue.status = IssueStatus.Open
+                    logging.debug(f"Setting {volume.id} status {issue.status}")
+                    IssueOperations.update(ddb_table, issue)
+                    # remove issue id from issues_list_from_db (if exists)
+                    # as we already checked it
+                    open_issues.pop(volume.id, None)
 
             logging.debug(f"Unencrypted EBS volumes in DDB:\n{open_issues.keys()}")
             # all other unresolved issues in DDB are for removed/remediated volumes
