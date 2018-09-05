@@ -412,7 +412,7 @@ class S3BucketsPolicyChecker(object):
                 return bucket
         return None
 
-    def check(self, buckets=None):
+    def check(self, buckets=None, tags=None):
         """
         Walk through S3 buckets in the account and check them (public or not).
         Put all gathered buckets to `self.buckets`.
@@ -422,6 +422,9 @@ class S3BucketsPolicyChecker(object):
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
+        if tags is not None:
+            logging.debug("At the moment, S3 does not offer filtering objects by tags")
+
         try:
             # AWS does not support filtering dirung list, so get all buckets for account
             response = self.account.client("s3").list_buckets()
@@ -447,7 +450,6 @@ class S3BucketsPolicyChecker(object):
                 if err.response['Error']['Code'] == "NoSuchBucketPolicy":
                     logging.debug(f"No policy attached to '{bucket_name}'")
                     policy = None
-                    continue
                 elif err.response['Error']['Code'] == "NoSuchBucket":
                     # deletion was not fully propogated to S3 backend servers
                     # so bucket is still available in listing but actually not exists
@@ -456,13 +458,14 @@ class S3BucketsPolicyChecker(object):
                     logging.error(f"Access denied in {self.account} "
                                   f"(s3:{err.operation_name}, "
                                   f"resource='{bucket_name}')")
+                    continue
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' policy in {self.account}")
-                return False
+                    continue
 
             # get bucket tags
             try:
-                tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
+                bucket_tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                     logging.error(f"Access denied in {self.account} "
@@ -470,7 +473,7 @@ class S3BucketsPolicyChecker(object):
                                   f"resource='{bucket_name}')")
                     continue
                 elif err.response['Error']['Code'] == "NoSuchTagSet":
-                    tags = []
+                    bucket_tags = []
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' tags in {self.account}")
                     continue
@@ -478,7 +481,7 @@ class S3BucketsPolicyChecker(object):
             s3bucket = S3Bucket(account=self.account,
                                 bucket_name=bucket_name,
                                 owner=owner,
-                                tags=tags,
+                                tags=bucket_tags,
                                 policy=policy)
             self.buckets.append(s3bucket)
         return True
@@ -504,7 +507,7 @@ class S3BucketsAclChecker(object):
                 return bucket
         return None
 
-    def check(self, buckets=None):
+    def check(self, buckets=None, tags=None):
         """
         Walk through S3 buckets in the account and check them (public or not).
         Put all gathered buckets to `self.buckets`.
@@ -514,6 +517,9 @@ class S3BucketsAclChecker(object):
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
+        if tags is not None:
+            logging.debug("At the moment, S3 does not offer filtering objects by tags")
+
         try:
             # AWS does not support filtering dirung list, so get all buckets for account
             response = self.account.client("s3").list_buckets()
@@ -546,11 +552,11 @@ class S3BucketsAclChecker(object):
                     continue
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' acl in {self.account}")
-                return False
+                continue
 
             # get bucket tags
             try:
-                tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
+                bucket_tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                     logging.error(f"Access denied in {self.account} "
@@ -558,7 +564,7 @@ class S3BucketsAclChecker(object):
                                   f"resource='{bucket_name}')")
                     continue
                 elif err.response['Error']['Code'] == "NoSuchTagSet":
-                    tags = []
+                    bucket_tags = []
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' tags in {self.account}")
                     continue
@@ -566,7 +572,7 @@ class S3BucketsAclChecker(object):
             s3bucket = S3Bucket(account=self.account,
                                 bucket_name=bucket_name,
                                 owner=owner,
-                                tags=tags,
+                                tags=bucket_tags,
                                 acl=acl)
             self.buckets.append(s3bucket)
         return True
