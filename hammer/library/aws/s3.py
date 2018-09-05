@@ -412,7 +412,7 @@ class S3BucketsPolicyChecker(object):
                 return bucket
         return None
 
-    def check(self, buckets=None, tags=None):
+    def check(self, buckets=None):
         """
         Walk through S3 buckets in the account and check them (public or not).
         Put all gathered buckets to `self.buckets`.
@@ -422,9 +422,6 @@ class S3BucketsPolicyChecker(object):
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
-        if tags is not None:
-            logging.debug("At the moment, S3 does not offer filtering objects by tags")
-
         try:
             # AWS does not support filtering dirung list, so get all buckets for account
             response = self.account.client("s3").list_buckets()
@@ -465,7 +462,7 @@ class S3BucketsPolicyChecker(object):
 
             # get bucket tags
             try:
-                bucket_tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
+                tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                     logging.error(f"Access denied in {self.account} "
@@ -473,7 +470,7 @@ class S3BucketsPolicyChecker(object):
                                   f"resource='{bucket_name}')")
                     continue
                 elif err.response['Error']['Code'] == "NoSuchTagSet":
-                    bucket_tags = []
+                    tags = []
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' tags in {self.account}")
                     continue
@@ -481,7 +478,7 @@ class S3BucketsPolicyChecker(object):
             s3bucket = S3Bucket(account=self.account,
                                 bucket_name=bucket_name,
                                 owner=owner,
-                                tags=bucket_tags,
+                                tags=tags,
                                 policy=policy)
             self.buckets.append(s3bucket)
         return True
@@ -507,7 +504,7 @@ class S3BucketsAclChecker(object):
                 return bucket
         return None
 
-    def check(self, buckets=None, tags=None):
+    def check(self, buckets=None):
         """
         Walk through S3 buckets in the account and check them (public or not).
         Put all gathered buckets to `self.buckets`.
@@ -517,9 +514,6 @@ class S3BucketsAclChecker(object):
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
-        if tags is not None:
-            logging.debug("At the moment, S3 does not offer filtering objects by tags")
-
         try:
             # AWS does not support filtering dirung list, so get all buckets for account
             response = self.account.client("s3").list_buckets()
@@ -556,7 +550,7 @@ class S3BucketsAclChecker(object):
 
             # get bucket tags
             try:
-                bucket_tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
+                tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                     logging.error(f"Access denied in {self.account} "
@@ -564,7 +558,7 @@ class S3BucketsAclChecker(object):
                                   f"resource='{bucket_name}')")
                     continue
                 elif err.response['Error']['Code'] == "NoSuchTagSet":
-                    bucket_tags = []
+                    tags = []
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' tags in {self.account}")
                     continue
@@ -572,7 +566,7 @@ class S3BucketsAclChecker(object):
             s3bucket = S3Bucket(account=self.account,
                                 bucket_name=bucket_name,
                                 owner=owner,
-                                tags=bucket_tags,
+                                tags=tags,
                                 acl=acl)
             self.buckets.append(s3bucket)
         return True
