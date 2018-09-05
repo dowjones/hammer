@@ -25,4 +25,4 @@ def handler(security_feature, account, config, ids, tags):
             response.setdefault("filterby", {})["tags"] = tags
         return response
     else:
-        return server_error(text="Failed to check insecure services")
+        return server_error(text="Failed to check EBS unencrypted volumes")

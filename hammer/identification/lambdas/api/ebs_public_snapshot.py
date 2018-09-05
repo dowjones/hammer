@@ -20,4 +20,4 @@ def handler(security_feature, account, config, ids, tags):
         }
         return response
     else:
-        return server_error(text="Failed to check s3 public acl")
+        return server_error(text="Failed to check EBS public snapshots")
