@@ -12,6 +12,7 @@ def handler(security_feature, config, account, ids, tags):
             if bucket.public:
                 result.append({
                     'name': bucket.name,
+                    'policy': bucket.policy,
                 })
         response = {
             security_feature: result,
