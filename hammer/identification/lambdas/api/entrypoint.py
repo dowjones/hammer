@@ -1,12 +1,13 @@
 import json
 import logging
 import functools
+import importlib
 
 
 from library.logger import set_logging
 from library.config import Config
 from library.aws.utility import Account
-from library.aws.security_groups import SecurityGroupsChecker
+from responses import bad_request, server_error
 
 
 def logger(handler):
@@ -18,19 +19,6 @@ def logger(handler):
         logging.debug(f"response:\n{json.dumps(response, indent=4)}")
         return response
     return wrapper
-
-
-def error_response(code, text):
-    response = {"statusCode": code}
-    if text:
-        response['body'] = text
-    return response
-
-def server_error(text=""):
-    return error_response(500, text)
-
-def bad_request(text=""):
-    return error_response(400, text)
 
 
 @logger
@@ -76,10 +64,11 @@ def lambda_handler(event, context):
     if account.session is None:
         return server_error(text=f"Failed to create session in {account}")
 
-    if security_feature == "secgrp_unrestricted_access":
-        response = insecure_services(security_feature, config, account, ids, tags)
-    else:
-        response = f"asked to scan '{security_feature}' resources in '{region}' of '{account_id} / {account_name}'"
+    try:
+        module = importlib.import_module(security_feature)
+        response = module.handler(security_feature, config, account, ids, tags)
+    except ModuleNotFoundError:
+        response = f"scan for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
 
     return {
         "statusCode": 200,
@@ -87,38 +76,3 @@ def lambda_handler(event, context):
     }
 
 
-def insecure_services(security_feature, config, account, ids, tags):
-    checker = SecurityGroupsChecker(account=account,
-                                    restricted_ports=config.sg.restricted_ports)
-    result = []
-    if checker.check(ids=ids, tags=tags):
-        groups = []
-        for sg in checker.groups:
-            groups.append(f"{sg.name} / {sg.id}")
-            if not sg.restricted:
-                permissions = []
-                for perm in sg.permissions:
-                    for ip_range in perm.ip_ranges:
-                        if not ip_range.restricted:
-                            permissions.append({
-                                'ports': f"{perm.to_port}" if perm.from_port == perm.to_port else f"{perm.from_port}-{perm.to_port}",
-                                'protocol': perm.protocol,
-                                'cidr': ip_range.cidr,
-                            })
-                result.append({
-                    'id': sg.id,
-                    'name': sg.name,
-                    'status': sg.status.value,
-                    'permissions': permissions,
-                })
-        response = {
-            security_feature: result,
-            'checked_groups': groups,
-        }
-        if ids:
-            response.setdefault("filterby", {})["ids"] = ids
-        if tags:
-            response.setdefault("filterby", {})["tags"] = tags
-        return response
-    else:
-        return server_error(text="Failed to check insecure services")
