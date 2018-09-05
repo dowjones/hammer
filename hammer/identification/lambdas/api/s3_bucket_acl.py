@@ -2,7 +2,7 @@ from library.aws.s3 import S3BucketsAclChecker
 from responses import server_error
 
 
-def handler(security_feature, config, account, ids, tags):
+def handler(security_feature, account, config, ids, tags):
     checker = S3BucketsAclChecker(account=account)
     result = []
     if checker.check(buckets=ids, tags=tags):

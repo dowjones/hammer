@@ -66,7 +66,7 @@ def lambda_handler(event, context):
 
     try:
         module = importlib.import_module(security_feature)
-        response = module.handler(security_feature, config, account, ids, tags)
+        response = module.handler(security_feature, account, config, ids, tags)
     except ModuleNotFoundError:
         response = f"scan for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
 

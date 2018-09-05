@@ -2,7 +2,7 @@ from library.aws.security_groups import SecurityGroupsChecker
 from responses import server_error
 
 
-def handler(security_feature, config, account, ids, tags):
+def handler(security_feature, account, config, ids, tags):
     checker = SecurityGroupsChecker(account=account,
                                     restricted_ports=config.sg.restricted_ports)
     result = []
