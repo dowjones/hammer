@@ -74,5 +74,3 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "body": json.dumps(response, indent=4) if isinstance(response, dict) else response
     }
-
-

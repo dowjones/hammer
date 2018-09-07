@@ -4,43 +4,22 @@ import logging
 
 from library.utility import jsonDumps
 from library.logger import set_logging
+from library.config import Config
 
 
 def lambda_handler(event, context):
     set_logging(level=logging.DEBUG)
-    logging.debug("Client token: " + event['authorizationToken'])
+
+    config = Config()
+
+    #logging.debug("Client token: " + event['authorizationToken'])
     logging.debug("Method ARN: " + event['methodArn'])
 
-    '''
-    Validate the incoming token and produce the principal user identifier
-    associated with the token. This can be accomplished in a number of ways:
+    if event['authorizationToken'] != config.api.token:
+        raise Exception('Unauthorized')
 
-    1. Call out to the OAuth provider
-    2. Decode a JWT token inline
-    3. Lookup in a self-managed DB
-    '''
-    principalId = 'user|a1b2c3d4'
+    principalId = 'hammer-api-user'
 
-    '''
-    You can send a 401 Unauthorized response to the client by failing like so:
-
-      raise Exception('Unauthorized')
-
-    If the token is valid, a policy must be generated which will allow or deny
-    access to the client. If access is denied, the client will receive a 403
-    Access Denied response. If access is allowed, API Gateway will proceed with
-    the backend integration configured on the method that was called.
-
-    This function must generate a policy that is associated with the recognized
-    principal user identifier. Depending on your use case, you might store
-    policies in a DB, or generate them on the fly.
-
-    Keep in mind, the policy is cached for 5 minutes by default (TTL is
-    configurable in the authorizer) and will apply to subsequent calls to any
-    method/resource in the RestApi made with the same token.
-
-    The example policy below denies access to all resources in the RestApi.
-    '''
     tmp = event['methodArn'].split(':')
     apiGatewayArnTmp = tmp[5].split('/')
     awsAccountId = tmp[4]
@@ -49,10 +28,8 @@ def lambda_handler(event, context):
     policy.restApiId = apiGatewayArnTmp[0]
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
-    #policy.allowMethod(HttpVerb.POST, '/*')
-    policy.denyAllMethods()
+    policy.allowMethod(HttpVerb.POST, '/scan')
 
-    # Finally, build the policy
     authResponse = policy.build()
 
     logging.debug(jsonDumps(authResponse))

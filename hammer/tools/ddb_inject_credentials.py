@@ -55,7 +55,8 @@ if __name__ == "__main__":
             }
 
     if args.hammer_api_token != None:
-        creds["api"] = {"token": secrets.token_hex() if args.hammer_api_token == -1 else args.hammer_api_token }
+        # generate new secret if secret value is not set
+        creds["api"] = {"token": secrets.token_hex() if args.hammer_api_token == -1 else args.hammer_api_token}
 
     if not creds:
         print(f"no credentials detected, please check CLI arguments")
