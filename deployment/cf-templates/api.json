@@ -12,7 +12,7 @@
             "Description": "S3 bucket with Hammer API sources",
             "Default": ""
         },
-        "SourceAPI": {
+        "SourceApi": {
             "Type": "String",
             "Default": "api.zip"
         },
@@ -28,12 +28,33 @@
         }
     },
     "Resources": {
-        "LambdaAPI": {
+        "LambdaAuthorizer": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
                     "S3Bucket": {"Ref": "SourceS3Bucket"},
-                    "S3Key": {"Ref": "SourceAPI"}
+                    "S3Key": {"Ref": "SourceApi"}
+                },
+                "Description": "Hammer API authorization lambda",
+                "FunctionName": {"Fn::Join": ["", [ {"Ref": "ResourcesPrefix"}, "api-authorizer" ] ] },
+                "Handler": "authorizer.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             {"Ref": "AWS::AccountId"},
+                                             ":role/",
+                                             {"Ref": "ResourcesPrefix"},
+                                             {"Ref": "IdentificationIAMRole"}
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LambdaApi": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {"Ref": "SourceS3Bucket"},
+                    "S3Key": {"Ref": "SourceApi"}
                 },
                 "Description": "Hammer API lambda",
                 "FunctionName": {"Fn::Join": ["", [ {"Ref": "ResourcesPrefix"}, "api" ] ] },
@@ -57,12 +78,45 @@
                 "FailOnWarnings": true
             }
         },
-        "LambdaPermission": {
+        "LambdaPermissionApi": {
             "Type": "AWS::Lambda::Permission",
-            "DependsOn": ["LambdaAPI", "ApiGateway"],
+            "DependsOn": ["LambdaApi", "ApiGateway"],
             "Properties": {
                 "Action": "lambda:invokeFunction",
-                "FunctionName": {"Fn::GetAtt": [ "LambdaAPI", "Arn" ] },
+                "FunctionName": {"Fn::GetAtt": [ "LambdaApi", "Arn" ] },
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {"Fn::Join": ["", [ "arn:aws:execute-api:",
+                                                  {"Ref": "AWS::Region"},
+                                                  ":",
+                                                  {"Ref": "AWS::AccountId"},
+                                                  ":",
+                                                  {"Ref": "ApiGateway"},
+                                                  "/*"
+                                                ] ]}
+            }
+        },
+        "ApiGatewayAuthorizer": {
+            "Type": "AWS::ApiGateway::Authorizer",
+            "DependsOn": ["ApiGateway"],
+            "Properties": {
+                "Name": {"Fn::Join" : ["", [ {"Ref": "ResourcesPrefix"},
+                                             "api-authorizer"
+                                           ] ]},
+                "AuthorizerUri": {"Fn::Join": ["",
+                    ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaAuthorizer", "Arn"]}, "/invocations"]
+                ]},
+                "AuthorizerResultTtlInSeconds": "0",
+                "IdentitySource": "method.request.header.Auth",
+                "RestApiId": {"Ref": "ApiGateway"},
+                "Type": "TOKEN"
+            }
+        },
+        "ApiLambdaPermissionAuthorizer": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaAuthorizer", "ApiGateway"],
+            "Properties": {
+                "Action": "lambda:invokeFunction",
+                "FunctionName": {"Fn::GetAtt": [ "LambdaAuthorizer", "Arn" ] },
                 "Principal": "apigateway.amazonaws.com",
                 "SourceArn": {"Fn::Join": ["", [ "arn:aws:execute-api:",
                                                   {"Ref": "AWS::Region"},
@@ -117,10 +171,10 @@
             }
         },
         "ApiGatewayStage": {
-            "DependsOn": ["ApiGatewayDeployment", "ApiGateway"],
+            "DependsOn": ["ApiGatewayDeployment2018090700", "ApiGateway"],
             "Type": "AWS::ApiGateway::Stage",
             "Properties": {
-                "DeploymentId": {"Ref": "ApiGatewayDeployment"},
+                "DeploymentId": {"Ref": "ApiGatewayDeployment2018090700"},
                 "MethodSettings": [{
                     "DataTraceEnabled": true,
                     "HttpMethod": "*",
@@ -131,7 +185,7 @@
                 "StageName": {"Fn::FindInMap": ["NamingStandards", "StageName", "value"] }
             }
         },
-        "ApiGatewayDeployment": {
+        "ApiGatewayDeployment2018090700": {
             "Type": "AWS::ApiGateway::Deployment",
             "DependsOn": ["ApiGateway", "ApiRequestPOST"],
             "Properties": {
@@ -148,16 +202,17 @@
             }
         },
         "ApiRequestPOST": {
-            "DependsOn": ["ApiGateway", "ApiGatewayResource", "LambdaAPI"],
+            "DependsOn": ["ApiGateway", "ApiGatewayResource", "LambdaApi", "ApiGatewayAuthorizer"],
             "Type": "AWS::ApiGateway::Method",
             "Properties": {
-                "AuthorizationType": "NONE",
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": { "Ref": "ApiGatewayAuthorizer" },
                 "HttpMethod": "POST",
                 "Integration": {
                     "Type": "AWS_PROXY",
                     "IntegrationHttpMethod": "POST",
                     "Uri": {"Fn::Join": ["",
-                        ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaAPI", "Arn"]}, "/invocations"]
+                        ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaApi", "Arn"]}, "/invocations"]
                     ]}
                 },
                 "ResourceId": {"Ref": "ApiGatewayResource"},
@@ -166,7 +221,7 @@
         }
     },
     "Outputs": {
-        "APIUrl": {
+        "ApiUrl": {
             "Description": "The URL of the API gateway",
             "Value": {"Fn::Join": ["", ["https://", {"Ref": "ApiGateway"}, ".execute-api.", {"Ref": "AWS::Region"}, ".amazonaws.com",
                                         "/",

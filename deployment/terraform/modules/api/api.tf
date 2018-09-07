@@ -12,7 +12,7 @@ resource "aws_cloudformation_stack" "api" {
         SourceS3Bucket  = "${var.s3bucket}"
         ResourcesPrefix = "${var.resources-prefix}"
         IdentificationIAMRole = "${var.identificationIAMRole}"
-        SourceAPI = "${aws_s3_bucket_object.api.id}",
+        SourceApi = "${aws_s3_bucket_object.api.id}",
     }
 
     template_url = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.api-cfn.id}"
