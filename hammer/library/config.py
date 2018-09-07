@@ -76,6 +76,14 @@ class Config(object):
         # Slack configuration
         self.slack = SlackConfig(slack_config)
 
+        # API configuration
+        self.api = ApiConfig({
+            'credentials':  self.json_load_from_ddb(self._config["credentials"]["ddb.table_name"],
+                                                    self.aws.region,
+                                                    "api")
+        })
+
+
     def get_bu_by_name(self, name):
         """
         Guess BU value from the issue name
@@ -258,6 +266,15 @@ class JiraConfig(object):
         if key in self._config:
             return self._config[key]
         raise AttributeError(f"section 'jira' has no option '{key}'")
+
+
+class ApiConfig(object):
+    def __init__(self, config):
+        self._config = config
+
+    @property
+    def token(self):
+        return self._config.get("credentials", {}).get("token", None)
 
 
 class SlackConfig(object):

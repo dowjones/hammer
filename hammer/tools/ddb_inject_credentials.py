@@ -3,6 +3,7 @@
 import boto3
 import json
 import argparse
+import secrets
 
 
 if __name__ == "__main__":
@@ -10,6 +11,9 @@ if __name__ == "__main__":
     parser.add_argument("--table",
                         dest="table", default=None,
                         help="credentials DDB table name")
+    parser.add_argument("--hammer-api-token",
+                        dest="hammer_api_token", nargs='?', const=-1, type=str,
+                        help="Hammer API token")
     parser.add_argument("--slack-api-token",
                         dest="slack_api_token", default=None,
                         help="Slack API token")
@@ -49,6 +53,9 @@ if __name__ == "__main__":
                     "access_token_secret": args.jira_access_token_secret,
                 }
             }
+
+    if args.hammer_api_token != None:
+        creds["api"] = {"token": secrets.token_hex() if args.hammer_api_token == -1 else args.hammer_api_token }
 
     if not creds:
         print(f"no credentials detected, please check CLI arguments")
