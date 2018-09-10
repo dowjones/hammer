@@ -99,7 +99,11 @@ In case you have chosen to deploy Dow Jones Hammer with Terraform, proceed as fo
 
 ### 4.1. Access Credentials Storage
 
-To configure JIRA and/or Slack integration, you should inject corresponding access credentials to the credentials DynamoDB table, defined in `credentials` section of `config.json`.
+To configure:
+* JIRA and/or Slack integration
+* API token
+
+you should inject corresponding access credentials to the credentials and values DynamoDB table, defined in `credentials` section of `config.json`.
 Default table name is `hammer-credentials`.
 
 To inject the access credentials, run the script `ddb_inject_credentials.py` from the `hammer/tools/` folder:
@@ -108,6 +112,7 @@ hammer/tools $ export AWS_PROFILE=hammer-master
 hammer/tools $ export AWS_DEFAULT_REGION="<hammer-master-region>"
 hammer/tools $ python3.6 ddb_inject_credentials.py \
                             --table "<table name from config.json>" \
+                            --hammer-api-token "<Hammer API token>" \
                             --slack-api-token "<slack API token>" \
                             --jira-access-token-secret "<JIRA secret for access token>" \
                             --jira-access-token "<JIRA access token>" \
@@ -120,6 +125,9 @@ In case operation was successful you should get output with injected credentials
 Successfully injected 'slack' credentials: {
     "api_token": "<slack API token>"
 }
+Successfully injected 'api' credentials: {
+    "token": "Hammer API token"
+}
 Successfully injected 'jira' credentials: {
     "oauth": {
         "consumer_key": "<JIRA consumer key>",
@@ -130,4 +138,6 @@ Successfully injected 'jira' credentials: {
 }
 ```
 
-You can omit Slack or JIRA parameters in case you are not going to use corresponding integration functionality.
+You can omit any of Slack, JIRA or API parameters in case you are not going to use corresponding integration functionality.
+
+As for Hammer API token, you can provide your own randomly generated token or let script to generate it for you. To do so just omit value for `--hammer-api-token` parameter. 
