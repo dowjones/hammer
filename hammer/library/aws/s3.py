@@ -543,7 +543,7 @@ class S3BucketsAclChecker(object):
                 elif err.response['Error']['Code'] == "NoSuchBucket":
                     # deletion was not fully propogated to S3 backend servers
                     # so bucket is still available in listing but actually not exists
-                    continue
+                    pass
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' acl in {self.account}")
                 continue
