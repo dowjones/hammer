@@ -46,6 +46,8 @@ module "identification" {
     identificationCheckRateExpression = "${var.identificationCheckRateExpression}"
     s3bucket = "${var.s3bucket}"
     identificationIAMRole = "${var.identificationIAMRole}"
+    lambdaSubnets = "${var.lambdaSubnets}"
+    lambdaSecurityGroups = "${var.lambdaSecurityGroups}"
     resources-prefix = "${var.resources-prefix}"
     tags = "${var.tags}"
 }

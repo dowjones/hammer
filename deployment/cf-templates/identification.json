@@ -1,6 +1,97 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Hammer identification stack",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": { "default": "Identification setup" },
+                    "Parameters": [
+                        "ResourcesPrefix",
+                        "IdentificationIAMRole",
+                        "IdentificationCheckRateExpression"
+                    ]
+                },
+                {
+                    "Label": { "default": "Sources" },
+                    "Parameters": [
+                        "SourceS3Bucket",
+                        "SourceLogsForwarder",
+                        "SourceBackupDDB",
+                        "SourceIdentificationSG",
+                        "SourceIdentificationCloudTrails",
+                        "SourceIdentificationS3ACL",
+                        "SourceIdentificationS3Policy",
+                        "SourceIdentificationIAMUserKeysRotation",
+                        "SourceIdentificationIAMUserInactiveKeys",
+                        "SourceIdentificationEBSVolumes",
+                        "SourceIdentificationEBSSnapshots",
+                        "SourceIdentificationRDSSnapshots"
+                    ]
+                },
+                {
+                    "Label": { "default": "VPC config (optional)" },
+                    "Parameters": [
+                        "LambdaSubnets",
+                        "LambdaSecurityGroups"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "ResourcesPrefix": {
+                    "default": "The prefix for all created resources"
+                },
+                "SourceS3Bucket": {
+                    "default": "The name of the S3 bucket with sources"
+                },
+                "IdentificationIAMRole": {
+                    "default": "The name of identification IAM role"
+                },
+                "IdentificationCheckRateExpression": {
+                    "default": "CloudWatch Schedule Cron Expression for the interval between identification runs"
+                },
+                "LambdaSubnets": {
+                    "default": "Subnet IDs in your VPC to run identification lambdas in"
+                },
+                "LambdaSecurityGroups": {
+                    "default": "SecurityGroup IDs in your VPC to associate identification lambdas with"
+                },
+                "SourceLogsForwarder": {
+                    "default": "Relative path to LogsForwarder lambda sources"
+                },
+                "SourceBackupDDB": {
+                    "default": "Relative path to BackupDDB lambda sources"
+                },
+                "SourceIdentificationSG": {
+                    "default": "Relative path to Insecure services lambda sources"
+                },
+                "SourceIdentificationCloudTrails": {
+                    "default": "Relative path to CloudTrails lambda sources"
+                },
+                "SourceIdentificationS3ACL": {
+                    "default": "Relative path to public S3 ACL lambda sources"
+                },
+                "SourceIdentificationS3Policy": {
+                    "default": "Relative path to public S3 policy lambda sources"
+                },
+                "SourceIdentificationIAMUserKeysRotation": {
+                    "default": "Relative path to IAM keys rotation lambda sources"
+                },
+                "SourceIdentificationIAMUserInactiveKeys": {
+                    "default": "Relative path to IAM inactive keys lambda sources"
+                },
+                "SourceIdentificationEBSVolumes": {
+                    "default": "Relative path to unencrypted EBS volumes lambda sources"
+                },
+                "SourceIdentificationEBSSnapshots": {
+                    "default": "Relative path to public EBS snapshots lambda sources"
+                },
+                "SourceIdentificationRDSSnapshots": {
+                    "default": "Relative path to public RDS snapshots lambda sources"
+                }
+            }
+        }
+    },
     "Parameters": {
         "ResourcesPrefix": {
             "Type": "String",
@@ -9,7 +100,6 @@
         },
         "SourceS3Bucket": {
             "Type": "String",
-            "Description": "S3 bucket with Hammer identification sources",
             "Default": ""
         },
         "IdentificationIAMRole": {
@@ -18,7 +108,18 @@
         },
         "IdentificationCheckRateExpression": {
           "Type": "String",
-          "Default": "* * * ? *"
+          "Default": "* * * ? *",
+          "Description": "should not include minutes part"
+        },
+        "LambdaSubnets": {
+            "Type" : "String",
+            "Description" : "Comma-separated list, without spaces. Leave empty to run lambdas in default system-managed VPC (recommended). All specified security groups and subnets must be in the same VPC.",
+            "Default": ""
+        },
+        "LambdaSecurityGroups": {
+            "Type" : "String",
+            "Description" : "Comma-separated list, without spaces. Leave empty to run lambdas with default access rules (recommended). All specified security groups and subnets must be in the same VPC.",
+            "Default": ""
         },
         "SourceLogsForwarder": {
             "Type": "String",
@@ -63,6 +164,14 @@
         "SourceIdentificationRDSSnapshots": {
             "Type": "String",
             "Default": "rds-public-snapshots-identification.zip"
+        }
+    },
+    "Conditions": {
+        "LambdaSubnetsEmpty": {
+            "Fn::Equals": [ {"Ref": "LambdaSubnets"}, "" ]
+        },
+        "LambdaSecurityGroupsEmpty": {
+            "Fn::Equals": [ {"Ref": "LambdaSecurityGroups"}, "" ]
         }
     },
     "Mappings": {
@@ -363,6 +472,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationSG" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe security groups unrestricted access.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifySecurityGroupLambdaFunctionName", "value"] } ]
@@ -464,6 +589,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationCloudTrails" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe CloudTrail issues",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyCloudTrailsLambdaFunctionName", "value"] } ]
@@ -565,6 +706,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationS3ACL" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe public s3 buckets.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyS3ACLLambdaFunctionName", "value"] } ]
@@ -666,6 +823,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationS3Policy" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe public s3 buckets.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyS3PolicyLambdaFunctionName", "value"] } ]
@@ -767,6 +940,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationIAMUserKeysRotation" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe IAM user keys to be rotated.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyIAMUserKeysRotationLambdaFunctionName", "value"] } ]
@@ -868,6 +1057,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationIAMUserInactiveKeys" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe IAM user keys last used.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyIAMUserInactiveKeysLambdaFunctionName", "value"] } ]
@@ -969,6 +1174,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationEBSVolumes" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe unencrypted ebs volumes.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyEBSVolumesLambdaFunctionName", "value"] } ]
@@ -1070,6 +1291,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationEBSSnapshots" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe public ebs snapshots.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyEBSSnapshotsLambdaFunctionName", "value"] } ]
@@ -1171,6 +1408,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationRDSSnapshots" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+        },
                 "Description": "Lambda function to describe public rds snapshots.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyRDSSnapshotsLambdaFunctionName", "value"] } ]
