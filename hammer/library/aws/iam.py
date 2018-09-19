@@ -10,8 +10,8 @@ from collections import namedtuple
 IAMPublicRole = namedtuple('IAMPublicRole', [
     # iam profile role name
     'role_name',
-    # list of public policies version
-    'list_public_policies',
+    # list with public policies
+    'public_policies',
     ])
 
 
@@ -19,9 +19,9 @@ class IAMOperations:
     @staticmethod
     def public_statement(statement):
         """
-        Check if IAM supplied role policy statement allows public access.
+        Check if supplied IAM policy statement allows public access.
 
-        :param statement: dict with IAM Role policy statement (as AWS returns)
+        :param statement: dict with IAM policy statement (as AWS returns)
 
         :return: boolean, True - if statement allows access from '*' `Principal`, not restricted by `IpAddress` condition
                           False - otherwise
@@ -34,35 +34,37 @@ class IAMOperations:
         # check both `Principal` - `{"AWS": "*"}` and `"*"`
         # and condition (if exists) to be restricted (not "0.0.0.0/0")
         if effect == "Allow" and \
-                (principal == "*" or principal.get("AWS") == "*"):
+           (principal == "*" or principal.get("AWS") == "*"):
             if condition is not None:
                 if suffix in str(condition.get("IpAddress")):
                     return True
             else:
                 return True
         if effect == "Allow" and \
-                        not_principal is not None:
+           not_principal is not None:
             # TODO: it is not recommended to use `Allow` with `NotPrincipal`, need to write proper check for such case
             # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_notprincipal.html
             logging.error(f"TODO: is this statement public???\n{statement}")
-        return False
+        return True
 
     @classmethod
     @timeit
     def get_instance_profile_policy_details(cls, iam_client, instance_profile_id):
-        profiles = {profile['InstanceProfileId']: profile['InstanceProfileName'] for profile in
-                    iam_client.list_instance_profiles()['InstanceProfiles']}
-
-        profile_name = profiles.get(instance_profile_id, None)
-        if profile_name is None:
+        # try to find profile name
+        for profile in iam_client.list_instance_profiles()['InstanceProfiles']:
+            if instance_profile_id == profile['InstanceProfileId']:
+                profile_name = profile['InstanceProfileName']
+                break
+        else:
+            # unknown profile id
             return []
 
-        list_iam_public_roles = []
+        iam_public_roles = []
 
         roles = iam_client.get_instance_profile(InstanceProfileName=profile_name)['InstanceProfile']['Roles']
         for role in roles:
             role_name = role['RoleName']
-            list_public_policies = []
+            public_policies = []
             # [{'PolicyName': 'AmazonChimeReadOnly', 'PolicyArn': 'arn:aws:iam::aws:policy/AmazonChimeReadOnly'}]
             managed_policies = iam_client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
             for policy in managed_policies:
@@ -77,25 +79,27 @@ class IAMOperations:
 
                 for statement in policy_doc["Document"]["Statement"]:
                     if cls.public_statement(statement):
-                        policy_details = "aws:" + policy_name + " (" + policy_version + ")"
-                        list_public_policies.append(policy_details)
+                        public_policies.append(
+                            f"aws:{policy_name} ({policy_version})"
+                        )
 
             inline_policies = iam_client.list_role_policies(RoleName=role_name)['PolicyNames']
             for policy_name in inline_policies:
                 policy_doc = iam_client.get_role_policy(RoleName=role_name, PolicyName=policy_name)
                 for statement in policy_doc["PolicyDocument"]["Statement"]:
                     if cls.public_statement(statement):
-                        policy_details = "inline:" + policy_name
-                        list_public_policies.append(policy_details)
+                        public_policies.append(f"inline: {policy_name}")
+                        break
 
-            if len(list_public_policies) > 0:
-                public_role = IAMPublicRole(
-                    role_name=role_name,
-                    list_public_policies=list_public_policies
+            if len(public_policies) > 0:
+                iam_public_roles.append(
+                    IAMPublicRole(
+                        role_name=role_name,
+                        public_policies=public_policies,
+                    )
                 )
-                list_iam_public_roles.append(public_role)
 
-        return list_iam_public_roles
+        return iam_public_roles
 
     @staticmethod
     def update_access_key(iam_client, user_name, key_id, status):

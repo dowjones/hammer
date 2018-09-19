@@ -143,9 +143,9 @@ class CreateSecurityGroupsTickets(object):
                                 f"||Instance Id||Role Name||Public Polices||\n"
                             )
                             for public_role in public_role_policies:
-                                instance_profile_details+=(
+                                instance_profile_details += (
                                     f"|{ec2_instance.id}|{public_role.role_name}"
-                                    f"|{public_role.list_public_policies}|\n"
+                                    f"|{public_role.public_policies}|\n"
                                 )
 
                 elif not table_limit_reached:
