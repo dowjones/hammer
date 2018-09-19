@@ -18,7 +18,7 @@ from library.aws.ec2 import EC2Operations
 from library.aws.iam import IAMOperations
 from library.ddb_issues import IssueStatus, SecurityGroupIssue
 from library.ddb_issues import Operations as IssueOperations
-from library.utility import empty_converter, list_converter
+from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
@@ -178,12 +178,13 @@ class CreateSecurityGroupsTickets(object):
             in_use = True
             rds_instance_details += (
                 f"\n*RDS instances:*\n"
-                f"||RDS Instance ID||RDS Instance Status"
-                f"||Public Accessible||\n")
+                f"||RDS Instance ID||Engine"
+                f"||RDS Instance Status"
+                f"||Publicly Accessible||\n")
             for rds_instance in rds_instances:
                 rds_instance_details += (
-                    f"|{rds_instance.id}|{rds_instance.db_instance_status}"
-                    f"|{rds_instance.public_accessible}|\n"
+                    f"|{rds_instance.id}|{rds_instance.engine}|{rds_instance.status}"
+                    f"|{bool_converter(rds_instance.public)}|\n"
                 )
 
         return rds_instance_details, in_use
