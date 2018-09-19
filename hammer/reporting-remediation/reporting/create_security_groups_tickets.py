@@ -201,7 +201,7 @@ class CreateSecurityGroupsTickets(object):
             for elb in elb_details:
                 elb_instance_details += (
                     f"|{elb.id}|{elb.scheme}"
-                    f"|{elb.elb_type}|{elb.instances}|\n"
+                    f"|{elb.elb_type}|{list_converter(elb.instances)}|\n"
                 )
 
         return elb_instance_details, in_use
@@ -296,7 +296,8 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_public = sg_blind_public = False
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
                     elb_client = account.client("elb") if account.session is not None else None
@@ -304,22 +305,23 @@ class CreateSecurityGroupsTickets(object):
 
                     iam_client = account.client("iam") if account.session is not None else None
 
-
                     rds_instance_details = elb_instance_details = None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
                         sg_instance_details, instance_profile_details,\
-                            sg_in_use, sg_public, sg_blind_public, \
+                            sg_in_use_ec2, sg_public, sg_blind_public, \
                             ec2_owner, ec2_bu, ec2_product = self.build_instances_table(iam_client, ec2_instances)
 
-                    if elb_client is not None:
+                    if elb_client is not None and elbv2_client is not None:
                         elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client, group_id)
-                        elb_instance_details, sg_in_use = self.build_elb_instances_table(elb_instances)
+                        elb_instance_details, sg_in_use_elb = self.build_elb_instances_table(elb_instances)
 
                     if rds_client is not None:
                         rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client, group_id)
-                        rds_instance_details, sg_in_use = self.build_rds_instances_table(rds_instances)
+                        rds_instance_details, sg_in_use_rds = self.build_rds_instances_table(rds_instances)
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu

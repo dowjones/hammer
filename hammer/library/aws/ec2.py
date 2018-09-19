@@ -140,6 +140,7 @@ class EC2Operations:
             tags=convert_tags(instance.get("Tags", [])),
             state=instance["State"]["Name"],
             public_subnet=None,
+            iam_profile_id=instance.get("IamInstanceProfile", {}).get("Id"),
         )
         return ec2_instance
 
@@ -190,10 +191,6 @@ class EC2Operations:
                         instance_private_ips += net_if_private_ips
                         instance_public_ips += net_if_public_ips
 
-                instance_profile_id = None
-                if "IamInstanceProfile" in instance:
-                    instance_profile_id = instance["IamInstanceProfile"]["Id"]
-                    
                 ec2_instance = EC2Instance(
                     id=instance["InstanceId"],
                     private_ips=instance_private_ips,
@@ -201,7 +198,7 @@ class EC2Operations:
                     tags=convert_tags(instance.get("Tags", [])),
                     state=instance["State"]["Name"],
                     public_subnet=public_subnet,
-                    iam_profile_id=instance_profile_id
+                    iam_profile_id=instance.get("IamInstanceProfile", {}).get("Id"),
                 )
                 ec2_instances.append(ec2_instance)
         return ec2_instances
@@ -216,37 +213,20 @@ class EC2Operations:
          :return: list with elb details
         """
         # describe elb with security group attached
-        elb_response = elb_client.describe_load_balancers()
         elb_details = []
 
-        for elb in elb_response["LoadBalancerDescriptions"]:
-            if group_id in elb["SecurityGroups"]:
-                elb_name = elb["LoadBalancerName"]
-                scheme = elb["Scheme"]
-                instance_list = []
-                if "Instances" in str(elb):
-                    instance_list = elb["Instances"]
-                elb_data = ELB(
-                    id=elb_name,
-                    scheme=scheme,
-                    elb_type='classic',
-                    instances=str(instance_list),
-                )
-                elb_details.append(elb_data)
+        elb_response = elb_client.describe_load_balancers()["LoadBalancerDescriptions"]
+        elb_response += elbv2_client.describe_load_balancers()["LoadBalancers"]
 
-        elbv2_response = elbv2_client.describe_load_balancers()
-        for elb in elbv2_response["LoadBalancers"]:
-            if group_id in elb["SecurityGroups"]:
-                elb_name = elb["LoadBalancerName"]
-                scheme = elb["Scheme"]
-                instance_list = []
-                if "Instances" in str(elb):
-                    instance_list = elb["Instances"]
-                elb_data = ELB(
-                    id=elb_name,
-                    scheme=scheme,
-                    elb_type='application',
-                    instances=str(instance_list),
+        for elb in elb_response:
+            if group_id in elb.get("SecurityGroups", []):
+                elb_details.append(
+                    ELB(
+                        id=elb["LoadBalancerName"],
+                        scheme=elb["Scheme"],
+                        elb_type=elb.get("Type", "classic"),
+                        instances=[ instance['InstanceId'] for instance in elb.get("Instances", []) ],
+                    )
                 )
-                elb_details.append(elb_data)
+
         return elb_details
