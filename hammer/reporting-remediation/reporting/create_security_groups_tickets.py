@@ -139,15 +139,15 @@ class CreateSecurityGroupsTickets(object):
                         public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
                         if len(public_role_policies) > 0:
                             instance_profile_details += (
-                                f"\n*Instance Role Public Policy Details:*\n\n"
-                                f"||Instance Id||Role Name||Public Polices||\n"
+                                f"\n*Instance Role Unsafe policies:*\n\n"
+                                f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
                             )
                             for public_role in public_role_policies:
                                 instance_profile_details += (
                                     f"|{ec2_instance.id}|{public_role.role_name}"
-                                    f"|{public_role.public_policies}|\n"
+                                    f"|{public_role.policy_name}"
+                                    f"|{list_converter(public_role.actions)}|\n"
                                 )
-
                 elif not table_limit_reached:
                     table_limit_reached = True
                 owners.append(owner)

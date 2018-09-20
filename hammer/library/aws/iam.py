@@ -7,19 +7,21 @@ from collections import namedtuple
 
 
 # structure which describes Instance Iam profile details
-IAMPublicRole = namedtuple('IAMPublicRole', [
+IAMUnsafeRole = namedtuple('IAMUnsafeRole', [
     # iam profile role name
     'role_name',
-    # list with public policies
-    'public_policies',
+    # policy name
+    'policy_name',
+    # list with unsafe actions
+    'actions'
     ])
 
 
 class IAMOperations:
     @staticmethod
-    def public_statement(statement):
+    def unsafe_statement(statement):
         """
-        Check if supplied IAM policy statement allows public access.
+        Check if supplied IAM policy statement allows unsafe access (with * in action).
 
         :param statement: dict with IAM policy statement (as AWS returns)
 
@@ -27,25 +29,19 @@ class IAMOperations:
                           False - otherwise
         """
         effect = statement['Effect']
-        principal = statement.get('Principal', {})
-        not_principal = statement.get('NotPrincipal', None)
-        condition = statement.get('Condition', None)
-        suffix = "/0"
-        # check both `Principal` - `{"AWS": "*"}` and `"*"`
-        # and condition (if exists) to be restricted (not "0.0.0.0/0")
+        actions = statement.get('Action', [])
+        if isinstance(actions, str):
+            action = [actions]
+        resource = statement.get('Resource', [])
+        if isinstance(resource, str):
+            resource = [resource]
+        result = []
         if effect == "Allow" and \
-           (principal == "*" or principal.get("AWS") == "*"):
-            if condition is not None:
-                if suffix in str(condition.get("IpAddress")):
-                    return True
-            else:
-                return True
-        if effect == "Allow" and \
-           not_principal is not None:
-            # TODO: it is not recommended to use `Allow` with `NotPrincipal`, need to write proper check for such case
-            # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_notprincipal.html
-            logging.error(f"TODO: is this statement public???\n{statement}")
-        return True
+           "*" in resource:
+            for action in actions:
+                if "*" in action:
+                    result.append(action)
+        return result
 
     @classmethod
     @timeit
@@ -59,12 +55,11 @@ class IAMOperations:
             # unknown profile id
             return []
 
-        iam_public_roles = []
+        iam_unsafe_roles = []
 
         roles = iam_client.get_instance_profile(InstanceProfileName=profile_name)['InstanceProfile']['Roles']
         for role in roles:
             role_name = role['RoleName']
-            public_policies = []
             # [{'PolicyName': 'AmazonChimeReadOnly', 'PolicyArn': 'arn:aws:iam::aws:policy/AmazonChimeReadOnly'}]
             managed_policies = iam_client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
             for policy in managed_policies:
@@ -78,28 +73,31 @@ class IAMOperations:
                 )['PolicyVersion']
 
                 for statement in policy_doc["Document"]["Statement"]:
-                    if cls.public_statement(statement):
-                        public_policies.append(
-                            f"aws:{policy_name} ({policy_version})"
+                    actions = cls.unsafe_statement(statement)
+                    if len(actions) > 0:
+                        iam_unsafe_roles.append(
+                            IAMUnsafeRole(
+                                role_name=role_name,
+                                policy_name=f"aws:{policy_name} ({policy_version})",
+                                actions=", ".join(actions)
+                            )
                         )
 
             inline_policies = iam_client.list_role_policies(RoleName=role_name)['PolicyNames']
             for policy_name in inline_policies:
                 policy_doc = iam_client.get_role_policy(RoleName=role_name, PolicyName=policy_name)
                 for statement in policy_doc["PolicyDocument"]["Statement"]:
-                    if cls.public_statement(statement):
-                        public_policies.append(f"inline: {policy_name}")
-                        break
+                    actions = cls.unsafe_statement(statement)
+                    if len(actions) > 0:
+                        iam_unsafe_roles.append(
+                            IAMUnsafeRole(
+                                role_name=role_name,
+                                policy_name=f"inline: {policy_name}",
+                                actions=actions
+                            )
+                        )
 
-            if len(public_policies) > 0:
-                iam_public_roles.append(
-                    IAMPublicRole(
-                        role_name=role_name,
-                        public_policies=public_policies,
-                    )
-                )
-
-        return iam_public_roles
+        return iam_unsafe_roles
 
     @staticmethod
     def update_access_key(iam_client, user_name, key_id, status):
