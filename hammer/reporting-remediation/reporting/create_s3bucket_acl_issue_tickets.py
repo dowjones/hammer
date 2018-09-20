@@ -12,6 +12,7 @@ from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, S3AclIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateS3BucketsTickets:
@@ -35,7 +36,7 @@ class CreateS3BucketsTickets:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3acl.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, S3AclIssue)
             for issue in issues:
@@ -163,6 +164,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateS3BucketsTickets(config)
         obj.create_tickets_s3buckets()

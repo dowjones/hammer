@@ -12,6 +12,7 @@ from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, EBSPublicSnapshotIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateEBSPublicSnapshotTickets(object):
@@ -28,7 +29,7 @@ class CreateEBSPublicSnapshotTickets(object):
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.ebsSnapshot.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, EBSPublicSnapshotIssue)
             for issue in issues:
@@ -145,6 +146,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateEBSPublicSnapshotTickets(config)
         obj.create_tickets_ebs_public_snapshots()

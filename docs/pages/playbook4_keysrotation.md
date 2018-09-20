@@ -78,6 +78,8 @@ To identify, report, and remediate issues of this type, you should add the follo
 |------------------------------|---------------------------------------|:------------:|
 |`enabled`                     |Toggles issue detection for this issue |`true`        |
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-iam-user-keys-rotation`|
+|`accounts`                    |*Optional* comma-separated list of accounts to check and report for this issue type | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
+|`remediation_accounts`        |*Optional* comma-separated list of accounts to remediate this issue type            | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
 |`rotation_criteria_days`      |The threshold number of days passed since this key's creation|There is no default value, you should set it up explicitly|
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|

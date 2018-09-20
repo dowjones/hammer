@@ -22,6 +22,7 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateSecurityGroupsTickets(object):
@@ -219,7 +220,7 @@ class CreateSecurityGroupsTickets(object):
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.sg.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, SecurityGroupIssue)
             for issue in issues:
@@ -471,6 +472,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateSecurityGroupsTickets(config)
         obj.create_tickets_securitygroups()

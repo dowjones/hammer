@@ -3,6 +3,8 @@ import json
 import logging
 import configparser
 import re
+import os
+import requests
 
 
 from functools import lru_cache
@@ -349,6 +351,31 @@ class AWSConfig(BaseConfig):
 
     @property
     @lru_cache()
+    def region(self):
+        """
+        Autodetection of current AWS region for AWS Lambda and EC2.
+
+        :return: string with AWS region the code is running in
+        """
+        # running in Lambda
+        region = os.environ.get("AWS_DEFAULT_REGION")
+        if region is not None:
+            return region
+
+        try:
+            # running in EC2
+            response = requests.get("http://169.254.169.254/latest/meta-data/placement/availability-zone", timeout=1)
+            if response.status_code == 200:
+                # remove AZ number from the end of the text
+                return response.text[:-1]
+        except Exception:
+            pass
+
+        # fallback to hardcoded in config region
+        return self._config["region"]
+
+    @property
+    @lru_cache()
     def regions(self):
         """
         :return: list of AWS regions to check based on regions in main account or hardcoded list in config
@@ -385,21 +412,38 @@ class ModuleConfig(BaseConfig):
         # main accounts dict
         self._accounts = config["aws"]["accounts"]
 
-    @property
-    def accounts(self):
+    def module_accounts(self, option):
         """
-        Each module can define its own list of accounts to process.
+        Each module can define its own list of accounts to identify/remediate.
         Account name (description) will be taken from main accounts dict,
         it means that each account in module list should have corresponding entry in main accounts dict.
 
-        :return: dict with AWS accounts to process {'account id': 'account name', ...}
+        :return: dict with AWS accounts to identify/remediate {'account id': 'account name', ...}
         """
-        module_accounts = self._config.get("accounts", None)
+        module_accounts = self._config.get(option, None)
         if module_accounts is None:
             return self._accounts
         else:
             # construct dict similar to main accounts dict
             return {account: self._accounts.get(account, "") for account in module_accounts}
+
+    @property
+    def accounts(self):
+        """
+        Each module can define its own list of accounts to identify in `accounts` option.
+
+        :return: dict with AWS accounts to remediate {'account id': 'account name', ...}
+        """
+        return self.module_accounts(option="accounts")
+
+    @property
+    def remediation_accounts(self):
+        """
+        Each module can define its own list of accounts to remediate in `remediation_accounts` option.
+
+        :return: dict with AWS accounts to remediate {'account id': 'account name', ...}
+        """
+        return self.module_accounts(option="remediation_accounts")
 
     @property
     def enabled(self):

@@ -88,6 +88,17 @@ class SlackNotification(object):
 
         return response["channel"]["id"]
 
+    def send_snippet(self, content, channel, content_type="text"):
+        response = self.sc.api_call(
+            "files.upload",
+            channels=channel,
+            content=content,
+            filetype=content_type,
+            username=self.slackUser
+        )
+        if not response.get("ok"):
+            logging.error(f"Failed to send slack snippet: {response.get('error')}\n{response}")
+
     def send_file(self, file_name, file_data, channel):
         file_type = os.path.splitext(file_name)[1]
 
@@ -103,7 +114,7 @@ class SlackNotification(object):
             username=self.slackUser
         )
         if not response.get("ok"):
-            logging.error(f"Failed to send slack message: {response.get('error')}\n{response}")
+            logging.error(f"Failed to send slack file: {response.get('error')}\n{response}")
     
     def send_file_notification(self, file_name, file_data, channel=None, user_mail=None):
         if channel is None:

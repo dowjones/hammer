@@ -15,6 +15,7 @@ from library.aws.utility import Account
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue
 from library.utility import confirm
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CleanSecurityGroups(object):
@@ -33,7 +34,7 @@ class CleanSecurityGroups(object):
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.sg.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, SecurityGroupIssue)
             for issue in issues:
@@ -66,10 +67,6 @@ class CleanSecurityGroups(object):
                     product = issue.jira_details.product
 
                     try:
-                        if not batch and \
-                           not confirm(f"Do you want to remediate security group '{group_name} / {group_id}'", False):
-                            continue
-
                         account = Account(id=account_id,
                                           name=account_name,
                                           region=group_region,
@@ -88,6 +85,10 @@ class CleanSecurityGroups(object):
                         elif sg.status != RestrictionStatus.OpenCompletely:
                             logging.debug(f"Security group '{group_name} / {group_id}' is not completely open")
                         else:
+                            if not batch and \
+                               not confirm(f"Do you want to remediate security group '{group_name} / {group_id}'", False):
+                                continue
+
                             logging.debug(f"Remediating '{group_name} / {group_id}' rules")
 
                             backup_path = sg.backup_s3(main_account.client("s3"), backup_bucket)
@@ -138,6 +139,11 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch', action='store_true', help='Do not ask confirmation for remediation')
