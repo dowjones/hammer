@@ -91,7 +91,7 @@ class CreateSecurityGroupsTickets(object):
 
     def build_instances_table(self, iam_client, instances):
         instance_details = ""
-        instance_profile_details = ""
+        instance_profile_details = []
         # security group has associated instances
         in_use = False
         # security group has associated instances with public ip in public subnet
@@ -101,6 +101,7 @@ class CreateSecurityGroupsTickets(object):
         owners = []
         bus = []
         products = []
+        separator = "\n"
 
         table_limit_reached = False
         if len(instances) > 0:
@@ -138,15 +139,11 @@ class CreateSecurityGroupsTickets(object):
                     if instance_profile_id is not None:
                         public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
                         if len(public_role_policies) > 0:
-                            instance_profile_details += (
-                                f"\n*Instance Role Unsafe policies:*\n\n"
-                                f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
-                            )
                             for public_role in public_role_policies:
-                                instance_profile_details += (
+                                instance_profile_details.append(
                                     f"|{ec2_instance.id}|{public_role.role_name}"
                                     f"|{public_role.policy_name}"
-                                    f"|{list_converter(public_role.actions)}|\n"
+                                    f"|{list_converter(public_role.actions, separator)}|\n"
                                 )
                 elif not table_limit_reached:
                     table_limit_reached = True
@@ -166,6 +163,12 @@ class CreateSecurityGroupsTickets(object):
         product = max(products, key=lambda product: products[product]) if products else None
         # logging.debug(f"bu={bu}")
         # logging.debug(f"product={product}")
+
+        if len(instance_profile_details) > 0:
+            instance_profile_details = (
+                f"\n*Instance Role Unsafe Policies:*\n"
+                f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
+            ) + "".join(instance_profile_details) + "\n"
 
         return instance_details, instance_profile_details, in_use, public, blind_public, owner, bu, product
 
@@ -197,7 +200,7 @@ class CreateSecurityGroupsTickets(object):
         if len(elb_details) > 0:
             in_use = True
             elb_instance_details += (
-                f"\n*ELB Instances:*\n "
+                f"\n*ELB Instances:*\n"
                 f"||Load Balance Name||Scheme||ELB Type||Instances||\n")
             for elb in elb_details:
                 elb_instance_details += (
