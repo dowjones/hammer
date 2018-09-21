@@ -69,3 +69,9 @@ resource "aws_s3_bucket_object" "rds-public-snapshots-identification" {
     key    = "lambda/${format("rds-public-snapshots-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-public-snapshots-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-public-snapshots-identification.zip"
 }
+
+resource "aws_s3_bucket_object" "dns-takeover-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("dns-takeover-identification-%s.zip", "${md5(file("${path.module}/../../../packages/dns-takeover-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/dns-takeover-identification.zip"
+}

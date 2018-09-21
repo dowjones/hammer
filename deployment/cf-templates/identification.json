@@ -63,6 +63,10 @@
         "SourceIdentificationRDSSnapshots": {
             "Type": "String",
             "Default": "rds-public-snapshots-identification.zip"
+        },
+        "SourceIdentificationDNSTakeover": {
+            "Type": "String",
+            "Default": "dns-takeover-identification.zip"
         }
     },
     "Mappings": {
@@ -99,6 +103,9 @@
             },
             "IdentificationMetricRDSSnapshotsError": {
                 "value": "RDSSnapshotsError"
+            },
+            "IdentificationMetricDNSTakeoverError": {
+                "value": "DNSTakeoverError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -153,6 +160,12 @@
             },
             "SNSTopicNameRDSSnapshots": {
                 "value": "describe-rds-public-snapshots-lambda"
+            },
+            "SNSDisplayNameDNSTakeover": {
+                "value": "describe-dns-takeover-sns"
+            },
+            "SNSTopicNameDNSTakeover": {
+                "value": "describe-dns-takeover-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -213,6 +226,12 @@
             },
             "IdentifyRDSSnapshotsLambdaFunctionName": {
                 "value": "describe-rds-public-snapshots"
+            },
+            "InitiateDNSTakeoverLambdaFunctionName": {
+                "value": "initiate-dns-takeover"
+            },
+            "IdentifyDNSTakeoverLambdaFunctionName": {
+                "value": "describe-dns-takeover"
             }
         }
     },
@@ -1210,6 +1229,107 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSSnapshots" }
             }
         },
+       
+        "LambdaInitiateDNSTakeoverEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateDNSTakeover", "LogGroupLambdaInitiateDNSTakeoverEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationDNSTakeover" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_DNS_TAKEOVER_ARN": { "Ref": "SNSNotifyLambdaEvaluateDNSTakeover" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify dns takeover issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateDNSTakeoverLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_dns_takeover.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateDNSTakeoverEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateDNSTakeoverLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateDNSTakeoverEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateDNSTakeoverEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateDNSTakeoverEvaluation" }
+            }
+        },
+
+        "LambdaEvaluateDNSTakeover": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateDNSTakeover"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationDNSTakeover" }
+                },
+                "Description": "Lambda function to describe dns takeover issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyDNSTakeoverLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_dns_takeover.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateDNSTakeover": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyDNSTakeoverLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateDNSTakeover": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateDNSTakeover"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateDNSTakeover" }
+            }
+        },
 
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
@@ -1339,6 +1459,23 @@
             }
         },
 
+        "EventInitiateEvaluationDNSTakeover": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateDNSTakeoverEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate DNS Takeover evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationDNSTakeover"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateDNSTakeoverEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateDNSTakeoverEvaluation"
+                  }
+                ]
+            }
+        },
+
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -1449,6 +1586,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSSnapshots", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateDNSTakeoverEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateDNSTakeoverEvaluation", "EventInitiateEvaluationDNSTakeover"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateDNSTakeoverEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationDNSTakeover", "Arn"] }
             }
         },
 
@@ -1615,6 +1762,25 @@
             }
         },
 
+        "SNSNotifyLambdaEvaluateDNSTakeover": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateDNSTakeover",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameDNSTakeover", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameDNSTakeover", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateDNSTakeover", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -1703,6 +1869,17 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateRDSSnapshots" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSSnapshots", "Arn"] }
+            }
+        },
+
+        "PermissionToInvokeLambdaEvaluateDNSTakeoverSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateDNSTakeover", "LambdaEvaluateDNSTakeover"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateDNSTakeover" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateDNSTakeover", "Arn"] }
             }
         },
 
@@ -2162,6 +2339,52 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateRDSSnapshots" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateDNSTakeoverEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateDNSTakeoverEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateDNSTakeoverEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateDNSTakeoverEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaDNSTakeoverEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateDNSTakeover"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateDNSTakeover" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateDNSTakeover" }
                     }
                 ],
                 "Period": 3600,

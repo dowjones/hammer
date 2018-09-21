@@ -208,6 +208,10 @@ class IAMKeyInactiveIssue(Issue):
     def __init__(self, *args):
         super().__init__(*args)
 
+class DNSTakeoverIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
 
 class Operations(object):
     @staticmethod

@@ -117,5 +117,13 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
+    },
+    "dns_takeover": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-dns-takeover",
+        "take_over_criteria_days": 30,
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }

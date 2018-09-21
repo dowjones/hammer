@@ -58,6 +58,8 @@ class Config(object):
         self.ebsSnapshot = ModuleConfig(self._config, "ebs_public_snapshot")
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
+        # DNS takeover issue config
+        self.dnsTakeover = ModuleConfig(self._config, "dns_takeover")
 
         self.bu_list = self._config.get("bu_list", [])
 
