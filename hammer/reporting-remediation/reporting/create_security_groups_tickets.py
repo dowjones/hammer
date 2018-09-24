@@ -406,8 +406,9 @@ class CreateSecurityGroupsTickets(object):
                         f"{threat}"
                         f"{account_details}")
 
-                    # auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
-                    # desc += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if status == RestrictionStatus.OpenCompletely:
+                        auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += f"{tags_table}"
 
