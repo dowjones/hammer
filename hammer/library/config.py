@@ -58,6 +58,8 @@ class Config(object):
         self.ebsSnapshot = ModuleConfig(self._config, "ebs_public_snapshot")
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
+        # SQS public access issue config
+        self.sqspolicy = ModuleConfig(self._config, "sqs_public_access")
 
         self.bu_list = self._config.get("bu_list", [])
 

@@ -117,5 +117,11 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
+    },
+    "sqs_public_access": {
+        "ddb.table_name": "djif-hammer-sqs-public-access",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
     }
 }
