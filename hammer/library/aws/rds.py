@@ -107,6 +107,58 @@ class RdsSnapshot(object):
         self._tags = convert_tags(value)
 
 
+class RdsInstance(object):
+    """
+    Parent class for RDS Instance (DB or Cluster). Child classes must define methods and fields to work with DB or Cluster instances.
+    Encapsulates `DB[Cluster]InstanceIdentifier`/`DB[Cluster]InstanceArn`/`DB[Cluster]InstanceIdentifier/Engine` and attributes.
+    """
+    ### all these static fields must be defined by child classes
+    # method which returns information about DB instances
+    describe_method = None
+    # field in `describe_method` response which specifies info about DB instances
+    response_field = None
+    # field in `response_field` which specifies DB instance identifier
+    instance_id_field = None
+    # field in `response_field` which specifies DB instance ARN
+    instance_arn_field = None
+    # field in `response_field` which specifies DB instance storage encryption
+    storage_encryption_field = None
+
+    def __init__(self, account, source):
+        """
+        :param account: `Account` instance where S3 bucket is present
+        :param source: dict with RDS instance properties (as `describe_method` returns)
+        """
+        self.account = account
+        # use instance ARN as id
+        self.id = source.get(self.instance_arn_field, None)
+        # instance name
+        self.name = source.get(self.instance_id_field, None)
+        self.source = source
+        # must be set later by creator
+        self.attributes = []
+        # name of the database engine
+        self.engine = source.get('Engine', None)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(Id={self.id}, db={self.db}, " \
+               f"engine={self.engine})"
+
+    @property
+    def tags(self):
+        """ :return: dict with tags associated with instance """
+        return self._tags
+
+    @tags.setter
+    def tags(self, value):
+        """
+        Set AWS tags for instance with prior converting from AWS format to simple dict
+
+        :param value: AWS tags as AWS returns
+        """
+        self._tags = convert_tags(value)
+
+
 class RdsInstanceSnapshot(RdsSnapshot):
     describe_method = "describe_db_snapshots"
     response_field = "DBSnapshots"
@@ -123,6 +175,22 @@ class RdsClusterSnapshot(RdsSnapshot):
     snapshot_arn_field = "DBClusterSnapshotArn"
     db_id_field = "DBClusterIdentifier"
     modify_attribute_method = "modify_db_cluster_snapshot_attribute"
+
+
+class RdsInstance(RdsInstance):
+    describe_method = "describe_db_instances"
+    response_field = "DBInstances"
+    instance_id_field = "DBInstanceIdentifier"
+    instance_arn_field = "DBInstanceArn"
+    storage_encryption_field = "StorageEncrypted"
+
+
+class RdsCluster(RdsInstance):
+    describe_method = "describe_db_clusters"
+    response_field = "DBClusters"
+    instance_id_field = "DBClusterIdentifier"
+    instance_arn_field = "DBClusterArn"
+    storage_encryption_field = "StorageEncrypted"
 
 
 class RdsSnapshotsChecker(object):
@@ -225,3 +293,102 @@ class RdsSnapshotsChecker(object):
             snapshot_cls=RdsClusterSnapshot
         )
         return instance and cluster
+
+
+class RdsEncryptionChecker(object):
+    """
+    Basic class for checking RDS instances in account/region.
+    Encapsulates discovered RDS instances.
+    """
+    def __init__(self, account):
+        """
+        :param account: `Account` instance with RDS instances to check
+        """
+        self.account = account
+        self.instances = []
+
+    def get_instance(self, id):
+        """
+        :return: `RdsInstance`/`RdsCluster` by id (ARN)
+        """
+        for instance in self.instances:
+            if instance.id == id:
+                return instance
+        return None
+
+    def collect_unencrypted_rds_instances(self, account, instance_cls):
+        """
+        Walk through public RDS instances (DB or Cluster, depending on `instance_cls`) in the account.
+        Filter instances owned by current account in current region.
+        Put all gathered instances to `self.instances`.
+
+        :param account: `Account` instance where RDS instance is present
+        :param instance_cls: `RdsInstance` or `RdsCluster`
+
+        :return: boolean. True - if check was successful,
+                          False - otherwise
+        """
+        marker = None
+        while True:
+            args = {}
+            if marker:
+                args['Marker'] = marker
+            try:
+                # describe instances
+                response = getattr(self.account.client("rds"), instance_cls.describe_method)(**args)
+            except ClientError as err:
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(rds:{err.operation_name})")
+                else:
+                    logging.exception(f"Failed to collect rds instance in {self.account}")
+                return False
+
+            for db_instance in response[instance_cls.response_field]:
+                # create RdsInstance/RdsCluster instance
+                instance = instance_cls(
+                    account=account,
+                    source=db_instance
+                )
+                # filter from all un-encrypted instances only instances owned by current account in current region
+                if instance.id.startswith(f"arn:aws:rds:{account.region}:{account.id}:") and (not db_instance[instance_cls.storage_encryption_field]):
+                    self.instances.append(instance)
+
+            if "Marker" in response:
+                marker = response["Marker"]
+            else:
+                break
+
+        # collect tags for all un-encrypted instances
+        for instance in self.instances:
+            try:
+                instance.tags = self.account.client("rds").list_tags_for_resource(
+                    ResourceName=instance.id
+                )['TagList']
+            except ClientError as err:
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(rds:{err.operation_name})")
+                else:
+                    logging.exception(f"Failed to describe db instnaces '{instance.id}' tags in {self.account}")
+                continue
+        return True
+
+    def check(self):
+        """
+        Walk through public DB and Cluster RDS instances in the account.
+
+        :return: boolean. True - if check was successful,
+                          False - otherwise
+        """
+        instance = self.collect_unencrypted_rds_instances(
+            account=self.account,
+            instance_cls=RdsInstance
+        )
+
+        cluster = self.collect_unencrypted_rds_instances(
+            account=self.account,
+            instance_cls=RdsCluster
+        )
+        return instance and cluster
+
