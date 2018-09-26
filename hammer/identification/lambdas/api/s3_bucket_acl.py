@@ -25,3 +25,24 @@ def identify(security_feature, account, config, ids, tags):
         return response
     else:
         return server_error(text="Failed to check S3 public acls")
+
+
+def remediate(security_feature, account, config, ids, tags):
+    response = {
+        security_feature: {}
+    }
+
+    checker = S3BucketsAclChecker(account=account)
+    if checker.check(buckets=ids):
+        for bucket in checker.buckets:
+            if not bucket.public_by_acl:
+                result = "skipped"
+            else:
+                if bucket.restrict_acl():
+                    result = "remediated"
+                else:
+                    result = "failed"
+            response[security_feature][bucket.name] = result
+        return response
+    else:
+        return server_error(text="Failed to check S3 ACL")
