@@ -117,5 +117,12 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
+    },
+    "s3_encryption": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-s3-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }

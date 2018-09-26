@@ -11,7 +11,8 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.iam-user-inactive-keys-identification",
                   "aws_s3_bucket_object.cloudtrails-issues-identification",
                   "aws_s3_bucket_object.ebs-unencrypted-volume-identification",
-                  "aws_s3_bucket_object.ebs-public-snapshots-identification"
+                  "aws_s3_bucket_object.ebs-public-snapshots-identification",
+                  "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification"
                  ]
 
     tags = "${var.tags}"
@@ -32,6 +33,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationEBSVolumes = "${aws_s3_bucket_object.ebs-unencrypted-volume-identification.id}"
         SourceIdentificationEBSSnapshots = "${aws_s3_bucket_object.ebs-public-snapshots-identification.id}"
         SourceIdentificationRDSSnapshots = "${aws_s3_bucket_object.rds-public-snapshots-identification.id}"
+        SourceIdentificationS3Encryption = "${aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification.id}"
     }
 
     template_url = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.identification-cfn.id}"

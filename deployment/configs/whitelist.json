@@ -35,5 +35,8 @@
 	"rds_public_snapshot":{
 		"__comment__": "Detects public RDS snapshots (with 'all' in 'restore' attribute). Key - account id, values - snapshot ARNs.",
 		"123456789012": ["arn:aws:rds:eu-central-1:123456789012:snapshot:public", "arn:aws:rds:eu-west-1:123456789012:snapshot:rds:snapshot1"]
+	},
+    "s3_encryption":{
+
 	}
 }

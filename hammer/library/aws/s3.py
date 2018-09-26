@@ -247,19 +247,43 @@ class S3Operations(object):
             ACL=acl
         )
 
+    @staticmethod
+    def put_bucket_encryption(s3_client, bucket):
+        """
+        Sets the bucket encryption using Server side encryption.
+
+        :param s3_client: S3 boto3 client
+        :param bucket: S3 bucket name which to encrypt
+        
+        :return: nothing
+        """
+        s3_client.put_bucket_encryption(
+            Bucket=bucket,
+            ServerSideEncryptionConfiguration={
+                'Rules': [
+                    {
+                        'ApplyServerSideEncryptionByDefault': {
+                            'SSEAlgorithm': 'AES256'
+                        }
+                    },
+                ]
+            }
+        )
+
 
 class S3Bucket(object):
     """
     Basic class for S3 bucket.
     Encapsulates `BucketName`/`Owner`/`Tags`, list of ACLs and dict with policy.
     """
-    def __init__(self, account, bucket_name, owner, tags, policy=None, acl=None):
+    def __init__(self, account, bucket_name, owner, tags, is_encrypted=None, policy=None, acl=None):
         """
         :param account: `Account` instance where S3 bucket is present
 
         :param bucket_name: `Name` of S3 bucket
         :param owner: ['Owner']['DisplayName'] of S3 bucket (if present)
         :param tags: tags if S3 bucket (as AWS returns)
+        :param is_encrypted: flag to identify bucket encrypted or not
         :param policy: str (JSON document) with S3 bucket policy (as AWS returns)
         :param acl: dict with S3 bucket ACL (as AWS returns)
         """
@@ -270,6 +294,7 @@ class S3Bucket(object):
         self._policy = json.loads(policy) if policy else {}
         self._acl = acl if acl else []
         self.backup_filename = pathlib.Path(f"{self.name}.json")
+        self.is_encrypted = is_encrypted
 
     def __str__(self):
         return f"{self.__class__.__name__}(Name={self.name}, Owner={self.owner}, Public={self.public})"
@@ -386,6 +411,19 @@ class S3Bucket(object):
             S3Operations.put_bucket_acl(self.account.client("s3"), self.name, 'private')
         except Exception:
             logging.exception(f"Failed to put {self.name} bucket 'private' acl")
+            return False
+
+        return True
+
+    def encrypt_bucket(self):
+        """
+        Encrypt bucket with SSL encryption.
+        :return: nothing        
+        """
+        try:
+            S3Operations.put_bucket_encryption(self.account.client("s3"), self.name)
+        except Exception:
+            logging.exception(f"Failed to encrypt {self.name} bucket ")
             return False
 
         return True
@@ -568,5 +606,96 @@ class S3BucketsAclChecker(object):
                                 owner=owner,
                                 tags=tags,
                                 acl=acl)
+            self.buckets.append(s3bucket)
+        return True
+
+class S3EncryptionChecker(object):
+    """
+    Basic class for checking S3 bucket encryption in account.
+    Encapsulates discovered S3 buckets.
+    """
+    def __init__(self, account):
+        """
+        :param account: `Account` instance with S3 buckets to check
+        """
+        self.account = account
+        self.buckets = []
+
+    def get_bucket(self, name):
+        """
+        :return: `S3Bucket` by name
+        """
+        for bucket in self.buckets:
+            if bucket.name == name:
+                return bucket
+        return None
+
+    def check(self, buckets=None):
+        """
+        Walk through S3 buckets in the account and check them (encrypted or not).
+        Put all gathered buckets to `self.buckets`.
+
+        :param buckets: list with S3 bucket names to check, if it is not supplied - all buckets must be checked
+
+        :return: boolean. True - if check was successful,
+                          False - otherwise
+        """
+        try:
+            # AWS does not support filtering dirung list, so get all buckets for account
+            response = self.account.client("s3").list_buckets()
+        except ClientError as err:
+            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                logging.error(f"Access denied in {self.account} "
+                              f"(s3:{err.operation_name})")
+            else:
+                logging.exception(f"Failed to list buckets in {self.account}")
+            return False
+
+        # owner (if present) is set for all buckets in response
+        owner = response.get('Owner', {}).get('DisplayName')
+        for bucket in response["Buckets"]:
+            bucket_name = bucket["Name"]
+            if buckets is not None and bucket_name not in buckets:
+                continue
+
+            # get bucket ACL
+            try:
+                response = self.account.client("s3").get_bucket_encryption(Bucket=bucket_name)
+                bucket_encrypted = True
+            except ClientError as err:
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(s3:{err.operation_name}, "
+                                  f"resource='{bucket_name}')")
+                    continue
+                elif err.response['Error']['Code'] == "NoSuchBucket":
+                    # deletion was not fully propogated to S3 backend servers
+                    # so bucket is still available in listing but actually not exists
+                    continue
+                elif err.response['Error']['Code'] in ["ServerSideEncryptionConfigurationNotFoundError"]:
+                    bucket_encrypted = False
+                else:
+                    logging.exception(f"Failed to get '{bucket_name}' encryption detials in {self.account}")
+
+            # get bucket tags
+            try:
+                tags = self.account.client("s3").get_bucket_tagging(Bucket=bucket_name)['TagSet']
+            except ClientError as err:
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(s3:{err.operation_name}, "
+                                  f"resource='{bucket_name}')")
+                    continue
+                elif err.response['Error']['Code'] == "NoSuchTagSet":
+                    tags = []
+                else:
+                    logging.exception(f"Failed to get '{bucket_name}' tags in {self.account}")
+                    continue
+
+            s3bucket = S3Bucket(account=self.account,
+                                bucket_name=bucket_name,
+                                owner=owner,
+                                tags=tags,
+                                is_encrypted=bucket_encrypted)
             self.buckets.append(s3bucket)
         return True
