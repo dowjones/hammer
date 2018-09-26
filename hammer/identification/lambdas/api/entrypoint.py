@@ -39,6 +39,16 @@ def lambda_handler(event, context):
     ids = payload.get("ids", None)
 
     config = Config()
+
+    action = event.get("path", "")[1:]
+    # do not forget to allow path in authorizer.py while extending this list
+    if action == "identify":
+        role = config.aws.role_name_identification
+    elif action == "remediate":
+        role = config.aws.role_name_reporting
+    else:
+        return bad_request(text="wrong action")
+
     account_name = config.aws.accounts.get(account_id, None)
 
     if account_name is None:
@@ -60,15 +70,16 @@ def lambda_handler(event, context):
     account = Account(id=account_id,
                       name=account_name,
                       region=region,
-                      role_name=config.aws.role_name_identification)
+                      role_name=role)
     if account.session is None:
         return server_error(text=f"Failed to create session in {account}")
 
     try:
         module = importlib.import_module(security_feature)
-        response = module.handler(security_feature, account, config, ids, tags)
-    except ModuleNotFoundError:
-        response = f"scan for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
+        handler = getattr(module, action)
+        response = handler(security_feature, account, config, ids, tags)
+    except (ModuleNotFoundError, AttributeError):
+        response = f"{action} for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
 
     return {
         "statusCode": 200,

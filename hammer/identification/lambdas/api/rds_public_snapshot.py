@@ -2,7 +2,7 @@ from library.aws.rds import RdsSnapshotsChecker
 from responses import server_error
 
 
-def handler(security_feature, account, config, ids, tags):
+def identify(security_feature, account, config, ids, tags):
     checker = RdsSnapshotsChecker(account=account)
     result = []
     if checker.check():

@@ -1,5 +1,5 @@
 variable "s3bucket" {}
-variable "identificationIAMRole" {}
+variable "apiIAMRole" {}
 
 variable "resources-prefix" {}
 

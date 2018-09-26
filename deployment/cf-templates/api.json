@@ -16,15 +16,14 @@
             "Type": "String",
             "Default": "api.zip"
         },
-        "IdentificationIAMRole": {
+        "ApiIAMRole": {
             "Type": "String",
-            "Default": "cloudsec-master-id"
+            "Default": "cloudsec-master-ec2"
         }
     },
     "Mappings": {
         "NamingStandards": {
-            "StageName": { "value": "LATEST" },
-            "PathPart":  { "value": "scan" }
+            "StageName": { "value": "LATEST" }
         }
     },
     "Resources": {
@@ -44,7 +43,7 @@
                                              {"Ref": "AWS::AccountId"},
                                              ":role/",
                                              {"Ref": "ResourcesPrefix"},
-                                             {"Ref": "IdentificationIAMRole"}
+                                             {"Ref": "ApiIAMRole"}
                                            ] ]},
                 "Runtime": "python3.6"
             }
@@ -65,7 +64,7 @@
                                              {"Ref": "AWS::AccountId"},
                                              ":role/",
                                              {"Ref": "ResourcesPrefix"},
-                                             {"Ref": "IdentificationIAMRole"}
+                                             {"Ref": "ApiIAMRole"}
                                            ] ]},
                 "Runtime": "python3.6"
             }
@@ -198,7 +197,7 @@
             "Properties": {
                 "RestApiId": {"Ref": "ApiGateway"},
                 "ParentId": {"Fn::GetAtt": ["ApiGateway", "RootResourceId"] },
-                "PathPart": {"Fn::FindInMap": ["NamingStandards", "PathPart", "value"] }
+                "PathPart": "{proxy+}"
             }
         },
         "ApiRequestPOST": {
@@ -207,10 +206,10 @@
             "Properties": {
                 "AuthorizationType": "CUSTOM",
                 "AuthorizerId": { "Ref": "ApiGatewayAuthorizer" },
-                "HttpMethod": "POST",
+                "HttpMethod": "ANY",
                 "Integration": {
                     "Type": "AWS_PROXY",
-                    "IntegrationHttpMethod": "POST",
+                    "IntegrationHttpMethod": "ANY",
                     "Uri": {"Fn::Join": ["",
                         ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaApi", "Arn"]}, "/invocations"]
                     ]}
@@ -226,8 +225,7 @@
             "Value": {"Fn::Join": ["", ["https://", {"Ref": "ApiGateway"}, ".execute-api.", {"Ref": "AWS::Region"}, ".amazonaws.com",
                                         "/",
                                         {"Fn::FindInMap": ["NamingStandards", "StageName", "value"] },
-                                        "/",
-                                        {"Fn::FindInMap": ["NamingStandards", "PathPart", "value"] }
+                                        "/"
                                        ]]}
         }
     }

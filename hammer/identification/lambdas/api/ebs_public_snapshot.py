@@ -2,7 +2,7 @@ from library.aws.ebs import EBSPublicSnapshotsChecker
 from responses import server_error
 
 
-def handler(security_feature, account, config, ids, tags):
+def identify(security_feature, account, config, ids, tags):
     checker = EBSPublicSnapshotsChecker(account=account)
     result = []
     if checker.check(ids=ids, tags=tags):

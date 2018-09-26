@@ -28,7 +28,8 @@ def lambda_handler(event, context):
     policy.restApiId = apiGatewayArnTmp[0]
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
-    policy.allowMethod(HttpVerb.POST, '/scan')
+    policy.allowMethod(HttpVerb.POST, '/identify')
+    policy.allowMethod(HttpVerb.POST, '/remediate')
 
     authResponse = policy.build()
 

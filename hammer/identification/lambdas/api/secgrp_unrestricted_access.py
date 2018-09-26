@@ -1,8 +1,11 @@
-from library.aws.security_groups import SecurityGroupsChecker
+import logging
+
+
+from library.aws.security_groups import SecurityGroupsChecker, RestrictionStatus
 from responses import server_error
 
 
-def handler(security_feature, account, config, ids, tags):
+def identify(security_feature, account, config, ids, tags):
     checker = SecurityGroupsChecker(account=account,
                                     restricted_ports=config.sg.restricted_ports)
     result = []
@@ -34,6 +37,28 @@ def handler(security_feature, account, config, ids, tags):
             response.setdefault("filterby", {})["ids"] = ids
         if tags:
             response.setdefault("filterby", {})["tags"] = tags
+        return response
+    else:
+        return server_error(text="Failed to check insecure services")
+
+
+def remediate(security_feature, account, config, ids, tags):
+    response = {
+        security_feature: {}
+    }
+
+    checker = SecurityGroupsChecker(account=account,
+                                restricted_ports=config.sg.restricted_ports)
+    if checker.check(ids=ids):
+        for sg in checker.groups:
+            processed = sg.restrict(RestrictionStatus.OpenCompletely)
+            if processed == 0:
+                 result = "skipped"
+            elif processed is None:
+                result = "failed"
+            else:
+                result = "remediated"
+            response[security_feature][sg.id] = result
         return response
     else:
         return server_error(text="Failed to check insecure services")

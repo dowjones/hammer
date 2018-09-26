@@ -11,7 +11,7 @@ resource "aws_cloudformation_stack" "api" {
     parameters {
         SourceS3Bucket  = "${var.s3bucket}"
         ResourcesPrefix = "${var.resources-prefix}"
-        IdentificationIAMRole = "${var.identificationIAMRole}"
+        ApiIAMRole = "${var.apiIAMRole}"
         SourceApi = "${aws_s3_bucket_object.api.id}",
     }
 

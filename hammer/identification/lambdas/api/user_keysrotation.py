@@ -2,7 +2,7 @@ from library.aws.iam import IAMKeyChecker
 from responses import server_error
 
 
-def handler(security_feature, account, config, ids, tags):
+def identify(security_feature, account, config, ids, tags):
     checker = IAMKeyChecker(account=account,
                             now=config.now,
                             rotation_criteria_days=config.iamUserKeysRotation.rotation_criteria_days)
