@@ -77,9 +77,16 @@ def lambda_handler(event, context):
     try:
         module = importlib.import_module(security_feature)
         handler = getattr(module, action)
-        response = handler(security_feature, account, config, ids, tags)
     except (ModuleNotFoundError, AttributeError):
+        logging.exception("Module or attribute was not found")
         response = f"{action} for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
+    else:
+        try:
+            response = handler(security_feature, account, config, ids, tags)
+        except Exception:
+            text=f"{security_feature}:{action} execution error"
+            logging.exception(text)
+            return server_error(text=text)
 
     return {
         "statusCode": 200,

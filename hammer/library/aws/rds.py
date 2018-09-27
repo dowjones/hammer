@@ -137,12 +137,14 @@ class RdsSnapshotsChecker(object):
         self.account = account
         self.snapshots = []
 
-    def get_snapshot(self, id):
+    def get_snapshot(self, id=None, name=None):
         """
-        :return: `RdsInstanceSnapshot`/`RdsClusterSnapshot` by id (ARN)
+        :return: `RdsInstanceSnapshot`/`RdsClusterSnapshot` by id (ARN) or name
         """
         for snapshot in self.snapshots:
-            if snapshot.id == id:
+            if id is not None and snapshot.id == id:
+                return snapshot
+            elif name is not None and snapshot.name == name:
                 return snapshot
         return None
 

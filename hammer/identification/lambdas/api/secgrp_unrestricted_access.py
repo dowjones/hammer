@@ -1,6 +1,3 @@
-import logging
-
-
 from library.aws.security_groups import SecurityGroupsChecker, RestrictionStatus
 from responses import server_error
 
