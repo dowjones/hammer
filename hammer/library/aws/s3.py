@@ -248,27 +248,41 @@ class S3Operations(object):
         )
 
     @staticmethod
-    def put_bucket_encryption(s3_client, bucket):
+    def set_bucket_encryption(s3_client, bucket, kms_master_key_id=None):
         """
         Sets the bucket encryption using Server side encryption.
 
         :param s3_client: S3 boto3 client
         :param bucket: S3 bucket name which to encrypt
+        :param kms_master_key_id: S3 bucket encryption key. default value is none.
         
         :return: nothing
         """
-        s3_client.put_bucket_encryption(
-            Bucket=bucket,
-            ServerSideEncryptionConfiguration={
-                'Rules': [
-                    {
-                        'ApplyServerSideEncryptionByDefault': {
-                            'SSEAlgorithm': 'AES256'
-                        }
-                    },
-                ]
-            }
-        )
+        args = {}
+        encryption_config = {}
+
+        if kms_master_key_id:
+           rules = [
+                {
+                    'ApplyServerSideEncryptionByDefault': {
+                        'SSEAlgorithm': 'aws:kms',
+                        'KMSMasterKeyID': kms_master_key_id
+                    }
+                },
+            ]
+        else:
+            rules = [
+                {
+                    'ApplyServerSideEncryptionByDefault': {
+                        'SSEAlgorithm': 'AES256'
+                    }
+                },
+            ]
+        encryption_config["Rules"] = rules
+        args["ServerSideEncryptionConfiguration"] = encryption_config
+        args["Bucket"] = bucket
+
+        s3_client.put_bucket_encryption(**args)
 
 
 class S3Bucket(object):
@@ -415,13 +429,13 @@ class S3Bucket(object):
 
         return True
 
-    def encrypt_bucket(self):
+    def encrypt_bucket(self, kms_key_id=None):
         """
         Encrypt bucket with SSL encryption.
         :return: nothing        
         """
         try:
-            S3Operations.put_bucket_encryption(self.account.client("s3"), self.name)
+            S3Operations.set_bucket_encryption(self.account.client("s3"), self.name, kms_key_id)
         except Exception:
             logging.exception(f"Failed to encrypt {self.name} bucket ")
             return False

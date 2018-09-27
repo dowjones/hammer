@@ -85,7 +85,7 @@ class CleanS3BucketUnencryption:
                             logging.debug(f"Bucket {s3bucket.name} Un-encryption issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{s3bucket.name}' Un-encryption")
-
+                            # kms_key_id = None
                             remediation_succeed = True
                             if s3bucket.encrypt_bucket():
                                 comment = (f"Bucket '{s3bucket.name}' un-encryption issue "
