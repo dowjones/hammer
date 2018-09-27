@@ -14,6 +14,7 @@ from library.slack_utility import SlackNotification
 from library.aws.dns import DNSOperations
 from library.ddb_issues import IssueStatus, DNSTakeoverIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateDNSTakeoverIssueTickets:
@@ -169,6 +170,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateDNSTakeoverIssueTickets(config)
         obj.create_tickets_dns_takeover()
