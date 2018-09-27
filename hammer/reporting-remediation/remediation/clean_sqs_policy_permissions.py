@@ -13,6 +13,7 @@ from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SQSPolicyIssue
 from library.aws.sqs import SQSPolicyChecker
 from library.aws.utility import Account
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CleanSQSPolicyPermissions:
@@ -124,6 +125,12 @@ if __name__ == "__main__":
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         class_object = CleanSQSPolicyPermissions(config)
         class_object.clean_sqs_policy_permissions()
