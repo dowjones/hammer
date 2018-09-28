@@ -336,9 +336,12 @@ class CreateSecurityGroupsTickets(object):
 
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Restrict access to only those IP addresses that require it."
-                        f"To restrict access to a specific IP address, set the suffix to /32 (for example, 192.0.2.10/32)."
-                        f"Be sure to delete overly permissive rules after creating rules that are more restrictive.")
+                        f"Allow access only for a minimum set of required ip addresses/ranges from [RFC1918|https://tools.ietf.org/html/rfc1918]. "
+                        f"As an exceptional case you can use public IP addresses (with /32 mask), "
+                        f"but be ready to provide strong business justification and follow "
+                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting]. "
+                        f"Be sure to delete overly permissive rules after creating rules that are more restrictive.\n"
+                    )
 
                     issue_summary = (f"{summary_status} open security group '{group_name}'"
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")

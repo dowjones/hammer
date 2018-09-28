@@ -124,8 +124,11 @@ class CreateS3BucketPolicyIssueTickets:
                     issue_description += f"\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Check if global access is truly needed and "
-                        f"if not - update bucket permissions to restrict access to specific private IP ranges from RFC1819.")
+                        f"Grant CloudFront OAI applicable permissions on bucket."
+                        f"Or Update bucket permissions with VPC CIDRs ranges or ip addresses/ranges from "
+                        f"[RFC1918|https://tools.ietf.org/html/rfc1918]. "
+                        f"If global access is truly needed, provide strong business justification and follow "
+                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting]."
 
                     try:
                         response = jira.add_issue(
