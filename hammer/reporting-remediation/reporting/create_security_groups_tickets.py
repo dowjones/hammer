@@ -319,12 +319,18 @@ class CreateSecurityGroupsTickets(object):
                             ec2_owner, ec2_bu, ec2_product = self.build_instances_table(iam_client, ec2_instances)
 
                     if elb_client is not None and elbv2_client is not None:
-                        elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client, group_id)
-                        elb_instance_details, sg_in_use_elb = self.build_elb_instances_table(elb_instances)
+                        try:
+                            elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client, group_id)
+                            elb_instance_details, sg_in_use_elb = self.build_elb_instances_table(elb_instances)
+                        except Exception:
+                            logging.exception(f"Failed to build ELB details for '{group_name} / {group_id}' in {account}")
 
                     if rds_client is not None:
-                        rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client, group_id)
-                        rds_instance_details, sg_in_use_rds = self.build_rds_instances_table(rds_instances)
+                        try:
+                            rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client, group_id)
+                            rds_instance_details, sg_in_use_rds = self.build_rds_instances_table(rds_instances)
+                        except Exception:
+                            logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
                     sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
 
