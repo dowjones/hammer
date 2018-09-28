@@ -115,6 +115,8 @@
                                         "rds:ListTagsForResource",
                                         "rds:DescribeDBSnapshots",
                                         "rds:DescribeDBClusterSnapshots",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:ModifyDBClusterSnapshotAttribute",
                                         "rds:ModifyDBSnapshotAttribute"
                                     ],
