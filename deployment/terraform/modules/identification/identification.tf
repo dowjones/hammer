@@ -22,6 +22,8 @@ resource "aws_cloudformation_stack" "identification" {
         ResourcesPrefix = "${var.resources-prefix}"
         IdentificationIAMRole = "${var.identificationIAMRole}"
         IdentificationCheckRateExpression = "${var.identificationCheckRateExpression}"
+        LambdaSubnets = "${var.lambdaSubnets}"
+        LambdaSecurityGroups = "${var.lambdaSecurityGroups}"
         SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}",
         SourceBackupDDB = "${aws_s3_bucket_object.ddb-tables-backup.id}",
         SourceIdentificationSG = "${aws_s3_bucket_object.sg-issues-identification.id}"
