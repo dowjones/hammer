@@ -447,7 +447,6 @@ class S3BucketsPolicyChecker(object):
                 if err.response['Error']['Code'] == "NoSuchBucketPolicy":
                     logging.debug(f"No policy attached to '{bucket_name}'")
                     policy = None
-                    continue
                 elif err.response['Error']['Code'] == "NoSuchBucket":
                     # deletion was not fully propogated to S3 backend servers
                     # so bucket is still available in listing but actually not exists
@@ -456,9 +455,10 @@ class S3BucketsPolicyChecker(object):
                     logging.error(f"Access denied in {self.account} "
                                   f"(s3:{err.operation_name}, "
                                   f"resource='{bucket_name}')")
+                    continue
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' policy in {self.account}")
-                return False
+                    continue
 
             # get bucket tags
             try:
@@ -543,10 +543,10 @@ class S3BucketsAclChecker(object):
                 elif err.response['Error']['Code'] == "NoSuchBucket":
                     # deletion was not fully propogated to S3 backend servers
                     # so bucket is still available in listing but actually not exists
-                    continue
+                    pass
                 else:
                     logging.exception(f"Failed to get '{bucket_name}' acl in {self.account}")
-                return False
+                continue
 
             # get bucket tags
             try:
