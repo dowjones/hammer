@@ -127,9 +127,13 @@ class CreateS3BucketPolicyIssueTickets:
                         f"Grant CloudFront OAI applicable permissions on bucket."
                         f"Or Update bucket permissions with VPC CIDRs ranges or ip addresses/ranges from "
                         f"[RFC1918|https://tools.ietf.org/html/rfc1918]. "
-                        f"If global access is truly needed, provide strong business justification and follow "
-                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting].")
+                        f"If global access is truly needed, provide strong business justification"
+                    )
 
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += f" and follow [whitelisting procedure|{self.config.whitelisting_procedure_url}]. "
+                    else:
+                        issue_description += "."
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
