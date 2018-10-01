@@ -1,8 +1,5 @@
-import logging
-
-
 from library.aws.rds import RdsEncryptionChecker
-from responses import server_error, bad_request
+from responses import server_error
 
 
 def identify(security_feature, account, config, ids, tags):
@@ -11,9 +8,9 @@ def identify(security_feature, account, config, ids, tags):
     if checker.check():
         for instance in checker.instances:
             result.append({
-                'name': instances.name,
-                'id': instances.id,
-                'engine': instances.engine,
+                'name': instance.name,
+                'id': instance.id,
+                'engine': instance.engine,
             })
         response = {
             security_feature: result
