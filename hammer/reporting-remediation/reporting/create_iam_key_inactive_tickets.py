@@ -79,7 +79,11 @@ class CreateTicketIamInactiveKeys:
                     auto_remediation_date = (self.config.now + self.config.iamUserInactiveKeys.issue_retention_date).date()
                     issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
-                    issue_description += f"*Recommendation*: Deactivate specified inactive user access key."
+                    issue_description += f"*Recommendation*: Deactivate specified inactive user access key. "
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(

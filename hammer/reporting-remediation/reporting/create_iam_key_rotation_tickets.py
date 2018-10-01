@@ -77,7 +77,11 @@ class CreateTicketIamKeyRotation:
                     # auto_remediation_date = (self.config.now + self.config.iamUserKeysRotation.issue_retention_date).date()
                     # issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
-                    issue_description += f"*Recommendation*: Rotate specified stale access key."
+                    issue_description += f"*Recommendation*: Rotate specified stale access key. "
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(

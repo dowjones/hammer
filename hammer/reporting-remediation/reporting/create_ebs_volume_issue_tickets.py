@@ -165,7 +165,11 @@ class CreateEBSUnencryptedVolumeTickets(object):
 
                     issue_description += ec2_details if ec2_details else ''
 
-                    issue_description += "*Recommendation*: Encrypt EBS volume."
+                    issue_description += "*Recommendation*: Encrypt EBS volume. "
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     issue_summary = (f"EBS unencrypted volume '{volume_id}' "
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")

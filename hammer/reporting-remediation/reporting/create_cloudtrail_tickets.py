@@ -118,7 +118,11 @@ class CreateCloudTrailLoggingTickets:
 
                     issue_description += self.build_trails_table(issue.issue_details.trails)
 
-                    issue_description += f"\n\n*Recommendation*: {recommendation}."
+                    issue_description += f"\n\n*Recommendation*: {recommendation}. "
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(

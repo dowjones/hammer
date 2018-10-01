@@ -103,9 +103,13 @@ class CreateEBSPublicSnapshotTickets(object):
                     issue_description += f"\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Unless you are certain you want to share all the data in the snapshot with all "
-                        f"AWS accounts and users, modify the permissions: mark the snapshot as private, "
-                        f"and then specify the accounts that you want to give permissions to.")
+                        f"Modify the permissions: mark the snapshot as private "
+                        f"and then specify the accounts you want to give permissions to. "
+                    )
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(
