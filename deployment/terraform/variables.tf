@@ -36,6 +36,13 @@ variable "apiIAMRole" {
     default = "cloudsec-crossact-ec2"
 }
 
+variable "lambdaSubnets" {
+    default = ""
+}
+variable "lambdaSecurityGroups" {
+    default = ""
+}
+
 variable "resources-prefix" {
     default = "hammer-"
 }

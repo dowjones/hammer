@@ -75,7 +75,10 @@
                                     "Sid": "EC2",
                                     "Effect": "Allow",
                                     "Action": [
-                                        "ec2:DescribeRegions"
+                                        "ec2:DescribeRegions",
+                                        "ec2:DescribeNetworkInterfaces",
+                                        "ec2:CreateNetworkInterface",
+                                        "ec2:DeleteNetworkInterface"
                                     ],
                                     "Resource": "*"
                                 },
