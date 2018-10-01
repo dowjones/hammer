@@ -21,7 +21,8 @@
     "csv": {
         "enabled": false,
         "schedule": "0 9 * * 1",
-        "bucket": "hammer-backup-bucket"
+        "bucket": "hammer-backup-bucket",
+        "slack_channel": "#hammer-prod"
     },
     "aws": {
         "main_account_id": "123456789012",

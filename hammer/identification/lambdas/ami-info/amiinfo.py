@@ -57,8 +57,7 @@ def lambda_handler(event, context):
             Filters = [{
                 "Name": "product-code",
                 "Values": [PRODUCT_CODE]
-            }],
-            Owners = ["aws-marketplace"]
+            }]
         )['Images']
     except Exception:
         logging.exception("Failed to describe images")

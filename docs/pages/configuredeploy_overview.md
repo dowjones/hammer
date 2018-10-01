@@ -94,6 +94,16 @@ In case you have chosen to deploy Dow Jones Hammer with Terraform, proceed as fo
 1. Make sure you have accomplished all of the [preliminary steps](#2-preliminary-steps).
 2. Proceed to deploying Dow Jones Dow Jones Hammer with Terraform. Check [Terraform Deployment](deployment_terraform.html) for further guidance.
 
+### 3.3. Deployment of identification lambdas to VPC (optional)
+
+It is not recommended, but you may **optionally** deploy identification lambdas to custom VPC instead of default system-managed VPC. To do so you may use [CloudFormation](deployment_cloudformation.html#313-identification-functionality)/[Terraform](deployment_terraform.html#32-the-variablestf-file) parameters for identification functionality.
+
+Note well some requirements for such setup:
+* you should specify both parameters (VPC subnets and security groups) simultaneously for Identification lambdas to be placed in your VPC. Or you can leave both parameters empty to place lambdas to system-managed VPC (default behavior)
+* all subnets and security groups should be in the same VPC
+* there should be enough free private IP addresses in subnets (at least 1 IP address for each enabled security feature) as for each lambda ENI is created
+* subnets that you specify should be private subnets with default route attached to NAT gateway/instance, as lambdas need access to public endpoints (such as S3). It will not work if you try to place lambdas into public subnets with default route attached to Internet Gateway, as ENIs for lambdas do not have public IP by default and this can't be changed
+* security groups should allow outbound connections
 
 ## 4. Concluding Steps
 

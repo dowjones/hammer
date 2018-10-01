@@ -37,8 +37,6 @@ class Config(object):
         self.local = LocalConfig(configIniFile)
         self.owners = OwnersConfig(self.json_load_from_file(ticketOwnersFile, default={}))
         self.cronjobs = self._config.get('cronjobs', {})
-        self.csv = BaseConfig(self._config, 'csv')
-        self.slack_channel = self._config.get("default_channel", None)
         self.aws = AWSConfig(self._config)
         # security group issue config
         self.sg = ModuleConfig(self._config, "secgrp_unrestricted_access")
@@ -77,6 +75,8 @@ class Config(object):
                                                               "slack")
         # Slack configuration
         self.slack = SlackConfig(slack_config)
+        # CSV configuration
+        self.csv = CSVConfig(self._config, self.slack)
 
     def get_bu_by_name(self, name):
         """
@@ -344,6 +344,17 @@ class BaseConfig(object):
         if key in self._config:
             return self._config[key]
         raise AttributeError(f"section '{self.section}' has no option '{key}'")
+
+
+class CSVConfig(BaseConfig):
+    """ represents CSV configuration part in config.json """
+    def __init__(self, config, slack_config):
+        super().__init__(config, "csv")
+        self.slack_config = slack_config
+
+    @property
+    def slack_channel(self):
+        return self._config.get("slack_channel") or self.slack_config.default_channel
 
 
 class AWSConfig(BaseConfig):
