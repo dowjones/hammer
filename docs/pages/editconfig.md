@@ -185,6 +185,7 @@ You can configure Dow Jones Hammer to send CSV with detected vulnerabilities to 
 Use following configuration parameters in **csv** section:
 * **enabled**: enables/disables CSV reporting;
 * **schedule**: defines schedule for CSV reporting. Please use the standard **crontab** syntax to define the timing of this job;
+* **slack_channel**: name of the slack channel (`#` prefixed) or user to send CSV reports to;
 * **bucket**: name of the pre-created S3 bucket to put CSV reports to.
 
 Configuration example:
@@ -192,7 +193,8 @@ Configuration example:
 "csv": {
     "enabled": true,
     "schedule": "0 9 * * 1",
-    "bucket": "hammer-backup-bucket"
+    "bucket": "hammer-backup-bucket",
+    "slack_channel": "#hammer-prod"
 },
 ```
 
