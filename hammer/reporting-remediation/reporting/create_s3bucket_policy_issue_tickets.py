@@ -128,7 +128,7 @@ class CreateS3BucketPolicyIssueTickets:
                         f"Or Update bucket permissions with VPC CIDRs ranges or ip addresses/ranges from "
                         f"[RFC1918|https://tools.ietf.org/html/rfc1918]. "
                         f"If global access is truly needed, provide strong business justification and follow "
-                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting]."
+                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting].")
 
                     try:
                         response = jira.add_issue(
