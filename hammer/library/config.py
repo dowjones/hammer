@@ -58,6 +58,7 @@ class Config(object):
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
 
         self.bu_list = self._config.get("bu_list", [])
+        self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 
         jira_config = self._config.get('jira', {})
         # credentials to access JIRA

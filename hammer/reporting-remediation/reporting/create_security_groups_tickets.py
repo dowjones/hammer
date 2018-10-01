@@ -338,10 +338,14 @@ class CreateSecurityGroupsTickets(object):
                         f"*Recommendation*: "
                         f"Allow access only for a minimum set of required ip addresses/ranges from [RFC1918|https://tools.ietf.org/html/rfc1918]. "
                         f"As an exceptional case you can use public IP addresses (with /32 mask), "
-                        f"but be ready to provide strong business justification and follow "
-                        f"[whitelisting procedure|https://wiki.dowjones.net/pages/viewpage.action?spaceKey=InfoSec&title=Hammer+Whitelisting]. "
-                        f"Be sure to delete overly permissive rules after creating rules that are more restrictive.\n"
-                    )
+                        f"but be ready to provide strong business justification")
+
+                    if self.config.whitelisting_procedure_url is not None:
+                        issue_description += f" and follow [whitelisting procedure|{self.config.whitelisting_procedure_url}]. "
+                    else:
+                        issue_description += ". "
+
+                    issue_description += f"Be sure to delete overly permissive rules after creating rules that are more restrictive.\n"
 
                     issue_summary = (f"{summary_status} open security group '{group_name}'"
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
