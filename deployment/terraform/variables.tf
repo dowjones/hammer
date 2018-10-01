@@ -32,6 +32,13 @@ variable "subnet" {
     default = "subnet-12345678"
 }
 
+variable "lambdaSubnets" {
+    default = ""
+}
+variable "lambdaSecurityGroups" {
+    default = ""
+}
+
 variable "resources-prefix" {
     default = "hammer-"
 }
