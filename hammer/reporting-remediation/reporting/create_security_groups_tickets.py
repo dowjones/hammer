@@ -138,7 +138,11 @@ class CreateSecurityGroupsTickets(object):
 
                     instance_profile_id = ec2_instance.iam_profile_id
                     if instance_profile_id is not None:
-                        public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
+                        try:
+                            public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
+                        except Exception:
+                            logging.exception("Failed to get instance profile policy details")
+                            public_role_policies = []
                         if len(public_role_policies) > 0:
                             for public_role in public_role_policies:
                                 instance_profile_details.append(
