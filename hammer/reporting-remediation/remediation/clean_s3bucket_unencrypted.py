@@ -82,7 +82,7 @@ class CleanS3BucketUnencryption:
 
                         if s3bucket is None:
                             logging.debug(f"Bucket {s3bucket.name} was removed by user")
-                        elif s3bucket.is_encrypted:
+                        elif s3bucket.encrypted:
                             logging.debug(f"Bucket {s3bucket.name} Un-encryption issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{s3bucket.name}' Un-encryption")

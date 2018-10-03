@@ -290,14 +290,14 @@ class S3Bucket(object):
     Basic class for S3 bucket.
     Encapsulates `BucketName`/`Owner`/`Tags`, list of ACLs and dict with policy.
     """
-    def __init__(self, account, bucket_name, owner, tags, is_encrypted=None, policy=None, acl=None):
+    def __init__(self, account, bucket_name, owner, tags, encrypted=None, policy=None, acl=None):
         """
         :param account: `Account` instance where S3 bucket is present
 
         :param bucket_name: `Name` of S3 bucket
         :param owner: ['Owner']['DisplayName'] of S3 bucket (if present)
         :param tags: tags if S3 bucket (as AWS returns)
-        :param is_encrypted: flag to identify bucket encrypted or not
+        :param encrypted: flag to identify bucket encrypted or not
         :param policy: str (JSON document) with S3 bucket policy (as AWS returns)
         :param acl: dict with S3 bucket ACL (as AWS returns)
         """
@@ -308,7 +308,7 @@ class S3Bucket(object):
         self._policy = json.loads(policy) if policy else {}
         self._acl = acl if acl else []
         self.backup_filename = pathlib.Path(f"{self.name}.json")
-        self.is_encrypted = is_encrypted
+        self.encrypted = encrypted
 
     def __str__(self):
         return f"{self.__class__.__name__}(Name={self.name}, Owner={self.owner}, Public={self.public})"
@@ -672,9 +672,9 @@ class S3EncryptionChecker(object):
             if buckets is not None and bucket_name not in buckets:
                 continue
 
-            # get bucket ACL
+            # get bucket encryption status
             try:
-                response = self.account.client("s3").get_bucket_encryption(Bucket=bucket_name)
+                self.account.client("s3").get_bucket_encryption(Bucket=bucket_name)
                 bucket_encrypted = True
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
@@ -689,7 +689,8 @@ class S3EncryptionChecker(object):
                 elif err.response['Error']['Code'] in ["ServerSideEncryptionConfigurationNotFoundError"]:
                     bucket_encrypted = False
                 else:
-                    logging.exception(f"Failed to get '{bucket_name}' encryption detials in {self.account}")
+                    logging.exception(f"Failed to get '{bucket_name}' encryption details in {self.account}")
+                    continue
 
             # get bucket tags
             try:
@@ -710,6 +711,6 @@ class S3EncryptionChecker(object):
                                 bucket_name=bucket_name,
                                 owner=owner,
                                 tags=tags,
-                                is_encrypted=bucket_encrypted)
+                                encrypted=bucket_encrypted)
             self.buckets.append(s3bucket)
         return True

@@ -11,7 +11,7 @@ from library.ddb_issues import Operations as IssueOperations
 
 def lambda_handler(event, context):
     """ Lambda handler to evaluate s3 buckets encryption """
-    set_logging(level=logging.INFO)
+    set_logging(level=logging.DEBUG)
 
     try:
         payload = json.loads(event["Records"][0]["Sns"]["Message"])
@@ -33,7 +33,7 @@ def lambda_handler(event, context):
         if account.session is None:
             return
 
-        logging.debug(f"Checking for public S3 Encryption in {account}")
+        logging.debug(f"Checking for S3 encryption in {account}")
 
         # existing open issues for account to check if resolved
         open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3EncryptionIssue)
@@ -48,7 +48,7 @@ def lambda_handler(event, context):
 
         for bucket in checker.buckets:
             logging.debug(f"Checking {bucket.name}")
-            if bucket.is_encrypted:
+            if not bucket.encrypted:
                 issue = S3EncryptionIssue(account_id, bucket.name)
                 issue.issue_details.owner = bucket.owner
                 issue.issue_details.tags = bucket.tags
@@ -67,7 +67,7 @@ def lambda_handler(event, context):
         for issue in open_issues.values():
             IssueOperations.set_status_resolved(ddb_table, issue)
     except Exception:
-        logging.exception(f"Failed to check s3 encryption for '{account_id} ({account_name})'")
+        logging.exception(f"Failed to check S3 encryption for '{account_id} ({account_name})'")
         return
 
-    logging.debug(f"Checked s3 encryption for '{account_id} ({account_name})'")
+    logging.debug(f"Checked S3 encryption for '{account_id} ({account_name})'")
