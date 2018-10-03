@@ -157,9 +157,7 @@
                                     "Action": [
                                         "rds:ListTagsForResource",
                                         "rds:DescribeDBSnapshots",
-                                        "rds:DescribeDBClusterSnapshots",
-                                        "rds:DescribeDBClusters",
-                                        "rds:DescribeDBInstances"
+                                        "rds:DescribeDBClusterSnapshots"
                                     ],
                                     "Resource": "*"
                                 },
