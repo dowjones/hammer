@@ -1716,7 +1716,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate S3 encryption evaluations",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationS3Encryption"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
