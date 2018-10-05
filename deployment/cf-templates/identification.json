@@ -1602,6 +1602,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateIAMUserKeysRotationEvaluation",
                           "LambdaInitiateIAMUserInactiveKeysEvaluation",
+                          "LambdaInitiateS3EncryptionEvaluation",
                           "LambdaInitiateS3ACLEvaluation",
                           "LambdaInitiateS3PolicyEvaluation"],
             "Properties": {
@@ -1617,6 +1618,10 @@
                   {
                     "Arn": { "Fn::GetAtt": ["LambdaInitiateIAMUserInactiveKeysEvaluation", "Arn"] },
                     "Id": "LambdaInitiateIAMUserInactiveKeysEvaluation"
+                  },
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateS3EncryptionEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateS3EncryptionEvaluation"
                   },
                   {
                     "Arn": { "Fn::GetAtt": ["LambdaInitiateS3ACLEvaluation", "Arn"] },
@@ -1710,22 +1715,6 @@
             }
         },
 
-        "EventInitiateEvaluationS3Encryption": {
-            "Type": "AWS::Events::Rule",
-            "DependsOn": ["LambdaInitiateS3EncryptionEvaluation"],
-            "Properties": {
-                "Description": "Hammer ScheduledRule to initiate S3 encryption evaluations",
-                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationS3Encryption"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
-                "State": "ENABLED",
-                "Targets": [
-                  {
-                    "Arn": { "Fn::GetAtt": ["LambdaInitiateS3EncryptionEvaluation", "Arn"] },
-                    "Id": "LambdaInitiateS3EncryptionEvaluation"
-                  }
-                ]
-            }
-        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -1838,17 +1827,17 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSSnapshots", "Arn"] }
             }
         },
-
         "PermissionToInvokeLambdaInitiateS3EncryptionEvaluationCloudWatchEvents": {
             "Type": "AWS::Lambda::Permission",
-            "DependsOn": ["LambdaInitiateS3EncryptionEvaluation", "EventInitiateEvaluationS3Encryption"],
+            "DependsOn": ["LambdaInitiateS3EncryptionEvaluation", "EventInitiateEvaluationS3IAM"],
             "Properties": {
                 "FunctionName": { "Ref": "LambdaInitiateS3EncryptionEvaluation" },
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
-                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationS3Encryption", "Arn"] }
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationS3IAM", "Arn"] }
             }
         },
+
         "SNSNotifyLambdaEvaluateSG": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": ["LambdaEvaluateSG"],
@@ -2011,7 +2000,6 @@
                 }]
             }
         },
-
         "SNSNotifyLambdaEvaluateS3Encryption": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": "LambdaEvaluateS3Encryption",
@@ -2030,6 +2018,7 @@
                 }]
             }
         },
+
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -2130,6 +2119,7 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateS3Encryption", "Arn"] }
             }
         },
+
         "SNSIdentificationErrors": {
             "Type": "AWS::SNS::Topic",
             "Properties": {
@@ -2138,6 +2128,7 @@
                                            ]}
             }
         },
+
         "SubscriptionSNSIdentificationErrorsLambdaLogsForwarder": {
             "Type" : "AWS::SNS::Subscription",
             "DependsOn": ["SNSIdentificationErrors", "LambdaLogsForwarder"],
