@@ -1,5 +1,5 @@
 """
-Class to remediate S3 bucket un-encryption issues.
+Class to remediate S3 bucket unencrypted issues.
 """
 import sys
 import logging
@@ -18,12 +18,12 @@ from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
-class CleanS3BucketUnencryption:
-    """ Class to remediate S3 bucket un-encryption issues """
+class CleanS3BucketUnencrypted:
+    """ Class to remediate S3 bucket unencrypted issues """
     def __init__(self, config):
         self.config = config
 
-    def cleans3bucketunencryption(self, batch=False):
+    def cleans3bucketunencrypted(self, batch=False):
         """ Class method to clean S3 buckets which are violating aws best practices """
         main_account = Account(region=config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(self.config.s3Encrypt.ddb_table_name)
@@ -67,7 +67,7 @@ class CleanS3BucketUnencryption:
 
                     try:
                         if not batch and \
-                           not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket Un-encryption", False):
+                           not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket unencrypted", False):
                             continue
 
                         account = Account(id=account_id,
@@ -83,18 +83,18 @@ class CleanS3BucketUnencryption:
                         if s3bucket is None:
                             logging.debug(f"Bucket {s3bucket.name} was removed by user")
                         elif s3bucket.encrypted:
-                            logging.debug(f"Bucket {s3bucket.name} Un-encryption issue was remediated by user")
+                            logging.debug(f"Bucket {s3bucket.name} unencrypted issue was remediated by user")
                         else:
-                            logging.debug(f"Remediating '{s3bucket.name}' Un-encryption")
+                            logging.debug(f"Remediating '{s3bucket.name}' unencrypted")
                             # kms_key_id = None
                             remediation_succeed = True
                             if s3bucket.encrypt_bucket():
-                                comment = (f"Bucket '{s3bucket.name}' un-encryption issue "
+                                comment = (f"Bucket '{s3bucket.name}' unencrypted issue "
                                            f"in '{account_name} / {account_id}' account "
                                            f"was remediated by hammer")
                             else:
                                 remediation_succeed = False
-                                comment = (f"Failed to remediate bucket '{s3bucket.name}' un-encryption issue "
+                                comment = (f"Failed to remediate bucket '{s3bucket.name}' unencrypted issue "
                                            f"in '{account_name} / {account_id}' account "
                                            f"due to some limitations. Please, check manually")
 
@@ -112,7 +112,7 @@ class CleanS3BucketUnencryption:
                             )
                             IssueOperations.set_status_remediated(ddb_table, issue)
                     except Exception:
-                        logging.exception(f"Error occurred while updating bucket '{bucket_name}' un-encryption "
+                        logging.exception(f"Error occurred while updating bucket '{bucket_name}' unencrypted "
                                           f"in '{account_name} / {account_id}'")
                 else:
                     logging.debug(f"Skipping '{bucket_name}' "
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        class_object = CleanS3BucketUnencryption(config)
-        class_object.cleans3bucketunencryption(batch=args.batch)
+        class_object = CleanS3BucketUnencrypted(config)
+        class_object.cleans3bucketunencrypted(batch=args.batch)
     except Exception:
-        logging.exception("Failed to clean S3 bucket unencryption")
+        logging.exception("Failed to clean S3 bucket unencrypted")

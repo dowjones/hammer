@@ -42,9 +42,9 @@ class CreateS3UnencryptedBucketsTickets:
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} S3 bucket '{bucket_name}' un-encryption issue")
+                        logging.debug(f"Closing {issue.status.value} S3 bucket '{bucket_name}' unencrypted issue")
 
-                        comment = (f"Closing {issue.status.value} S3 bucket '{bucket_name}' un-encryption issue "
+                        comment = (f"Closing {issue.status.value} S3 bucket '{bucket_name}' unencrypted issue "
                                    f"in '{account_name} / {account_id}' account")
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
@@ -60,7 +60,7 @@ class CreateS3UnencryptedBucketsTickets:
                         IssueOperations.set_status_closed(ddb_table, issue)
                     # issue.status != IssueStatus.Closed (should be IssueStatus.Open)
                     elif issue.timestamps.updated > issue.timestamps.reported:
-                        logging.debug(f"Updating S3 bucket '{bucket_name}' un-encryption issue")
+                        logging.debug(f"Updating S3 bucket '{bucket_name}' unencrypted issue")
 
                         comment = "Issue details are changed, please check again.\n"
                         comment += JiraOperations.build_tags_table(tags)
@@ -69,7 +69,7 @@ class CreateS3UnencryptedBucketsTickets:
                             comment=comment
                         )
                         slack.report_issue(
-                            msg=f"S3 bucket '{bucket_name}' un-encryption issue is changed "
+                            msg=f"S3 bucket '{bucket_name}' unencrypted issue is changed "
                                 f"in '{account_name} / {account_id}' account"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
@@ -81,7 +81,7 @@ class CreateS3UnencryptedBucketsTickets:
                         logging.debug(f"No changes for '{bucket_name}'")
                 # issue has not been reported yet
                 else:
-                    logging.debug(f"Reporting S3 bucket '{bucket_name}' un-encryption issue")
+                    logging.debug(f"Reporting S3 bucket '{bucket_name}' unencrypted issue")
 
                     owner = tags.get("owner", None)
                     bu = tags.get("bu", None)
@@ -90,7 +90,7 @@ class CreateS3UnencryptedBucketsTickets:
                     if bu is None:
                         bu = self.config.get_bu_by_name(bucket_name)
 
-                    issue_summary = (f"S3 bucket '{bucket_name}' with un-encryption "
+                    issue_summary = (f"S3 bucket '{bucket_name}' unencrypted "
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
@@ -113,12 +113,12 @@ class CreateS3UnencryptedBucketsTickets:
                     issue_description += (
                         f"*Recommendation*: "
                         f"Encrypt the bucket by enabling server-side encryption with either "
-                        f"Amazon S3-managed keys (SSE-S3) or AWS KMS-managed keys (SSE-KMS)")
+                        f"Amazon S3-managed keys (SSE-S3) or AWS KMS-managed keys (SSE-KMS).")
 
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["s3-unencryption"],
+                            priority="Major", labels=["s3-unencrypted"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
@@ -164,4 +164,4 @@ if __name__ == '__main__':
         obj = CreateS3UnencryptedBucketsTickets(config)
         obj.create_tickets_s3_unencrypted_buckets()
     except Exception:
-        logging.exception("Failed to create S3 buket un-encryption issue tickets")
+        logging.exception("Failed to create S3 bucket unencrypted issue tickets")

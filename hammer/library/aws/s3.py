@@ -258,9 +258,6 @@ class S3Operations(object):
         
         :return: nothing
         """
-        args = {}
-        encryption_config = {}
-
         if kms_master_key_id:
            rules = [
                 {
@@ -278,10 +275,13 @@ class S3Operations(object):
                     }
                 },
             ]
-        encryption_config["Rules"] = rules
-        args["ServerSideEncryptionConfiguration"] = encryption_config
-        args["Bucket"] = bucket
 
+        args = {
+            "Bucket": bucket,
+            "ServerSideEncryptionConfiguration": {
+                "Rules": rules
+            },
+        }
         s3_client.put_bucket_encryption(**args)
 
 
@@ -437,7 +437,7 @@ class S3Bucket(object):
         try:
             S3Operations.set_bucket_encryption(self.account.client("s3"), self.name, kms_key_id)
         except Exception:
-            logging.exception(f"Failed to encrypt {self.name} bucket ")
+            logging.exception(f"Failed to encrypt {self.name} bucket")
             return False
 
         return True
