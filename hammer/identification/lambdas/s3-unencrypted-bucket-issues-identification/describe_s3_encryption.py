@@ -11,7 +11,7 @@ from library.ddb_issues import Operations as IssueOperations
 
 def lambda_handler(event, context):
     """ Lambda handler to evaluate s3 buckets encryption """
-    set_logging(level=logging.DEBUG)
+    set_logging(level=logging.INFO)
 
     try:
         payload = json.loads(event["Records"][0]["Sns"]["Message"])

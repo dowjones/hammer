@@ -8,7 +8,7 @@ from library.aws.utility import Sns
 
 def lambda_handler(event, context):
     """ Lambda handler to initiate to find S3 bucket encryption """
-    set_logging(level=logging.DEBUG)
+    set_logging(level=logging.INFO)
     logging.debug("Initiating S3 encryption checking")
 
     try:
