@@ -121,7 +121,7 @@
     },
     "rds_encryption": {
         "enabled": true,
-        "ddb.table_name": "djif-hammer-rds-unencrypted",
+        "ddb.table_name": "hammer-rds-unencrypted",
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
