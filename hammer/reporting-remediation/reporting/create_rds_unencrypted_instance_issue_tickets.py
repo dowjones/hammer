@@ -34,6 +34,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, RdsEncryptionIssue)
             for issue in issues:
                 instance_id = issue.issue_id
+                instance_name = issue.issue_details.name
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
@@ -43,9 +44,9 @@ class CreateRDSUnencryptedInstanceTickets(object):
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} RDS unencrypted instance  '{instance_id}' issue")
+                        logging.debug(f"Closing {issue.status.value} RDS unencrypted instance '{instance_name}' issue")
 
-                        comment = (f"Closing {issue.status.value} RDS unencrypted instance '{instance_id}' issue "
+                        comment = (f"Closing {issue.status.value} RDS unencrypted instance '{instance_name}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
@@ -61,9 +62,9 @@ class CreateRDSUnencryptedInstanceTickets(object):
                         IssueOperations.set_status_closed(ddb_table, issue)
                     # issue.status != IssueStatus.Closed (should be IssueStatus.Open)
                     elif issue.timestamps.updated > issue.timestamps.reported:
-                        logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {instance_id}")
+                        logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {instance_name}")
                         slack.report_issue(
-                            msg=f"RDS unencrypted instance '{instance_id}' issue is changed "
+                            msg=f"RDS unencrypted instance '{instance_name}' issue is changed "
                                 f"in '{account_name} / {account_id}' account, '{region}' region"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
@@ -72,28 +73,30 @@ class CreateRDSUnencryptedInstanceTickets(object):
                         )
                         IssueOperations.set_status_updated(ddb_table, issue)
                     else:
-                        logging.debug(f"No changes for '{instance_id}'")
+                        logging.debug(f"No changes for '{instance_name}'")
                 # issue has not been reported yet
                 else:
-                    logging.debug(f"Reporting RDS unencrypted instance '{instance_id}' issue")
+                    logging.debug(f"Reporting RDS unencrypted instance '{instance_name}' issue")
 
                     owner = tags.get("owner", None)
                     bu = tags.get("bu", None)
                     product = tags.get("product", None)
 
-                    issue_summary = (f"RDS unencrypted instance '{instance_id}'"
+                    issue_summary = (f"RDS unencrypted instance '{instance_name}'"
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
                         f"The RDS instance is unencrypted.\n\n"
+                        f"*Threat*: "
+                        f"Based on data protection policies, data that is classified as sensitive information or "
+                        f"intellectual property of the organization needs to be encrypted. Additionally, as part of the "
+                        f"initiative of Encryption Everywhere, it is necessary to encrypt the data in order to ensure the "
+                        f"confidentiality and integrity of the data.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*RDS Instance ID*: {instance_id}\n")
-
-                    auto_remediation_date = (self.config.now + self.config.rdsEncrypt.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
