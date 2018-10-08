@@ -38,14 +38,14 @@ def lambda_handler(event, context):
         if account.session is None:
             return
 
-        logging.debug(f"Checking for RDS data encryption in {account}")
+        logging.debug(f"Checking for RDS encryption in {account}")
 
         # existing open issues for account to check if resolved
         open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, RdsEncryptionIssue)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
-        logging.debug(f"RDS data encryption in DDB:\n{open_issues.keys()}")
+        logging.debug(f"RDS encryption in DDB:\n{open_issues.keys()}")
 
         checker = RdsEncryptionChecker(account=account)
         if checker.check():
@@ -67,18 +67,18 @@ def lambda_handler(event, context):
                 # as we already checked it
                 open_issues.pop(instance.id, None)
 
-            logging.debug(f"RDS data encryption in DDB:\n{open_issues.keys()}")
-            # all other unresolved issues in DDB are for removed/remediated RDS data encryption
+            logging.debug(f"RDS encryption in DDB:\n{open_issues.keys()}")
+            # all other unresolved issues in DDB are for removed/remediated RDS encryption
             for issue in open_issues.values():
                 IssueOperations.set_status_resolved(ddb_table, issue)
     except Exception:
-        logging.exception(f"Failed to check RDS data encryption in '{region}' for '{account_id} ({account_name})'")
+        logging.exception(f"Failed to check RDS encryption in '{region}' for '{account_id} ({account_name})'")
 
     # push SNS messages until the list with regions to check is empty
     if len(payload['regions']) > 0:
         try:
             Sns.publish(payload["sns_arn"], payload)
         except Exception:
-            logging.exception("Failed to chain RDS data encryption checking")
+            logging.exception("Failed to chain RDS encryption checking")
 
-    logging.debug(f"Checked RDS data encrypted or not in '{region}' for '{account_id} ({account_name})'")
+    logging.debug(f"Checked RDS encrypted or not in '{region}' for '{account_id} ({account_name})'")
