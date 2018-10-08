@@ -96,7 +96,10 @@ class CreateS3UnencryptedBucketsTickets:
                     issue_description = (
                         f"Bucket is unencrypted.\n\n"
                         f"*Threat*: "
-                        f"This creates potential security vulnerabilities by allowing anyone to add, modify, or remove items in a bucket.\n\n"
+                        f"Based on data protection policies, data that is classified as sensitive information or "
+                        f"intellectual property of the organization needs to be encrypted. Additionally, as part of the "
+                        f"initiative of Encryption Everywhere, it is necessary to encrypt the data in order to ensure the "
+                        f"confidentiality and integrity of the data.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
