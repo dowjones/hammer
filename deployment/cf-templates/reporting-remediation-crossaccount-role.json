@@ -101,10 +101,12 @@
                                     "Resource": "*"
                                 },
                                 {
-                                    "Sid": "RdsSnapshot",
+                                    "Sid": "RdsIssues",
                                     "Effect": "Allow",
                                     "Action": [
                                         "rds:ListTagsForResource",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:DescribeDBSnapshots",
                                         "rds:DescribeDBClusterSnapshots",
                                         "rds:ModifyDBClusterSnapshotAttribute",
