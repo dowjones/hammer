@@ -336,12 +336,6 @@
             "IdentifyRDSSnapshotsLambdaFunctionName": {
                 "value": "describe-rds-public-snapshots"
             },
-            
-
-
-
-
-
             "InitiateRDSEncryptionLambdaFunctionName": {
                 "value": "initiate-rds-encryption"
             },
@@ -1501,7 +1495,7 @@
                         "SNS_RDS_ENCRYPT_ARN": { "Ref": "SNSNotifyLambdaEvaluateRDSEncryption" }
                     }
                 },
-                "Description": "Lambda function for initiate to identify un-encrypted RDS instances.",
+                "Description": "Lambda function for initiate to identify unencrypted RDS instances.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "InitiateRDSEncryptionLambdaFunctionName", "value"] } ]
                                               ]},
@@ -1731,6 +1725,7 @@
                 ]
             }
         },
+
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -1853,6 +1848,7 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSEncryption", "Arn"] }
             }
         },
+
         "SNSNotifyLambdaEvaluateSG": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": ["LambdaEvaluateSG"],
@@ -2033,6 +2029,7 @@
                 }]
             }
         },
+
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -2133,6 +2130,7 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSEncryption", "Arn"] }
             }
         },
+
         "SNSIdentificationErrors": {
             "Type": "AWS::SNS::Topic",
             "Properties": {
