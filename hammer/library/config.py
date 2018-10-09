@@ -57,6 +57,8 @@ class Config(object):
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
 
+		# KMS key rotation issue config
+        self.kmsKeysRotation = ModuleConfig(self._config, "kms_keys_rotation")
         self.bu_list = self._config.get("bu_list", [])
 
         jira_config = self._config.get('jira', {})

@@ -26,7 +26,8 @@
                         "SourceIdentificationIAMUserInactiveKeys",
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
-                        "SourceIdentificationRDSSnapshots"
+                        "SourceIdentificationRDSSnapshots",
+                        "SourceIdentificationKMSKeyRotation"
                     ]
                 },
                 {
@@ -88,6 +89,9 @@
                 },
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
+                },
+                "SourceIdentificationKMSKeyRotation":{
+                    "default": "Relative path to KMS key rotation sources"
                 }
             }
         }
@@ -164,6 +168,10 @@
         "SourceIdentificationRDSSnapshots": {
             "Type": "String",
             "Default": "rds-public-snapshots-identification.zip"
+        },
+        "SourceIdentificationKMSKeyRotation": {
+            "Type": "String",
+            "Default": "kms-keyrotation-issues-identification.zip"
         }
     },
     "Conditions": {
@@ -208,6 +216,9 @@
             },
             "IdentificationMetricRDSSnapshotsError": {
                 "value": "RDSSnapshotsError"
+            },
+            "IdentificationMetricKMSKeyRotationError": {
+                "value": "KMSKeyRotationError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -262,6 +273,12 @@
             },
             "SNSTopicNameRDSSnapshots": {
                 "value": "describe-rds-public-snapshots-lambda"
+            },
+            "SNSDisplayNameKMSKeyRotation": {
+                "value": "describe-kms-key-rotation-sns"
+            },
+            "SNSTopicNameKMSKeyRotation": {
+                "value": "describe-kms-key-rotation-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -322,6 +339,12 @@
             },
             "IdentifyRDSSnapshotsLambdaFunctionName": {
                 "value": "describe-rds-public-snapshots"
+            },
+            "InitiateKMSKeyRotationLambdaFunctionName": {
+                "value": "initiate-kms-key-rotation"
+            },
+            "IdentifyKMSKeyRotationLambdaFunctionName": {
+                "value": "describe-kms-key-rotation"
             }
         }
     },
@@ -1464,6 +1487,107 @@
             }
         },
 
+        "LambdaInitiateKMSKeyRotationEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateRDSEncryption", "LogGroupLambdaInitiateKMSKeyRotationEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationKMSKeyRotation" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_KMS_KEY_ROTATION_ARN": { "Ref": "SNSNotifyLambdaEvaluateKMSKeyRotation" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify disabled kms key rotation issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateKMSKeyRotationLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_kms_key_rotation.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateKMSKeyRotationEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateKMSKeyRotationLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateKMSKeyRotationEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateKMSKeyRotationEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateKMSKeyRotationEvaluation" }
+            }
+        },
+
+        "LambdaEvaluateKMSKeyRotation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateRDSEncryption"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationKMSKeyRotation" }
+                },
+                "Description": "Lambda function to describe disabled KMS key rotation issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyKMSKeyRotationLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_kms_key_rotation.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateKMSKeyRotation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyKMSKeyRotationLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateKMSKeyRotation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateKMSKeyRotation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateKMSKeyRotation" }
+            }
+        },
+
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
@@ -1592,6 +1716,23 @@
             }
         },
 
+       "EventInitiateEvaluationKMSKeyRotation": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateKMSKeyRotationEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate kms key rotation evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationKMSKeyRotation"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateKMSKeyRotationEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateKMSKeyRotationEvaluation"
+                  }
+                ]
+            }
+        },
+
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -1702,6 +1843,17 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSSnapshots", "Arn"] }
+            }
+        },
+
+        "PermissionToInvokeLambdaInitiateKMSKeyRotationEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateKMSKeyRotationEvaluation", "EventInitiateEvaluationKMSKeyRotation"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateKMSKeyRotationEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationKMSKeyRotation", "Arn"] }
             }
         },
 
@@ -1868,6 +2020,25 @@
             }
         },
 
+        "SNSNotifyLambdaEvaluateKMSKeyRotation": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateRDSEncryption",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameKMSKeyRotation", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameKMSKeyRotation", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateKMSKeyRotation", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -1956,6 +2127,16 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateRDSSnapshots" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSSnapshots", "Arn"] }
+            }
+        },
+       "PermissionToInvokeLambdaEvaluateKMSKeyRotationSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateKMSKeyRotation", "LambdaEvaluateKMSKeyRotation"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateKMSKeyRotation" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateKMSKeyRotation", "Arn"] }
             }
         },
 
@@ -2415,6 +2596,52 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateRDSSnapshots" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateKMSKeyRotationEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateKMSKeyRotationEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateKMSKeyRotationEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateKMSKeyRotationEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaKMSKeyRotationEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateKMSKeyRotation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateKMSKeyRotation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateKMSKeyRotation" }
                     }
                 ],
                 "Period": 3600,
