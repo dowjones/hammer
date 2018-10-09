@@ -130,11 +130,11 @@ class KMSKeyChecker(object):
                     except ClientError as err:
                         if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                             logging.error(f"Access denied in {self.account} "
-                                          f"(sqs:{err.operation_name}, "
-                                          f"resource='{queue_url}')")
+                                          f"(kms:{err.operation_name}, "
+                                          f"resource='{key_id}')")
                             continue
                         else:
-                            logging.exception(f"Failed to get '{queue_url}' tags in {self.account}")
+                            logging.exception(f"Failed to get '{key_id}' tags in {self.account}")
                             continue
 
 
