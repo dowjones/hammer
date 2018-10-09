@@ -80,6 +80,18 @@
                                     "Resource": "*"
                                 },
                                 {
+                                    "Action": [
+                                        "kms:ListKeys",
+                                        "kms:GetKeyRotationStatus",
+                                        "kms:DescribeKey",
+                                        "kms:ListResourceTags",
+                                        "kms:EnableKeyRotation"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow",
+                                    "Sid": "KmsIssues"
+                                },
+                                {
                                     "Sid": "CloudTrailIssues",
                                     "Effect": "Allow",
                                     "Action": [

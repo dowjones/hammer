@@ -59,6 +59,7 @@ class Config(object):
 
 		# KMS key rotation issue config
         self.kmsKeysRotation = ModuleConfig(self._config, "kms_keys_rotation")
+
         self.bu_list = self._config.get("bu_list", [])
 
         jira_config = self._config.get('jira', {})

@@ -118,5 +118,12 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
-    }
+    },
+    `"kms_keys_rotation": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-kms-key-rotation",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
 }
