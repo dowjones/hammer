@@ -1542,7 +1542,7 @@
 
         "LambdaEvaluateKMSKeyRotation": {
             "Type": "AWS::Lambda::Function",
-            "DependsOn": ["LogGroupLambdaEvaluateRDSEncryption"],
+            "DependsOn": ["LogGroupLambdaEvaluateKMSKeyRotation"],
             "Properties": {
                 "Code": {
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
