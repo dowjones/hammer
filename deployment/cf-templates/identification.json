@@ -2022,7 +2022,7 @@
 
         "SNSNotifyLambdaEvaluateKMSKeyRotation": {
             "Type": "AWS::SNS::Topic",
-            "DependsOn": "LambdaEvaluateRDSEncryption",
+            "DependsOn": "LambdaEvaluateKMSKeyRotation",
             "Properties": {
                 "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                     { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameKMSKeyRotation", "value"] } ]
