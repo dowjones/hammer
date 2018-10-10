@@ -17,6 +17,19 @@ class KMSOperations:
         """
         kms_client.enable_key_rotation(KeyId=key_id)
 
+    def convert_tags(tags):
+        """
+        Convert tags from AWS format [{'Key': '...', 'Value': '...'}, ...] to {'Key': 'Value', ...} format
+
+        :param tags: tags in native AWS format
+
+        :return: dict with tags ready to store in DynamoDB
+        """
+        # dynamodb does not like empty strings
+        # but Value can be empty, so convert it to None
+        empty_converter = lambda x: x if x != "" else None
+        return {tag['TagKey']: empty_converter(tag['TagValue']) for tag in tags} if tags else {}
+
 class KMSKey(object):
     """
     Basic class for KMS key.
@@ -33,7 +46,7 @@ class KMSKey(object):
         self.account = account
         self.id = key_id
         self.arn = key_arn
-        self.tags = tags
+        self.tags = KMSOperations.convert_tags(tags)
         self.rotation_status = key_rotation_status
 
 

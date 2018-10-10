@@ -12,7 +12,7 @@ from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.aws.kms import KMSKeyChecker
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import KmsKeyRotationIssue
+from library.ddb_issues import KMSKeyRotationIssue
 from library.aws.utility import Account
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -35,7 +35,7 @@ class CleanKMSKeyRotation(object):
 
         for account_id, account_name in self.config.kmsKeysRotation.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
-            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, KmsKeyRotationIssue)
+            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, KMSKeyRotationIssue)
             for issue in issues:
                 if issue.timestamps.remediated is not None:
                     logging.debug(f"Skipping '{issue.issue_id}' (has been already remediated)")

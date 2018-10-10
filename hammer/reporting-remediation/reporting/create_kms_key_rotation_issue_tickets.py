@@ -10,7 +10,7 @@ from library.aws.utility import Account
 from library.config import Config
 from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
-from library.ddb_issues import IssueStatus, KmsKeyRotationIssue
+from library.ddb_issues import IssueStatus, KMSKeyRotationIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
@@ -31,7 +31,7 @@ class CreateKMSKeyRotationIssueTickets(object):
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
-            issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, KmsKeyRotationIssue)
+            issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, KMSKeyRotationIssue)
             for issue in issues:
                 kms_key_id = issue.issue_id
                 region = issue.issue_details.region
@@ -100,7 +100,8 @@ class CreateKMSKeyRotationIssueTickets(object):
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Enable key rotation for KMS key.")
+                        f"Enable key rotation status for KMS key."
+                    )
 
                     try:
                         response = jira.add_issue(
