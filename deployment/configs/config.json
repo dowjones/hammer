@@ -125,5 +125,5 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
-    },
+    }
 }
