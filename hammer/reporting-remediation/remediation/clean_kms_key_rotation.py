@@ -71,7 +71,7 @@ class CleanKMSKeyRotation(object):
                             continue
 
                         checker = KMSKeyChecker(account=account)
-                        checker.check(ids=[issue.issue_id])
+                        checker.check(keys_to_check=[issue.issue_id])
                         kms_key = checker.get_key(issue.issue_id)
                         remediation_succeed = True
                         try:
