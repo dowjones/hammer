@@ -110,7 +110,11 @@
                                         "ec2:DescribeRouteTables",
                                         "ec2:DescribeSubnets",
                                         "ec2:AuthorizeSecurityGroupIngress",
-                                        "ec2:RevokeSecurityGroupIngress"
+                                        "ec2:RevokeSecurityGroupIngress",
+                                        "ec2:DescribeImages",
+                                        "ec2:DescribeImageAttribute",
+                                        "ec2:ResetImageAttribute",
+                                        "ec2:ModifyImageAttribute"
                                     ],
                                     "Resource": "*"
                                 },

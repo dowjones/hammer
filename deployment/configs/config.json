@@ -118,5 +118,12 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
+    },
+    "public_ami_issues": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-public-amis",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }

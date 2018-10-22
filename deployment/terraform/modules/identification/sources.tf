@@ -69,3 +69,9 @@ resource "aws_s3_bucket_object" "rds-public-snapshots-identification" {
     key    = "lambda/${format("rds-public-snapshots-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-public-snapshots-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-public-snapshots-identification.zip"
 }
+resource "aws_s3_bucket_object" "ami-public-access-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ami-public-access-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ami-public-access-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ami-public-access-issues-identification.zip"
+}
+

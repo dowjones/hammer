@@ -57,6 +57,9 @@ class Config(object):
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
 
+        # AMI public access issue config
+        self.publicAMIs = ModuleConfig(self._config, "public_ami_issues")
+
         self.bu_list = self._config.get("bu_list", [])
 
         jira_config = self._config.get('jira', {})
