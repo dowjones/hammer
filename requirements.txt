@@ -1,6 +1,6 @@
 pyflakes
 boto3==1.7.84
-moto
+moto==1.3.4
 watchtower
 pytest
 pytest-pythonpath
