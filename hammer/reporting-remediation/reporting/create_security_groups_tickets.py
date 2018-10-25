@@ -336,9 +336,14 @@ class CreateSecurityGroupsTickets(object):
 
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Restrict access to only those IP addresses that require it."
-                        f"To restrict access to a specific IP address, set the suffix to /32 (for example, 192.0.2.10/32)."
-                        f"Be sure to delete overly permissive rules after creating rules that are more restrictive.")
+                        f"Allow access only for a minimum set of required ip addresses/ranges from [RFC1918|https://tools.ietf.org/html/rfc1918]. "
+                    )
+
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
+
+                    issue_description += f"Be sure to delete overly permissive rules after creating rules that are more restrictive.\n"
 
                     issue_summary = (f"{summary_status} open security group '{group_name}'"
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
