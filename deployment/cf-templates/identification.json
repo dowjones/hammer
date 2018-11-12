@@ -487,7 +487,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe security groups unrestricted access.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifySecurityGroupLambdaFunctionName", "value"] } ]
@@ -604,7 +604,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe CloudTrail issues",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyCloudTrailsLambdaFunctionName", "value"] } ]
@@ -721,7 +721,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe public s3 buckets.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyS3ACLLambdaFunctionName", "value"] } ]
@@ -838,7 +838,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe public s3 buckets.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyS3PolicyLambdaFunctionName", "value"] } ]
@@ -955,7 +955,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe IAM user keys to be rotated.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyIAMUserKeysRotationLambdaFunctionName", "value"] } ]
@@ -1072,7 +1072,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe IAM user keys last used.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyIAMUserInactiveKeysLambdaFunctionName", "value"] } ]
@@ -1189,7 +1189,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe unencrypted ebs volumes.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyEBSVolumesLambdaFunctionName", "value"] } ]
@@ -1306,7 +1306,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe public ebs snapshots.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyEBSSnapshotsLambdaFunctionName", "value"] } ]
@@ -1423,7 +1423,7 @@
                             { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
                         ]
                     }
-        },
+                },
                 "Description": "Lambda function to describe public rds snapshots.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyRDSSnapshotsLambdaFunctionName", "value"] } ]
