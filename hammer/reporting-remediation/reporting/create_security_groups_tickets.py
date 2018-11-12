@@ -37,7 +37,7 @@ class CreateSecurityGroupsTickets(object):
             warnings.simplefilter("ignore")
             try:
                 whois = IPWhois(ip).lookup_rdap()
-            except ipwhois.exceptions.IPDefinedError:
+            except Exception:
                 return ""
 
         registrants = []
