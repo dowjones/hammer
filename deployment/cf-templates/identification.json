@@ -1482,6 +1482,7 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSSnapshots" }
             }
         },
+
         "LambdaInitiateRDSEncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSEncryption", "LogGroupLambdaInitiateRDSEncryptionEvaluation"],
@@ -1582,6 +1583,7 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSEncryption" }
             }
         },
+
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
