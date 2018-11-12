@@ -1727,14 +1727,13 @@
                 ]
             }
         },
-
         "EventInitiateEvaluationSQSPublicPolicy": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateSQSPublicPolicyEvaluation"],
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate SQS queue evaluations",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSQSPublicPolicy"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -1867,6 +1866,7 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationSQSPublicPolicy", "Arn"] }
             }
         },
+
         "SNSNotifyLambdaEvaluateSG": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": ["LambdaEvaluateSG"],
@@ -2047,6 +2047,7 @@
                 }]
             }
         },
+
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
