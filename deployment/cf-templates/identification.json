@@ -1535,6 +1535,7 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3EncryptionEvaluation" }
             }
         },
+
         "LambdaEvaluateS3Encryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Encryption"],
@@ -1582,6 +1583,7 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Encryption" }
             }
         },
+
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
