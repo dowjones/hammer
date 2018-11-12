@@ -1544,6 +1544,22 @@
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
                     "S3Key": { "Ref": "SourceIdentificationSQSPublicPolicy" }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+                },
                 "Description": "Lambda function to describe public SQS queues.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifySQSPublicPolicyLambdaFunctionName", "value"] } ]
