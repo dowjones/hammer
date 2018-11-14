@@ -4,7 +4,6 @@ Class to create jira tickets for security group issues.
 import sys
 import logging
 import warnings
-import ipwhois
 
 
 from functools import lru_cache
