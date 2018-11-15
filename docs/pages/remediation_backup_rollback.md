@@ -93,4 +93,5 @@ To rollback this issue's remediation, you need to [make snapshot public](https:/
 
 To roll back a remediation of this issue, run the following command using the AWS CLI:
 ```
+aws sqs set-queue-attributes --queue-url [queue_url] --attributes [[backup_file_name]].json
 ```
