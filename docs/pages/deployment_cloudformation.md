@@ -90,6 +90,7 @@ You will need to set the following parameters:
 * **SourceIdentificationEBSVolumes**: the relative path to the Lambda package that identifies EBS volume issues. The default value is **ebs-unencrypted-volume-identification.zip**.
 * **SourceIdentificationEBSSnapshots**: the relative path to the Lambda package that identifies EBS snapshot issues. The default value is **ebs-public-snapshots-identification.zip**.
 * **SourceIdentificationRDSSnapshots**: the relative path to the Lambda package that identifies RDS snapshot issues. The default value is **rds-public-snapshots-identification.zip**.
+* **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.
