@@ -1,170 +1,16 @@
 import json
 import logging
-import mimetypes
 import pathlib
+import os
 
 
 from datetime import datetime, timezone
-from io import BytesIO
-from copy import deepcopy
 from botocore.exceptions import ClientError
 from library.utility import jsonDumps
+from library.aws.s3 import S3Operations
 
 
 class SQSOperations(object):
-
-    @classmethod
-    def public_policy(cls, policy):
-        """
-        Check if SQS queue policy allows public access by checking policy statements
-
-        :param policy: dict with SQS queue policy (as AWS returns)
-
-        :return: boolean, True - if any policy statement has public access allowed
-                          False - otherwise
-        """
-        for statement in policy.get("Statement", []):
-            if cls.public_statement(statement):
-                return True
-        return False
-
-    @staticmethod
-    def public_statement(statement):
-        """
-        Check if SQS queue supplied policy statement allows public access.
-
-        :param statement: dict with SQS queue policy statement (as AWS returns)
-
-        :return: boolean, True - if statement allows access from '*' `Principal`, not restricted by `IpAddress` condition
-                          False - otherwise
-        """
-        effect = statement['Effect']
-        principal = statement.get('Principal', {})
-        # check both `Principal` - `{"AWS": "*"}` and `"*"`
-        # and condition (if exists) to be restricted (not "0.0.0.0/0")
-        if effect == "Allow" and (principal == "*" or principal.get("AWS") == "*"):
-            return True
-
-        return False
-
-    @classmethod
-    def restrict_policy(cls, policy):
-        """
-        Walk through SQS queue policy and restrict all public statements.
-        It does not restrict supplied policy dict, but creates an copy and works with that copy.
-
-        :param policy: dict with SQS queue policy (as AWS returns)
-
-        :return: new dict with SQS queue policy based on old one, but with restricted public statements
-        """
-        # make a copy of supplied policy to restrict it
-        new_policy = deepcopy(policy)
-        # iterate over policy copy and restrict statements
-        for statement in new_policy.get("Statement", []):
-            cls.restrict_statement(statement)
-        return new_policy
-
-    @classmethod
-    def restrict_statement(cls, statement):
-        """
-        Restricts provided SQS queue policy statement with RFC1918 condition.
-        It performs in-place restriction of supplied statement.
-
-        :param statement: dict with SQS queue policy statement to restrict (as AWS returns)
-
-        :return: nothing
-        """
-
-        suffix = "/0"
-        ip_ranges_rfc1918 = ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
-        if cls.public_statement(statement):
-            # get current condition, if no condition - return condition with source ip from rfc1918
-            condition = statement.get('Condition', { "IpAddress": {"aws:SourceIp": ip_ranges_rfc1918}})
-            # get current ip addresses from condition, if no ip addresses - return source ip from rfc1918
-            ipaddress = condition.get("IpAddress", {"aws:SourceIp": ip_ranges_rfc1918})
-            # get source ips, if no ips return rfc1918 range
-            sourceip = ipaddress.get("aws:SourceIp", ip_ranges_rfc1918)
-            # make list from source ip if it is a single string value
-            if isinstance(sourceip, str):
-                sourceip = [sourceip]
-            # replace cidr with "/0" from source ips with ip ranges from rfc1918
-            ip_ranges = []
-            for cidr in sourceip:
-                if suffix not in cidr:
-                    ip_ranges.append(cidr)
-                else:
-                    ip_ranges += ip_ranges_rfc1918
-            # remove dublicates
-            ip_ranges = list(set(ip_ranges))
-            ipaddress['aws:SourceIp'] = ip_ranges
-            condition['IpAddress'] = ipaddress
-            statement['Condition'] = condition
-
-    @staticmethod
-    def object_exists(s3_client, bucket, path):
-        """
-        Check if object exists on SQS queue by given path.
-
-        :param s3_client: S3 boto3 client
-        :param bucket: S3 bucket name
-        :param path: S3 object path
-
-        :return: True - if object exists by given `path` on given `bucket`,
-                 Fasle - otherwise
-        """
-        try:
-            s3_client.head_object(Bucket=bucket, Key=path)
-            return True
-        except ClientError:
-            return False
-
-    @staticmethod
-    def get_object(s3_client, bucket, path):
-        """
-        Get content of S3 object.
-
-        :param s3_client: S3 boto3 client
-        :param bucket: S3 bucket name
-        :param path: S3 object path
-
-        :return: Content of requested `path` on S3 `bucket` as a bytes stream (BytesIO object)
-        """
-        output = BytesIO()
-        s3_client.download_fileobj(bucket, path, output)
-        return output.getvalue().strip()
-
-    @staticmethod
-    def put_object(s3_client, bucket, file_name, file_data):
-        """
-        Upload some data to private S3 object with `file_name` key.
-
-
-        :param s3_client: S3 boto3 client
-        :param bucket: S3 bucket name where to put data to
-        :param file_name: S3 full path where to put data to (Key)
-        :param file_data: `dict` or `str` of data to put. `Dict` will be transformed to string using pretty json.dumps().
-
-        :return: `S3.Client.put_object` Response dict
-        """
-        content_type = mimetypes.guess_type(file_name)[0]
-        if isinstance(file_data, dict):
-            payload = jsonDumps(file_data)
-        elif isinstance(file_data, str):
-            payload = file_data
-        elif isinstance(file_data, BytesIO):
-            payload = file_data
-            payload.seek(0)
-        else:
-            raise Exception(f"Failed to detect file_data type for {file_name}\n{file_data}")
-
-        s3_client.put_object(
-            Bucket=bucket,
-            Key=file_name,
-            ACL='private',
-            ContentType=content_type if content_type is not None else '',
-            Body=payload,
-        )
-
     @staticmethod
     def put_queue_policy(sqs_client, queue_url, policy):
         """
@@ -188,26 +34,25 @@ class SQSOperations(object):
 class SQSQueue(object):
     """
     Basic class for SQS queue.
-    Encapsulates `Owner`/`Tags`, dict with policy.
+    Encapsulates `Tags`, dict with policy.
     """
-    def __init__(self, account, name, owner, tags, policy=None):
+    def __init__(self, account, url, tags, policy=None):
         """
         :param account: `Account` instance where SQS queue is present
 
-        :param name: `Name` of sqs queue
-        :param owner: ['Owner']['DisplayName'] of SQS queue (if present)
+        :param url: `URL` of sqs queue
         :param tags: tags if SQS queue (as AWS returns)
         :param policy: str (JSON document) with SQS queue policy (as AWS returns)
         """
         self.account = account
-        self.name =name
-        self.owner = owner
+        self.url = url
+        self.name = os.path.basename(self.url)
         self.tags = tags
         self._policy = json.loads(policy) if policy else {}
         self.backup_filename = pathlib.Path(f"{self.name}.json")
 
     def __str__(self):
-        return f"{self.__class__.__name__}(Name={self.name}, Owner={self.owner}, Public={self.public})"
+        return f"{self.__class__.__name__}(Name={self.name}, Public={self.public})"
 
     @property
     def policy(self):
@@ -217,19 +62,11 @@ class SQSQueue(object):
         return jsonDumps(self._policy)
 
     @property
-    def public_by_policy(self):
-        """
-        :return: boolean, True - if SQS Queue policy allows public access
-                          False - otherwise
-        """
-        return SQSOperations.public_policy(self._policy)
-
-    @property
     def public(self):
         """
         :return: boolean, True - if policy allows public access to SQS
         """
-        return self.public_by_policy
+        return S3Operations.public_policy(self._policy)
 
     def backup_policy_s3(self, s3_client, bucket):
         """
@@ -245,9 +82,9 @@ class SQSQueue(object):
                 f"{self.account.id}/"
                 f"{self.backup_filename.stem}_{timestamp}"
                 f"{self.backup_filename.suffix}")
-        if SQSOperations.object_exists(s3_client, bucket, path):
+        if S3Operations.object_exists(s3_client, bucket, path):
             raise Exception(f"s3://{bucket}/{path} already exists")
-        SQSOperations.put_object(s3_client, bucket, path, self.policy)
+        S3Operations.put_object(s3_client, bucket, path, self.policy)
         return path
 
     def restrict_policy(self):
@@ -259,9 +96,9 @@ class SQSQueue(object):
         .. note:: This keeps self._policy unchanged.
                   You need to recheck SQS Queue policy to ensure that it was really restricted.
         """
-        restricted_policy = SQSOperations.restrict_policy(self._policy)
+        restricted_policy = S3Operations.restrict_policy(self._policy)
         try:
-            SQSOperations.put_queue_policy(self.account.client("sqs"), self.name, restricted_policy)
+            SQSOperations.put_queue_policy(self.account.client("sqs"), self.url, restricted_policy)
         except Exception:
             logging.exception(f"Failed to put {self.name} restricted policy")
             return False
@@ -302,7 +139,7 @@ class SQSPolicyChecker(object):
         """
         try:
             # AWS does not support filtering dirung list, so get all queues for account
-            response = self.account.client("sqs").list_queues()
+            queue_urls = self.account.client("sqs").list_queues().get("QueueUrls", [])
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
@@ -311,48 +148,42 @@ class SQSPolicyChecker(object):
                 logging.exception(f"Failed to list queues in {self.account}")
             return False
 
-        # owner (if present) is set for all queues in response
-        owner = response.get('Owner', {}).get('DisplayName')
-        if "QueueUrls" in response:
-            for queue_url in response["QueueUrls"]:
-                if queues is not None and queue_url not in queues:
-                    continue
+        for queue_url in queue_urls:
+            if queues is not None and queue_url not in queues:
+                continue
 
-                # get queue policy
-                try:
-                    policy = ""
-                    policy_response = self.account.client("sqs").get_queue_attributes(QueueUrl=queue_url, AttributeNames=['Policy'])
-                    if "Attributes" in policy_response and "Policy" in policy_response:
-                        policy = policy_response["Attributes"]["Policy"]
-                except ClientError as err:
-                    if err.response['Error']['Code'] == "AccessDenied":
-                        logging.error(f"Access denied in {self.account} "
-                                      f"(sqs:{err.operation_name}, "
-                                      f"resource='{queue_url}')")
-                    else:
-                        logging.exception(f"Failed to get '{queue_url}' policy in {self.account}")
-                    return False
+            # get queue policy
+            try:
+                policy = self.account.client("sqs").get_queue_attributes(
+                    QueueUrl=queue_url,
+                    AttributeNames=['Policy']
+                ).get("Attributes", {}).get("Policy", None)
+            except ClientError as err:
+                if err.response['Error']['Code'] == "AccessDenied":
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(sqs:{err.operation_name}, "
+                                  f"resource='{queue_url}')")
+                else:
+                    logging.exception(f"Failed to get '{queue_url}' policy in {self.account}")
+                return False
 
-                # get queue tags
-                try:
-                    tags_response = self.account.client("sqs").list_queue_tags(QueueUrl=queue_url)
-                    tags = {}
-                    if "Tags" in tags_response:
-                        tags = tags_response["Tags"]
-                except ClientError as err:
-                    if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
-                        logging.error(f"Access denied in {self.account} "
-                                      f"(sqs:{err.operation_name}, "
-                                      f"resource='{queue_url}')")
-                        continue
-                    else:
-                        logging.exception(f"Failed to get '{queue_url}' tags in {self.account}")
-                        continue
-                #if policy != "":
-                sqs_queue = SQSQueue(account=self.account,
-                                    name=queue_url,
-                                    owner=owner,
-                                    tags=tags,
-                                    policy=policy)
-                self.queues.append(sqs_queue)
+            # get queue tags
+            try:
+                tags = self.account.client("sqs").list_queue_tags(QueueUrl=queue_url).get("Tags", {})
+            except ClientError as err:
+                tags = {}
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(sqs:{err.operation_name}, "
+                                  f"resource='{queue_url}')")
+                else:
+                    logging.exception(f"Failed to get '{queue_url}' tags in {self.account}")
+
+            sqs_queue = SQSQueue(
+                account=self.account,
+                url=queue_url,
+                tags=tags,
+                policy=policy,
+            )
+            self.queues.append(sqs_queue)
         return True
