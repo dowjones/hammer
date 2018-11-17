@@ -65,7 +65,7 @@ def lambda_handler(event, context):
                     IssueOperations.update(ddb_table, issue)
                     # remove issue id from issues_list_from_db (if exists)
                     # as we already checked it
-                    open_issues.pop(queue.name, None)
+                    open_issues.pop(queue.url, None)
 
         logging.debug(f"SQS in DDB:\n{open_issues.keys()}")
         # all other unresolved issues in DDB are for removed/remediated queues
