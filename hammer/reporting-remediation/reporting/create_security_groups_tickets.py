@@ -4,7 +4,6 @@ Class to create jira tickets for security group issues.
 import sys
 import logging
 import warnings
-import ipwhois
 
 
 from functools import lru_cache
@@ -37,7 +36,7 @@ class CreateSecurityGroupsTickets(object):
             warnings.simplefilter("ignore")
             try:
                 whois = IPWhois(ip).lookup_rdap()
-            except ipwhois.exceptions.IPDefinedError:
+            except Exception:
                 return ""
 
         registrants = []
