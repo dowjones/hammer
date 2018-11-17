@@ -53,6 +53,7 @@ def automation_cronjob(config):
         ("EBS Unencrypted Volumes",   config.ebsVolume,           "create_ebs_volume_issue_tickets",      None),
         ("EBS Public Snapshots",      config.ebsSnapshot,         "create_ebs_public_snapshot_issue_tickets", "clean_public_ebs_snapshots"),
         ("RDS Public Snapshots",      config.rdsSnapshot,         "create_rds_public_snapshot_issue_tickets", "clean_public_rds_snapshots"),
+        ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
     ]
 
     for title, module_config, reporting_script, remediation_script in modules:
