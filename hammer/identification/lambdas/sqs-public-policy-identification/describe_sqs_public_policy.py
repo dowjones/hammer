@@ -52,12 +52,12 @@ def lambda_handler(event, context):
             for queue in checker.queues:
                 logging.debug(f"Checking {queue.name}")
                 if queue.public:
-                    issue = SQSPolicyIssue(account_id, queue.name)
-                    issue.issue_details.owner = queue.owner
+                    issue = SQSPolicyIssue(account_id, queue.url)
                     issue.issue_details.tags = queue.tags
+                    issue.issue_details.name = queue.name
                     issue.issue_details.region = queue.account.region
                     issue.issue_details.policy = queue.policy
-                    if config.sqspolicy.in_whitelist(account_id, queue.name):
+                    if config.sqspolicy.in_whitelist(account_id, queue.url):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open
