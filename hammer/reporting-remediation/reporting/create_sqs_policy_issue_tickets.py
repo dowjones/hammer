@@ -118,7 +118,6 @@ class CreateSQSPolicyIssueTickets:
                         f"*SQS queue url*: {queue_url}\n"
                         f"*SQS queue name*: {queue_name}\n"
                         f"*SQS queue region*: {queue_region}\n"
-                        f"*Queue Owner*: {owner}\n"
                         f"\n")
 
                     auto_remediation_date = (self.config.now + self.config.sqspolicy.issue_retention_date).date()

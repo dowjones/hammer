@@ -75,7 +75,7 @@ class CleanSQSPolicyPermissions:
                         queue = checker.get_queue(queue_name)
                         if queue is None:
                             logging.debug(f"Queue {queue_name} was removed by user")
-                        elif not queue.public_by_policy:
+                        elif not queue.public:
                             logging.debug(f"Queue {queue.name} policy issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{queue.name}' policy")
