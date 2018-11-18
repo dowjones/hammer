@@ -88,4 +88,4 @@ def test_sqs_policy(queue, remediated):
     """
 
     expected = True if remediated else find_rule_prop(queue, "CheckShouldPass", True)
-    assert expected == (not queue.public_by_policy)
+    assert expected == (not queue.public)
