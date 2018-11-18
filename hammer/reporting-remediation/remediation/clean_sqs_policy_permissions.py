@@ -37,23 +37,21 @@ class CleanSQSPolicyPermissions:
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, SQSPolicyIssue)
             for issue in issues:
                 queue_url = issue.issue_id
+                queue_name = issue.issue_details.name
+                queue_region = issue.issue_details.region
 
                 in_whitelist = self.config.sqspolicy.in_whitelist(account_id, queue_url)
-                #in_fixlist = self.config.sqspolicy.in_fixnow(account_id, queue_url)
 
                 if in_whitelist:
-                    logging.debug(f"Skipping {queue_url} (in whitelist)")
+                    logging.debug(f"Skipping {queue_name} (in whitelist)")
                     continue
-                # if not in_fixlist:
-                #     logging.debug(f"Skipping {queue_url} (not in fixlist)")
-                #     continue
 
                 if issue.timestamps.reported is None:
-                    logging.debug(f"Skipping '{queue_url}' (was not reported)")
+                    logging.debug(f"Skipping '{queue_name}' (was not reported)")
                     continue
 
                 if issue.timestamps.remediated is not None:
-                    logging.debug(f"Skipping {queue_url} (has been already remediated)")
+                    logging.debug(f"Skipping {queue_name} (has been already remediated)")
                     continue
 
                 updated_date = issue.timestamp_as_datetime
@@ -74,26 +72,26 @@ class CleanSQSPolicyPermissions:
 
                         checker = SQSPolicyChecker(account=account)
                         checker.check(queues=[queue_url])
-                        sqsqueue = checker.get_queue(queue_url)
-                        if sqsqueue is None:
-                            logging.debug(f"Queue {queue_url} was removed by user")
-                        elif not sqsqueue.public_by_policy:
-                            logging.debug(f"Queue {sqsqueue.name} policy issue was remediated by user")
+                        queue = checker.get_queue(queue_name)
+                        if queue is None:
+                            logging.debug(f"Queue {queue_name} was removed by user")
+                        elif not queue.public_by_policy:
+                            logging.debug(f"Queue {queue.name} policy issue was remediated by user")
                         else:
-                            logging.debug(f"Remediating '{sqsqueue.name}' policy")
+                            logging.debug(f"Remediating '{queue.name}' policy")
 
-                            backup_path = sqsqueue.backup_policy_s3(main_account.client("s3"), backup_bucket)
+                            backup_path = queue.backup_policy_s3(main_account.client("s3"), backup_bucket)
                             remediation_succeed = True
-                            if sqsqueue.restrict_policy():
+                            if queue.restrict_policy():
                                 comment = (f"Policy backup was saved to "
                                            f"[{backup_path}|https://s3.console.aws.amazon.com/s3/object/{backup_bucket}/{backup_path}]. "
-                                           f"Queue '{sqsqueue.name}' policy issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                           f"Queue '{queue.name}' policy issue "
+                                           f"in '{account_name} / {account_id}' account, '{queue_region}' region "
                                            f"was remediated by hammer")
                             else:
                                 remediation_succeed = False
-                                comment = (f"Failed to remediate queue '{sqsqueue.name}' policy issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                comment = (f"Failed to remediate queue '{queue.name}' policy issue "
+                                           f"in '{account_name} / {account_id}' account, '{queue_region}' region "
                                            f"due to some limitations. Please, check manually")
 
                             jira.remediate_issue(
@@ -111,9 +109,9 @@ class CleanSQSPolicyPermissions:
                             IssueOperations.set_status_remediated(ddb_table, issue)
                     except Exception:
                         logging.exception(f"Error occurred while updating queue '{queue_url}' policy "
-                                          f"in '{account_name} / {account_id}'")
+                                          f"in '{account_name} / {account_id}', '{queue_region}' region")
                 else:
-                    logging.debug(f"Skipping '{queue_url}' "
+                    logging.debug(f"Skipping '{queue_name}' "
                                   f"({retention_period - no_of_days_issue_created} days before remediation)")
 
 

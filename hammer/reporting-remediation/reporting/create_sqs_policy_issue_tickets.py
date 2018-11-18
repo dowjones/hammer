@@ -20,8 +20,8 @@ class CreateSQSPolicyIssueTickets:
     def __init__(self, config):
         self.config = config
 
-    def attachment_name(self, account_id, queue_url):
-        return f"{account_id}_{queue_url}_{self.config.now.isoformat('T', 'seconds')}.json"
+    def attachment_name(self, account_id, queue_region, queue_name):
+        return f"{account_id}_{queue_region}_{queue_name}_{self.config.now.isoformat('T', 'seconds')}.json"
 
     def create_tickets_sqs_policy(self):
         """ Class method to create jira tickets """
@@ -37,6 +37,8 @@ class CreateSQSPolicyIssueTickets:
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, SQSPolicyIssue)
             for issue in issues:
                 queue_url = issue.issue_id
+                queue_name = issue.issue_details.name
+                queue_region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 policy = issue.issue_details.policy
                 # issue has been already reported
@@ -46,10 +48,10 @@ class CreateSQSPolicyIssueTickets:
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} SQS queue '{queue_url}' public policy issue")
+                        logging.debug(f"Closing {issue.status.value} SQS queue '{queue_name}' public policy issue")
 
-                        comment = (f"Closing {issue.status.value} SQS queue '{queue_url}' public policy "
-                                   f"in '{account_name} / {account_id}' account ")
+                        comment = (f"Closing {issue.status.value} SQS queue '{queue_name}' public policy "
+                                   f"in '{account_name} / {account_id}' account, '{queue_region}' region")
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
@@ -64,13 +66,13 @@ class CreateSQSPolicyIssueTickets:
                         IssueOperations.set_status_closed(ddb_table, issue)
                     # issue.status != IssueStatus.Closed (should be IssueStatus.Open)
                     elif issue.timestamps.updated > issue.timestamps.reported:
-                        logging.debug(f"Updating SQS queue '{queue_url}' public policy issue")
+                        logging.debug(f"Updating SQS queue '{queue_name}' public policy issue")
 
                         comment = "Issue details are changed, please check again.\n"
                         # Adding new SQS queue policy json as attachment to Jira ticket.
                         attachment = jira.add_attachment(
                             ticket_id=issue.jira_details.ticket,
-                            filename=self.attachment_name(account_id, queue_url),
+                            filename=self.attachment_name(account_id, queue_region, queue_name),
                             text=policy
                         )
                         if attachment is not None:
@@ -81,8 +83,8 @@ class CreateSQSPolicyIssueTickets:
                             comment=comment
                         )
                         slack.report_issue(
-                            msg=f"SQS queue '{queue_url}' pubic policy issue is changed "
-                                f"in '{account_name} / {account_id}' account"
+                            msg=f"SQS queue '{queue_name}' pubic policy issue is changed "
+                                f"in '{account_name} / {account_id}' account, '{queue_region}' region"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
                             account_id=account_id,
@@ -90,29 +92,32 @@ class CreateSQSPolicyIssueTickets:
                         )
                         IssueOperations.set_status_updated(ddb_table, issue)
                     else:
-                        logging.debug(f"No changes for '{queue_url}'")
+                        logging.debug(f"No changes for '{queue_name}'")
                 # issue has not been reported yet
                 else:
-                    logging.debug(f"Reporting SQS queue '{queue_url}' public policy issue")
+                    logging.debug(f"Reporting SQS queue '{queue_name}' public policy issue")
 
                     owner = tags.get("owner", None)
                     bu = tags.get("bu", None)
                     product = tags.get("product", None)
 
                     if bu is None:
-                        bu = self.config.get_bu_by_name(queue_url)
+                        bu = self.config.get_bu_by_name(queue_name)
 
-                    issue_summary = (f"SQS queue '{queue_url}' with public policy "
-                                     f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
+                    issue_summary = (f"SQS queue '{queue_name}' with public policy "
+                                     f"in '{account_name} / {account_id}' account, '{queue_region}' region"
+                                     f"{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
                         f"Queue policy allows unrestricted public access.\n\n"
                         f"*Threat*: "
-                        f"This creates potential security vulnerabilities by allowing anyone to add, modify, or remove items in a SQS .\n\n"
+                        f"This creates potential security vulnerabilities by allowing anyone to add, modify, or remove items in a SQS.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
-                        f"*SQS queue name*: {queue_url}\n"
+                        f"*SQS queue url*: {queue_url}\n"
+                        f"*SQS queue name*: {queue_name}\n"
+                        f"*SQS queue region*: {queue_region}\n"
                         f"*Queue Owner*: {owner}\n"
                         f"\n")
 
@@ -125,7 +130,7 @@ class CreateSQSPolicyIssueTickets:
                     issue_description += (
                         f"*Recommendation*: "
                         f"Check if global access is truly needed and "
-                        f"if not - update SQS queue permissions to restrict access to specific private IP ranges from RFC1819.")
+                        f"if not - update SQS queue permissions to restrict access to specific private IP ranges from [RFC1918|https://tools.ietf.org/html/rfc1918].")
 
                     try:
                         response = jira.add_issue(
@@ -144,7 +149,7 @@ class CreateSQSPolicyIssueTickets:
                         issue.jira_details.ticket_assignee_id = response.ticket_assignee_id
                         # Adding SQS queue json as attachment to Jira ticket.
                         jira.add_attachment(ticket_id=issue.jira_details.ticket,
-                                            filename=self.attachment_name(account_id, queue_url),
+                                            filename=self.attachment_name(account_id, queue_region, queue_name),
                                             text=policy)
 
                     issue.jira_details.owner = owner
