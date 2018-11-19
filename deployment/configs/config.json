@@ -124,6 +124,6 @@
         "ddb.table_name": "hammer-s3-unencrypted",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 0
     }
 }

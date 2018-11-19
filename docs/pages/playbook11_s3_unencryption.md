@@ -5,11 +5,11 @@ sidebar: mydoc_sidebar
 permalink: playbook11_s3_unencryption.html
 ---
 
-# Playbook 11: S3 Un-encrypted Buckets
+# Playbook 11: S3 Unencrypted Buckets
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to identify Unencrypted S3 buckets.
+This playbook describes how to configure Dow Jones Hammer to identify S3 buckets that are not encrypted at rest.
 
 ## 1. Issue Identification
 
@@ -162,8 +162,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name           |
 |---------------|------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-s3-encryption`|
-|Identification |`/aws-lambda/hammer-describe-s3-encryption`|
+|Initialization |`/aws/lambda/hammer-initiate-s3-encryption`|
+|Identification |`/aws/lambda/hammer-describe-s3-encryption`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

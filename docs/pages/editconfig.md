@@ -334,9 +334,9 @@ Parameters:
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.
 
-### 2.11. S3 Un-encrypted Buckets
+### 2.11. S3 Unencrypted Buckets
 
-This section describes how to detect your un-encrypted S3 buckets. Refer to [issue-specific playbook](playbook11_s3_unencryption.html) for further details.
+This section describes how to detect whether you have S3 buckets that are not encrypted at rest. Refer to [issue-specific playbook](playbook11_s3_unencryption.html) for further details.
 
 Edit the **s3_encryption** section of the `config.json` file to configure the handling of this issue.
 
