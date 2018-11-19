@@ -166,8 +166,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                           |
 |---------------|----------------------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-iam-user-keys-rotation`|
-|Identification |`/aws-lambda/hammer-describe-iam-user-keys-rotation`|
+|Initialization |`/aws/lambda/hammer-initiate-iam-user-keys-rotation`|
+|Identification |`/aws/lambda/hammer-describe-iam-user-keys-rotation`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

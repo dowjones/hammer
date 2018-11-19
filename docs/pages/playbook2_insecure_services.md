@@ -171,8 +171,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                    |
 |---------------|---------------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-security-groups`|
-|Identification |`/aws-lambda/hammer-describe-security-groups`|
+|Initialization |`/aws/lambda/hammer-initiate-security-groups`|
+|Identification |`/aws/lambda/hammer-describe-security-groups`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

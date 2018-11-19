@@ -24,7 +24,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[EBS Unencrypted Volumes](playbook7_ebs_unencrypted_volumes.html#3-issue-remediation) | `No`      | `No`                |
 |[EBS Public Snapshots](playbook8_ebs_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
 |[RDS Public Snapshots](playbook9_rds_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
-|[SQS Queue Public Access](playbook10_sqs_public_policy.html#3-issue-remediation)      | Yes       | `Yes`               |
+|[SQS Queue Public Access](playbook10_sqs_public_policy.html#3-issue-remediation)      | Yes       | Yes                 |
 
 ## 2. How Remediation Backup Works
 
@@ -46,7 +46,7 @@ The steps you should take to rollback an issue's remediation vary depending on t
 
 ### 3.1. S3 ACL Public Access Rollback
 
-To roll back a remediation of this issue, perform the following steps:
+To rollback this issue's remediation, perform the following steps:
 
 1. Sign in to the AWS Management Console and open the Amazon S3 console.
 2. Find the S3 bucket you want to rollback ACL settings for.
@@ -57,7 +57,7 @@ Refer to [ACL Bucket Permissions documentation](https://docs.aws.amazon.com/Amaz
 
 ### 3.2. Insecure Services Rollback
 
-To roll back a remediation of this issue, perform the following steps:
+To rollback this issue's remediation, perform the following steps:
 
 1. Sign in to the AWS Management Console and open the Amazon EC2 console, `Security Groups` section.
 2. Find the security group you want to rollback rules for.
@@ -76,7 +76,7 @@ To rollback this issue's remediation, you need to [set this access key status](h
 
 ### 3.5. S3 Policy Public Access Rollback
 
-To roll back a remediation of this issue, run the following command using the AWS CLI:
+To rollback this issue's remediation, run the following command using the AWS CLI:
 ```
 aws s3api put-bucket-policy --bucket [remediated_bucket_name] --policy [backup_file_name].json
 ```
@@ -91,7 +91,7 @@ To rollback this issue's remediation, you need to [make snapshot public](https:/
 
 ### 3.8. SQS Policy Public Access Rollback
 
-To roll back a remediation of this issue, run the following command using the AWS CLI:
+To rollback this issue's remediation, run the following command using the AWS CLI:
 ```
-aws sqs set-queue-attributes --queue-url [queue_url] --attributes [[backup_file_name]].json
+aws sqs set-queue-attributes --queue-url [queue_url] --attributes [backup_file_name].json
 ```

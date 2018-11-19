@@ -9,11 +9,11 @@ permalink: playbook10_sqs_public_policy.html
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to identify SQS Queue public polices that Queues are publicly accessible.
+This playbook describes how to configure Dow Jones Hammer to identify SQS queues that are accessible because of the policy settings.
 
 ## 1. Issue Identification
 
-Dow Jones Hammer investigates policy statements for SQS Queue and checks whether both of the following conditions apply:
+Dow Jones Hammer investigates policy statements for SQS queues and checks whether both of the following conditions apply:
 
 1. The `Principal` parameter value is `*` or `{"AWS": "*"}` (these are identical in terms of the issue's definition)
 2. Statement is not restricted by `IpAddress` condition or `IpAddress` condition is set to `{"aws:SourceIp": "0.0.0.0/0"}`.
@@ -51,11 +51,11 @@ hammer/reporting-remediation/reporting/create_sqs_policy_issue_tickets.py
 
 ### 3.1 Automatic
 
-To reduce the workload of your DevOps engineers and mitigate the threats stemming from this issue, you can configure automatic remediation of issues. It means that in case Dow Jones Hammer has detected and reported an issue, but the assignee of the report has not remediated the issue within a timeframe specified in the configuration, the Dow Jones Hammer remediation job will adjust SQS Queue policy to eliminate this vulnerability.
+To reduce the workload of your DevOps engineers and mitigate the threats stemming from this issue, you can configure automatic remediation of issues. It means that in case Dow Jones Hammer has detected and reported an issue, but the assignee of the report has not remediated the issue within a timeframe specified in the configuration, the Dow Jones Hammer remediation job will adjust SQS queue policy to eliminate this vulnerability.
 
 In this specific case, Dow Jones Hammer restricts public statement by adding (or changing) `IpAddress` condition value that allow access only for IP addresses defined in [RFC 1918 - Address Allocation for Private Internets](https://tools.ietf.org/html/rfc1918).
 
-Dow Jones Hammer will save the pre-remediation SQS Queue policy configuration to a S3 backup bucket. You can use this configuration to [rollback the automatic remediation manually](remediation_backup_rollback.html#31-sqs-policy-public-access-rollback), if necessary.
+Dow Jones Hammer will save the pre-remediation SQS queue policy configuration to a S3 backup bucket. You can use this configuration to [rollback the automatic remediation manually](remediation_backup_rollback.html#31-sqs-policy-public-access-rollback), if necessary.
 
 This Python module implements the issue remediation functionality:
 ```
@@ -105,8 +105,8 @@ Sample **config.json** section:
 You can define exceptions to the general automatic remediation settings for specific SQS queues. To configure such exceptions, you should edit the **sqs_policy** section of the **whitelist.json** configuration file as follows:
 
 |Parameter Key | Parameter Value(s) |
-|:----:|:-----:|
-|AWS Account ID|SQS Queue Name(s)|
+|:------------:|:------------------:|
+|AWS Account ID|SQS Queue URL(s)    |
 
 Sample **whitelist.json** section:
 ```
@@ -165,19 +165,19 @@ Dow Jones Hammer issue identification functionality uses two Lambda functions:
 
 You can see the logs for each of these Lambda functions in the following Log Groups:
 
-|Lambda Function|CloudWatch Log Group Name           |
-|---------------|------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-sqs-policy`|
-|Identification |`/aws-lambda/hammer-describe-sqs-policy`|
+|Lambda Function|CloudWatch Log Group Name                      |
+|---------------|-----------------------------------------------|
+|Initialization |`/aws/lambda/hammer-initiate-sqs-public-policy`|
+|Identification |`/aws/lambda/hammer-describe-sqs-public-policy`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 
 Dow Jones Hammer issue reporting/remediation functionality uses ```/aws/ec2/hammer-reporting-remediation``` CloudWatch Log Group for logging. The Log Group contains issue-specific Log Streams named as follows:
 
-|Designation|CloudWatch Log Stream Name       |
-|-----------|---------------------------------|
-|Reporting  |`reporting.create_sqs_policy_tickets`|
-|Remediation|`remediation.clean_sqs_policy`       |
+|Designation|CloudWatch Log Stream Name                  |
+|-----------|--------------------------------------------|
+|Reporting  |`reporting.create_sqs_policy_issue_tickets` |
+|Remediation|`remediation.clean_sqs_policy_permissions`  |
 
 ### 5.3. Slack Reports
 
@@ -201,8 +201,8 @@ Check [CloudWatch Logs documentation](https://docs.aws.amazon.com/AmazonCloudWat
 
 Dow Jones Hammer stores various issue specific details in DynamoDB as a map under `issue_details` key. You can use it to create your own reporting modules.
 
-|Key          |Type  |Description                                                |Example                          |
-|-------------|:----:|-----------------------------------------------------------|---------------------------------|
-|`owner`      |string|Queue owner's display name (available not for all regions)|`test-user`                      |
-|`policy`|map   |Permissions grouped by Amazon SQS Predefined Groups         |`{\n \"Version\": \"2012-10-17\",\n \"Statement\": [...]\n}`|
-|`tags`       |map   |Tags associated with SQS queue                                |`{"Name": "TestQueue", "service": "archive"}`|
+|Key          |Type  |Description                    |Example                          |
+|-------------|:----:|-------------------------------|---------------------------------|
+|`name`       |string|SQS queue name                 |`test-user`                      |
+|`policy`     |string|SQS queue policy document      |`{\n \"Version\": \"2012-10-17\",\n \"Statement\": [...]\n}`|
+|`tags`       |map   |Tags associated with SQS queue |`{"Name": "TestQueue", "service": "archive"}`|
