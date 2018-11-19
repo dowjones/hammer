@@ -18,6 +18,6 @@ Dow Jones Hammer can identify and report the following issues:
 |[EBS Unencrypted Volumes](playbook7_ebs_unencrypted_volumes.html) |Detects not encrypted at rest EBS volumes              |Any of the EBS volumes is not encrypted at rest                                 |
 |[EBS Public Snapshots](playbook8_ebs_snapshots_public.html)       |Detects publicly accessible EBS snapshots              |Any one of EBS snapshots is worldwide accessible                                |
 |[RDS Public Snapshots](playbook9_rds_snapshots_public.html)       |Detects publicly accessible RDS snapshots              |Any one of RDS snapshots is worldwide accessible                                |
-|[RDS Un-encrypted instance](playbook12_rds_unencrypted.html)      |Detects un-encrypted RDS instances                     |Any of RDS instance is not encrypted   |
+|[RDS Unencrypted instances](playbook12_rds_unencryption.html)     |Detects not encrypted at rest RDS instances            |Any one of RDS instances is not encrypted at reset  |
 
-Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes** and **CloudTrail Logging Issues**.
+Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues** and **RDS Unencrypted instances**.

@@ -9,11 +9,11 @@ permalink: playbook12_rds_unencryption.html
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to identify Unencrypted RDS instances.
+This playbook describes how to configure Dow Jones Hammer to detect RDS instances that are not encrypted at rest.
 
 ## 1. Issue Identification
 
-Dow Jones Hammer investigates RDS instances properties whether encrypted status is enabled or not
+Dow Jones Hammer identifies those RDS instances for which ```StorageEncrypted``` parameter value is ```false```.
 
 When Dow Jones Hammer detects an issue, it writes the issue to the designated DynamoDB table.
 
@@ -72,14 +72,14 @@ Sample **config.json** section:
 
 You can define exceptions to the general automatic remediation settings for specific RDS instances. To configure such exceptions, you should edit the **rds_encryption** section of the **whitelist.json** configuration file as follows:
 
-|Parameter Key | Parameter Value(s) |
-|:----:|:-----:|
-|AWS Account ID|RDS Instance name(s)|
+|Parameter Key | Parameter Value(s)|
+|:------------:|:-----------------:|
+|AWS Account ID|RDS Instance ARN(s)|
 
 Sample **whitelist.json** section:
 ```
 "rds_encryption": {
-    "123456789012": ["instance_id1", "instance_id2"]
+    "123456789012": ["instance_arn1", "instance_arn2"]
 }	
 ```
 
@@ -133,18 +133,18 @@ Dow Jones Hammer issue identification functionality uses two Lambda functions:
 
 You can see the logs for each of these Lambda functions in the following Log Groups:
 
-|Lambda Function|CloudWatch Log Group Name           |
-|---------------|------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-rds-encryption`|
-|Identification |`/aws-lambda/hammer-describe-rds-encryption`|
+|Lambda Function|CloudWatch Log Group Name                   |
+|---------------|--------------------------------------------|
+|Initialization |`/aws/lambda/hammer-initiate-rds-encryption`|
+|Identification |`/aws/lambda/hammer-describe-rds-encryption`|
 
 ### 4.2. Issue Reporting Logging
 
 Dow Jones Hammer issue reporting functionality uses ```/aws/ec2/hammer-reporting-remediation``` CloudWatch Log Group for logging. The Log Group contains issue-specific Log Streams named as follows:
 
-|Designation|CloudWatch Log Stream Name       |
-|-----------|---------------------------------|
-|Reporting  |`reporting.create_rds-encryption_tickets`|
+|Designation|CloudWatch Log Stream Name                               |
+|-----------|---------------------------------------------------------|
+|Reporting  |`reporting.create_rds_unencrypted_instance_issue_tickets`|
 
 
 ### 4.3. Slack Reports
@@ -169,11 +169,8 @@ Check [CloudWatch Logs documentation](https://docs.aws.amazon.com/AmazonCloudWat
 
 Dow Jones Hammer stores various issue specific details in DynamoDB as a map under `issue_details` key. You can use it to create your own reporting modules.
 
-|Key          |Type  |Description                                                |Example                          |
-|-------------|:----:|-----------------------------------------------------------|---------------------------------|
-|`owner`      |string|RDS instance owner's display name (available not for all regions)|`test-user`                      |
-|`tags`       |map   |Tags associated with RDS instance                         |`{"Name": "TestInstance", "service": "archive"}`|
-
-## 6. Remediation
-
-Remediation of RDS instance encryption is TBD. 
+|Key          |Type  |Description                       |Example                                         |
+|-------------|:----:|----------------------------------|------------------------------------------------|
+|`name`       |string|RDS instance name                 |`test-rds-instances`                            |
+|`engine`     |string|Name of the database engine       |`mysql`                                         |
+|`tags`       |map   |Tags associated with RDS instance |`{"Name": "TestInstance", "service": "archive"}`|
