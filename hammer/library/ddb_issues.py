@@ -208,6 +208,10 @@ class IAMKeyInactiveIssue(Issue):
     def __init__(self, *args):
         super().__init__(*args)
 
+class SQSPolicyIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
 
 class S3EncryptionIssue(Issue):
     def __init__(self, *args):

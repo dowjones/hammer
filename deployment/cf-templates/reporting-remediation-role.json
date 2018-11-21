@@ -185,6 +185,18 @@
                                     "Resource": "*"
                                 },
                                 {
+                                    "Sid": "SQSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:ListQueues",
+                                        "sqs:GetQueueUrl",
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:ListQueueTags",
+                                        "sqs:SetQueueAttributes"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
                                     "Sid": "IAMassumeCrossAccountRole",
                                     "Effect": "Allow",
                                     "Action": [

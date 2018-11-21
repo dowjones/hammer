@@ -120,6 +120,13 @@
         "remediation": false,
         "remediation_retention_period": 0
     },
+    "sqs_public_access": {
+        "enabled": true,
+        "ddb.table_name": "hammer-sqs-public-access",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
+    },
     "s3_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-s3-unencrypted",

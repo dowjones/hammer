@@ -334,6 +334,21 @@ Parameters:
 * **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
 * **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.
 
+### 2.10. SQS Public Policy
+
+This section describes how to detect your publicly accessible SQS Queues. Refer to [issue-specific playbook](playbook10_sqs_public_policy.html) for further details.
+
+Edit the **sqs_public_access** section of the `config.json` file to configure the handling of this issue.
+
+Parameters:
+* **enabled**: enables/disables issue identification. The default value is `true`;
+* **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will put detection results. The default value is `hammer-sqs-public-access`.
+* **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **remediation_accounts**: *optional* comma-separated list of accounts to remediate issues in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
+* **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
+* **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
+* **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.
+
 ### 2.11. S3 Unencrypted Buckets
 
 This section describes how to detect whether you have S3 buckets that are not encrypted at rest. Refer to [issue-specific playbook](playbook11_s3_unencryption.html) for further details.
