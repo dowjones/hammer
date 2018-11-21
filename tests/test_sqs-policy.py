@@ -83,7 +83,7 @@ def test_sqs_policy(queue, remediated):
     Actual testing function.
 
     :param queue: queue details
-    :param remediated: 
+    :param remediated:
     :return: nothing, raises AssertionError if actual test result is not matched with expected
     """
 

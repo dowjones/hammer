@@ -14,11 +14,13 @@ from library.config import Config
 from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
 from library.aws.ec2 import EC2Operations
+from library.aws.iam import IAMOperations
 from library.ddb_issues import IssueStatus, SecurityGroupIssue
 from library.ddb_issues import Operations as IssueOperations
-from library.utility import empty_converter, list_converter
+from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
+from library.aws.rds import RDSOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -63,7 +65,7 @@ class CreateSecurityGroupsTickets(object):
                 if open_port['status'] == 'open_partly':
                     open_port_details += empty_converter(self.get_registrant(open_port['cidr'])) + "|"
                 else:
-                    open_port_details += "-"
+                    open_port_details += "-" + "|"
             open_port_details += "\n"
         return open_port_details
 
@@ -87,8 +89,9 @@ class CreateSecurityGroupsTickets(object):
         open_port_details += "```"
         return open_port_details
 
-    def build_instances_table(self, instances):
+    def build_instances_table(self, iam_client, instances):
         instance_details = ""
+        instance_profile_details = []
         # security group has associated instances
         in_use = False
         # security group has associated instances with public ip in public subnet
@@ -98,6 +101,7 @@ class CreateSecurityGroupsTickets(object):
         owners = []
         bus = []
         products = []
+        separator = "\n"
 
         table_limit_reached = False
         if len(instances) > 0:
@@ -107,6 +111,7 @@ class CreateSecurityGroupsTickets(object):
                 f"||Private Ip Address||Public Ip Address"
                 f"||Owner||Business unit||Product||Component"
                 f"||Subnet||\n")
+
             for ec2_instance in instances:
                 if len(ec2_instance.public_ips) > 0:
                     if ec2_instance.public_subnet:
@@ -129,13 +134,28 @@ class CreateSecurityGroupsTickets(object):
                         f"|{empty_converter(component)}"
                         f"|{'public' if ec2_instance.public_subnet else 'private'}|\n"
                     )
+
+                    instance_profile_id = ec2_instance.iam_profile_id
+                    if instance_profile_id is not None:
+                        try:
+                            public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
+                        except Exception:
+                            logging.exception("Failed to get instance profile policy details")
+                            public_role_policies = []
+                        if len(public_role_policies) > 0:
+                            for public_role in public_role_policies:
+                                instance_profile_details.append(
+                                    f"|{ec2_instance.id}|{public_role.role_name}"
+                                    f"|{public_role.policy_name}"
+                                    f"|{list_converter(public_role.actions, separator)}|\n"
+                                )
                 elif not table_limit_reached:
                     table_limit_reached = True
                 owners.append(owner)
                 bus.append(bu)
                 products.append(product)
 
-        instance_details = f"*Instances{' (limited subset)' if table_limit_reached else ''}*:\n{instance_details}"
+            instance_details = f"*Ec2 Instances{' (limited subset)' if table_limit_reached else ''}*:\n{instance_details}"
 
         # remove empty and count number of occurrences for each owner/bu/product
         owners = Counter([x for x in owners if x])
@@ -148,7 +168,51 @@ class CreateSecurityGroupsTickets(object):
         # logging.debug(f"bu={bu}")
         # logging.debug(f"product={product}")
 
-        return instance_details, in_use, public, blind_public, owner, bu, product
+        if len(instance_profile_details) > 0:
+            instance_profile_details = (
+                f"\n*Instance Role Unsafe Policies:*\n"
+                f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
+            ) + "".join(instance_profile_details) + "\n"
+
+        return instance_details, instance_profile_details, in_use, public, blind_public, owner, bu, product
+
+    @staticmethod
+    def build_rds_instances_table(rds_instances):
+        in_use = False
+        rds_instance_details = ""
+
+        if len(rds_instances) > 0:
+            in_use = True
+            rds_instance_details += (
+                f"\n*RDS instances:*\n"
+                f"||RDS Instance ID||Engine"
+                f"||RDS Instance Status"
+                f"||Publicly Accessible||\n")
+            for rds_instance in rds_instances:
+                rds_instance_details += (
+                    f"|{rds_instance.id}|{rds_instance.engine}|{rds_instance.status}"
+                    f"|{bool_converter(rds_instance.public)}|\n"
+                )
+
+        return rds_instance_details, in_use
+
+    @staticmethod
+    def build_elb_instances_table(elb_details):
+        elb_instance_details = ""
+        in_use = False
+
+        if len(elb_details) > 0:
+            in_use = True
+            elb_instance_details += (
+                f"\n*ELB Instances:*\n"
+                f"||Load Balance Name||Scheme||ELB Type||Instances||\n")
+            for elb in elb_details:
+                elb_instance_details += (
+                    f"|{elb.id}|{elb.scheme}"
+                    f"|{elb.elb_type}|{list_converter(elb.instances)}|\n"
+                )
+
+        return elb_instance_details, in_use
 
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
@@ -240,13 +304,38 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_public = sg_blind_public = False
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_public = sg_blind_public = False
+
+                    rds_client = account.client("rds") if account.session is not None else None
+                    elb_client = account.client("elb") if account.session is not None else None
+                    elbv2_client = account.client("elbv2") if account.session is not None else None
+
+                    iam_client = account.client("iam") if account.session is not None else None
+
+                    rds_instance_details = elb_instance_details = None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
-                        sg_instance_details, \
-                            sg_in_use, sg_public, sg_blind_public, \
-                            ec2_owner, ec2_bu, ec2_product = self.build_instances_table(ec2_instances)
+                        sg_instance_details, instance_profile_details,\
+                            sg_in_use_ec2, sg_public, sg_blind_public, \
+                            ec2_owner, ec2_bu, ec2_product = self.build_instances_table(iam_client, ec2_instances)
+
+                    if elb_client is not None and elbv2_client is not None:
+                        try:
+                            elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client, group_id)
+                            elb_instance_details, sg_in_use_elb = self.build_elb_instances_table(elb_instances)
+                        except Exception:
+                            logging.exception(f"Failed to build ELB details for '{group_name} / {group_id}' in {account}")
+
+                    if rds_client is not None:
+                        try:
+                            rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client, group_id)
+                            rds_instance_details, sg_in_use_rds = self.build_rds_instances_table(rds_instances)
+                        except Exception:
+                            logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -326,12 +415,19 @@ class CreateSecurityGroupsTickets(object):
                         f"{threat}"
                         f"{account_details}")
 
-                    # auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
-                    # desc += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if status == RestrictionStatus.OpenCompletely:
+                        auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += f"{tags_table}"
 
                     issue_description += f"{sg_instance_details if sg_instance_details else ''}"
+
+                    issue_description += f"{rds_instance_details if rds_instance_details else ''}"
+
+                    issue_description += f"{elb_instance_details if elb_instance_details else ''}"
+
+                    issue_description += f"{instance_profile_details if instance_profile_details else ''}"
 
                     issue_description += (
                         f"*Recommendation*: "

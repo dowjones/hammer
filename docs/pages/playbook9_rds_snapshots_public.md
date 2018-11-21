@@ -204,4 +204,5 @@ Dow Jones Hammer stores various issue specific details in DynamoDB as a map unde
 |---------|:----:|---------------------------------------------------------------------------|---------------------------------|
 |`region` |string|AWS region code where snapshot exists                                      |`eu-west-1`                      |
 |`db`     |string|DB instance identifier of the DB instance this DB snapshot was created from|`vol-1234567890`                 |
-|`engine` |string|name of the database engine                                                |`{"Name": "TestSnapshot", "service": "gluster"}`|
+|`engine` |string|Name of the database engine                                                |`mysql`|
+|`tags`   |map   |Tags associated with RDS snapshot                                          |`{"Name": "TestSnapshot", "service": "gluster"}`|

@@ -108,3 +108,10 @@ entries:
       url: /playbook10_sqs_public_policy.html
       output: web, pdf
 
+    - title: S3 Unencrypted buckets
+      url: /playbook11_s3_unencryption.html
+      output: web, pdf
+
+    - title: RDS Unencrypted instances
+      url: /playbook12_rds_unencryption.html
+      output: web, pdf

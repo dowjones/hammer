@@ -1,22 +1,19 @@
 ---
-title: SQS Public Policy
-keywords: playbook10
+title: S3 Un-encrypted Buckets
+keywords: playbook11
 sidebar: mydoc_sidebar
-permalink: playbook10_sqs_public_policy.html
+permalink: playbook11_s3_unencryption.html
 ---
 
-# Playbook 1: SQS Public Policy
+# Playbook 11: S3 Unencrypted Buckets
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to identify SQS queues that are accessible because of the policy settings.
+This playbook describes how to configure Dow Jones Hammer to identify S3 buckets that are not encrypted at rest.
 
 ## 1. Issue Identification
 
-Dow Jones Hammer investigates policy statements for SQS queues and checks whether both of the following conditions apply:
-
-1. The `Principal` parameter value is `*` or `{"AWS": "*"}` (these are identical in terms of the issue's definition)
-2. Statement is not restricted by `IpAddress` condition or `IpAddress` condition is set to `{"aws:SourceIp": "0.0.0.0/0"}`.
+Dow Jones Hammer investigates S3 buckets and checks whether bucket is encrypted or not.
 
 When Dow Jones Hammer detects an issue, it writes the issue to the designated DynamoDB table.
 
@@ -25,8 +22,8 @@ The table lists the Python modules that implement this functionality:
 
 |Designation   |Path                  |
 |--------------|:--------------------:|
-|Initialization|`hammer/identification/lambdas/sqs-public-policy-identification/initiate_to_desc_sqs_public_policy.py`|
-|Identification|`hammer/identification/lambdas/sqs-public-policy-identification/describe_sqs_public_policy.py`        |
+|Initialization|`hammer/identification/lambdas/s3-unencrypted-bucket-issues-identification/initiate_to_desc_s3_encryption.py`|
+|Identification|`hammer/identification/lambdas/s3-unencrypted-bucket-issues-identification/describe_s3_encryption.py`        |
 
 ## 2. Issue Reporting
 
@@ -37,13 +34,13 @@ Thus, in case you have turned on the reporting functionality for this issue and 
 * raise a JIRA ticket and assign it to a specific person in your organization;
 * send the issue notification to the Slack channel or directly to a Slack user.
 
-Additionally Dow Jones Hammer tries to detect person to report issue to by examining `owner` tag on affected SQS queue. In case when such tag **exists** and is **valid JIRA/Slack user**:
+Additionally Dow Jones Hammer tries to detect person to report issue to by examining `owner` tag on affected S3 bucket. In case when such tag **exists** and is **valid JIRA/Slack user**:
 * for JIRA: `jira_owner` parameter from [ticket_owners.json](#43-the-ticket_ownersjson-file) **is ignored** and discovered `owner` **is used instead** as a JIRA assignee;
 * for Slack: discovered `owner` **is used in addition to** `slack_owner` value from [ticket_owners.json](#43-the-ticket_ownersjson-file).
 
 This Python module implements the issue reporting functionality:
 ```
-hammer/reporting-remediation/reporting/create_sqs_policy_issue_tickets.py
+hammer/reporting-remediation/reporting/create_s3_unencrypted_bucket_issue_tickets.py
 ```
 
 
@@ -51,15 +48,13 @@ hammer/reporting-remediation/reporting/create_sqs_policy_issue_tickets.py
 
 ### 3.1 Automatic
 
-To reduce the workload of your DevOps engineers and mitigate the threats stemming from this issue, you can configure automatic remediation of issues. It means that in case Dow Jones Hammer has detected and reported an issue, but the assignee of the report has not remediated the issue within a timeframe specified in the configuration, the Dow Jones Hammer remediation job will adjust SQS queue policy to eliminate this vulnerability.
+To reduce the workload of your DevOps engineers and mitigate the threats stemming from this issue, you can configure automatic remediation of issues. It means that in case Dow Jones Hammer has detected and reported an issue, but the assignee of the report has not remediated the issue within a timeframe specified in the configuration, the Dow Jones Hammer remediation job will adjust S3 bucket configurations to eliminate this vulnerability.
 
 In this specific case, Dow Jones Hammer restricts public statement by adding (or changing) `IpAddress` condition value that allow access only for IP addresses defined in [RFC 1918 - Address Allocation for Private Internets](https://tools.ietf.org/html/rfc1918).
 
-Dow Jones Hammer will save the pre-remediation SQS queue policy configuration to a S3 backup bucket. You can use this configuration to [rollback the automatic remediation manually](remediation_backup_rollback.html#31-sqs-policy-public-access-rollback), if necessary.
-
 This Python module implements the issue remediation functionality:
 ```
-hammer/reporting-remediation/remediation/clean_sqs_policy_permissions.py
+hammer/reporting-remediation/remediation/clean_s3bucket_unencrypted.py
 ```
 
 ### 3.2 Manual
@@ -68,7 +63,7 @@ To retain full control on the remediation functionality you can disable automati
 1. Login to Dow Jones Hammer reporting and remediation EC2 via SSH with **centos** user and ssh key you created during [deployment](configuredeploy_overview.html#25-create-ec2-key-pair-for-hammer): `ssh -l centos -i <private_key> <EC2_IP_Address>`
 2. Become **root** user: `sudo su -`
 3. Change directory to Dow Jones Hammer sources: `cd /hammer-correlation-engine`
-4. Launch Dow Jones Hammer remediation script: `python3.6 -m remediation.clean_sqs_policy_permissions`
+4. Launch Dow Jones Hammer remediation script: `python3.6 -m remediation.clean_s3bucket_unencrypted`
 5. Confirm or refuse remediation of each issue separately
 
 
@@ -79,39 +74,39 @@ To configure the detection, reporting, and remediation of this issue, you should
 ### 4.1. The config.json File
 
 The **config.json** file is the main configuration file for Dow Jones Hammer that is available at `deployment/terraform/accounts/sample/config/config.json`.
-To identify, report, and remediate issues of this type, you should add the following parameters in the **sqs_queue_policy** section of the **config.json** file:
+To identify, report, and remediate issues of this type, you should add the following parameters in the **s3_encryption** section of the **config.json** file:
 
 |Parameter Name                |Description                            | Default Value|
 |------------------------------|---------------------------------------|:------------:|
 |`enabled`                     |Toggles issue detection for this issue |`true`|
-|`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-sqs-public-access` |
+|`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-s3-unencrypted` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
 |`remediation_retention_period`|The amount of days to pass between issue detection and its automatic remediation. The value `0` denotes that Dow Jones Hammer will remediate the issue at the next remediation job run.|`0`|
 
 Sample **config.json** section:
 ```
-"sqs_public_access": {
-        "enabled": false,
-        "ddb.table_name": "hammer-sqs-public-access",
-        "reporting": false,
+"s3_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-s3-unencrypted",
+        "reporting": true,
         "remediation": false,
         "remediation_retention_period": 0
-    },
+    }
 ```
 
 ### 4.2. The whitelist.json File
 
-You can define exceptions to the general automatic remediation settings for specific SQS queues. To configure such exceptions, you should edit the **sqs_policy** section of the **whitelist.json** configuration file as follows:
+You can define exceptions to the general automatic remediation settings for specific S3 buckets. To configure such exceptions, you should edit the **s3_encryption** section of the **whitelist.json** configuration file as follows:
 
 |Parameter Key | Parameter Value(s) |
-|:------------:|:------------------:|
-|AWS Account ID|SQS Queue URL(s)    |
+|:----:|:-----:|
+|AWS Account ID|S3 Bucket Name(s)|
 
 Sample **whitelist.json** section:
 ```
-"sqs_policy": {
-    "123456789012": ["queue_url1", "queue_url1"]
+"s3_encryption": {
+    "123456789012": ["Bucket1", "Bucket2"]
 }
 ```
 
@@ -165,19 +160,19 @@ Dow Jones Hammer issue identification functionality uses two Lambda functions:
 
 You can see the logs for each of these Lambda functions in the following Log Groups:
 
-|Lambda Function|CloudWatch Log Group Name                      |
-|---------------|-----------------------------------------------|
-|Initialization |`/aws/lambda/hammer-initiate-sqs-public-policy`|
-|Identification |`/aws/lambda/hammer-describe-sqs-public-policy`|
+|Lambda Function|CloudWatch Log Group Name           |
+|---------------|------------------------------------|
+|Initialization |`/aws/lambda/hammer-initiate-s3-encryption`|
+|Identification |`/aws/lambda/hammer-describe-s3-encryption`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 
 Dow Jones Hammer issue reporting/remediation functionality uses ```/aws/ec2/hammer-reporting-remediation``` CloudWatch Log Group for logging. The Log Group contains issue-specific Log Streams named as follows:
 
-|Designation|CloudWatch Log Stream Name                  |
-|-----------|--------------------------------------------|
-|Reporting  |`reporting.create_sqs_policy_issue_tickets` |
-|Remediation|`remediation.clean_sqs_policy_permissions`  |
+|Designation|CloudWatch Log Stream Name       |
+|-----------|---------------------------------|
+|Reporting  |`reporting.create_s3_unencrypted_bucket_issue_tickets`|
+|Remediation|`remediation.clean_s3bucket_unencrypted`       |
 
 ### 5.3. Slack Reports
 
@@ -201,8 +196,7 @@ Check [CloudWatch Logs documentation](https://docs.aws.amazon.com/AmazonCloudWat
 
 Dow Jones Hammer stores various issue specific details in DynamoDB as a map under `issue_details` key. You can use it to create your own reporting modules.
 
-|Key          |Type  |Description                    |Example                          |
-|-------------|:----:|-------------------------------|---------------------------------|
-|`name`       |string|SQS queue name                 |`test-user`                      |
-|`policy`     |string|SQS queue policy document      |`{\n \"Version\": \"2012-10-17\",\n \"Statement\": [...]\n}`|
-|`tags`       |map   |Tags associated with SQS queue |`{"Name": "TestQueue", "service": "archive"}`|
+|Key          |Type  |Description                                                |Example                          |
+|-------------|:----:|-----------------------------------------------------------|---------------------------------|
+|`owner`      |string|S3 bucket owner's display name (available not for all regions)|`test-user`                      |
+|`tags`       |map   |Tags associated with S3 bucket                                |`{"Name": "TestBucket", "service": "archive"}`|
