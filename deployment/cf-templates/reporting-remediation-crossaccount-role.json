@@ -51,7 +51,15 @@
                                         "ec2:DescribeRouteTables",
                                         "ec2:DescribeSubnets",
                                         "ec2:AuthorizeSecurityGroupIngress",
-                                        "ec2:RevokeSecurityGroupIngress"
+                                        "ec2:RevokeSecurityGroupIngress",
+                                        "elasticloadbalancing:DescribeLoadBalancers",
+                                        "iam:ListInstanceProfiles",
+                                        "iam:GetInstanceProfile",
+                                        "iam:ListRolePolicies",
+                                        "iam:GetRolePolicy",
+                                        "iam:ListAttachedRolePolicies",
+                                        "iam:GetPolicy",
+                                        "iam:GetPolicyVersion"
                                     ],
                                     "Resource": "*"
                                 },
@@ -107,6 +115,8 @@
                                         "rds:ListTagsForResource",
                                         "rds:DescribeDBSnapshots",
                                         "rds:DescribeDBClusterSnapshots",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:ModifyDBClusterSnapshotAttribute",
                                         "rds:ModifyDBSnapshotAttribute"
                                     ],
