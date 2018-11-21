@@ -12,8 +12,8 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.cloudtrails-issues-identification",
                   "aws_s3_bucket_object.ebs-unencrypted-volume-identification",
                   "aws_s3_bucket_object.ebs-public-snapshots-identification",
-                  "aws_s3_bucket_object.sqs-public-policy-identification"
-                  "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification"
+                  "aws_s3_bucket_object.sqs-public-policy-identification",
+                  "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification",
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification"
                  ]
 
