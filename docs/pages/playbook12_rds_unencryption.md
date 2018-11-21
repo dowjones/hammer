@@ -80,7 +80,7 @@ Sample **whitelist.json** section:
 ```
 "rds_encryption": {
     "123456789012": ["instance_arn1", "instance_arn2"]
-}	
+}
 ```
 
 ### 3.3. The ticket_owners.json File

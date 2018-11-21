@@ -12,6 +12,7 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.cloudtrails-issues-identification",
                   "aws_s3_bucket_object.ebs-unencrypted-volume-identification",
                   "aws_s3_bucket_object.ebs-public-snapshots-identification",
+                  "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification"
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification"
                  ]
 
@@ -35,6 +36,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationEBSVolumes = "${aws_s3_bucket_object.ebs-unencrypted-volume-identification.id}"
         SourceIdentificationEBSSnapshots = "${aws_s3_bucket_object.ebs-public-snapshots-identification.id}"
         SourceIdentificationRDSSnapshots = "${aws_s3_bucket_object.rds-public-snapshots-identification.id}"
+        SourceIdentificationS3Encryption = "${aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification.id}"
         SourceIdentificationRDSEncryption = "${aws_s3_bucket_object.rds-unencrypted-instance-identification.id}"
     }
 

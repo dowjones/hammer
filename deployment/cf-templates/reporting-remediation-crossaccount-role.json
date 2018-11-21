@@ -72,7 +72,8 @@
                                         "s3:GetBucketPolicy",
                                         "s3:GetBucketTagging",
                                         "s3:PutBucketAcl",
-                                        "s3:PutBucketPolicy"
+                                        "s3:PutBucketPolicy",
+                                        "s3:PutEncryptionConfiguration"
                                     ],
                                     "Resource": "*"
                                 },

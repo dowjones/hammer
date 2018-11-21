@@ -24,6 +24,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[EBS Unencrypted Volumes](playbook7_ebs_unencrypted_volumes.html#3-issue-remediation) | `No`      | `No`                |
 |[EBS Public Snapshots](playbook8_ebs_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
 |[RDS Public Snapshots](playbook9_rds_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
+|[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
 
 ## 2. How Remediation Backup Works
@@ -88,3 +89,10 @@ To rollback this issue's remediation, you need to add `group` `all` to `createVo
 ### 3.7. RDS Public Snapshots
 
 To rollback this issue's remediation, you need to [make snapshot public](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ShareSnapshot.html) using the AWS API or Management Console.
+
+### 3.9. S3 Unencrypted Buckets
+
+To rollback a remediation of this issue, run the following command using the AWS CLI:
+```
+aws s3 put-bucket-encryption --bucket [bucket_name] --server-side-encryption-configuration [rules]
+```

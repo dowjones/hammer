@@ -116,7 +116,8 @@
                                         "s3:ListAllMyBuckets",
                                         "s3:GetBucketAcl",
                                         "s3:GetBucketPolicy",
-                                        "s3:GetBucketTagging"
+                                        "s3:GetBucketTagging",
+                                        "s3:GetEncryptionConfiguration"
                                     ],
                                     "Resource": "*"
                                 },
