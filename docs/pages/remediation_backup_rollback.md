@@ -25,6 +25,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[EBS Public Snapshots](playbook8_ebs_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
 |[RDS Public Snapshots](playbook9_rds_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
+|[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
 
 ## 2. How Remediation Backup Works
 
@@ -95,4 +96,3 @@ To rollback a remediation of this issue, run the following command using the AWS
 ```
 aws s3 put-bucket-encryption --bucket [bucket_name] --server-side-encryption-configuration [rules]
 ```
-

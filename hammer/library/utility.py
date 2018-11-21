@@ -31,7 +31,7 @@ def jsonDumps(obj, **kwargs):
     return json.dumps(obj, indent=4, default=jsonEncoder, **kwargs)
 
 
-def list_converter(x): return ", ".join(x) if len(x) > 0 else '-'
+def list_converter(x, separator=", "): return separator.join(x) if len(x) > 0 else '-'
 def empty_converter(x): return '-' if not x else x
 def bool_converter(x): return 'Yes' if x else 'No'
 

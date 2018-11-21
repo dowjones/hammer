@@ -152,10 +152,12 @@
                                     "Resource": "*"
                                 },
                                 {
-                                    "Sid": "RdsSnapshotIssues",
+                                    "Sid": "RdsIssues",
                                     "Effect": "Allow",
                                     "Action": [
                                         "rds:ListTagsForResource",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:DescribeDBSnapshots",
                                         "rds:DescribeDBClusterSnapshots"
                                     ],

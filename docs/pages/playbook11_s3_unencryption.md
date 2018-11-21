@@ -107,7 +107,7 @@ Sample **whitelist.json** section:
 ```
 "s3_encryption": {
     "123456789012": ["Bucket1", "Bucket2"]
-}	
+}
 ```
 
 ### 4.3. The ticket_owners.json File

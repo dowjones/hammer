@@ -108,3 +108,7 @@ entries:
       url: /playbook11_s3_unencryption.html
       output: web, pdf
 
+    - title: RDS Unencrypted instances
+      url: /playbook12_rds_unencryption.html
+      output: web, pdf
+

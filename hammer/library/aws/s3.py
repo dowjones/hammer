@@ -255,7 +255,7 @@ class S3Operations(object):
         :param s3_client: S3 boto3 client
         :param bucket: S3 bucket name which to encrypt
         :param kms_master_key_id: S3 bucket encryption key. default value is none.
-        
+
         :return: nothing
         """
         if kms_master_key_id:
@@ -432,7 +432,7 @@ class S3Bucket(object):
     def encrypt_bucket(self, kms_key_id=None):
         """
         Encrypt bucket with SSL encryption.
-        :return: nothing        
+        :return: nothing
         """
         try:
             S3Operations.set_bucket_encryption(self.account.client("s3"), self.name, kms_key_id)

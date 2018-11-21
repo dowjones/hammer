@@ -40,6 +40,7 @@
             "654321210987": "slave2"
         }
     },
+    "whitelisting_procedure_url": "",
     "credentials": {
         "ddb.table_name": "hammer-credentials"
     },
@@ -122,6 +123,13 @@
     "s3_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-s3-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
+    },
+    "rds_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-rds-unencrypted",
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 0
