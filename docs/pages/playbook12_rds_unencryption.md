@@ -51,7 +51,7 @@ To configure the detection, reporting, you should edit the following sections of
 ### 3.1. The config.json File
 
 The **config.json** file is the main configuration file for Dow Jones Hammer that is available at `deployment/terraform/accounts/sample/config/config.json`.
-To identify, report, and remediate issues of this type, you should add the following parameters in the **rds_encryption** section of the **config.json** file:
+To identify and report issues of this type, you should add the following parameters in the **rds_encryption** section of the **config.json** file:
 
 |Parameter Name                |Description                            | Default Value|
 |------------------------------|---------------------------------------|:------------:|
@@ -62,10 +62,10 @@ To identify, report, and remediate issues of this type, you should add the follo
 Sample **config.json** section:
 ```
 "rds_encryption": {
-        "enabled": true,
-        "ddb.table_name": "hammer-rds-unencrypted",
-        "reporting": true
-    }
+    "enabled": true,
+    "ddb.table_name": "hammer-rds-unencrypted",
+    "reporting": true
+}
 ```
 
 ### 3.2. The whitelist.json File
