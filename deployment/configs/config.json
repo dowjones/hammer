@@ -40,6 +40,7 @@
             "654321210987": "slave2"
         }
     },
+    "whitelisting_procedure_url": "",
     "credentials": {
         "ddb.table_name": "hammer-credentials"
     },

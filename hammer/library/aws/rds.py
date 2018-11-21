@@ -3,7 +3,52 @@ import logging
 
 from botocore.exceptions import ClientError
 from library.aws.utility import convert_tags
+from collections import namedtuple
+from library.utility import timeit
 
+# structure which describes EC2 instance
+RDSInstance = namedtuple('RDSInstance', [
+    # instance ID
+    'id',
+    # DB engine
+    'engine',
+    # instance arn
+    'arn',
+    # status of db instance (available or not)
+    'status',
+    # boolean if RDS instance is public access or not
+    'public'
+    ])
+
+
+class RDSOperations:
+    @classmethod
+    @timeit
+    def get_rds_instance_details_of_sg_associated(cls, rds_client, group_id):
+        """ Retrieve rds instances meta data with security group attached
+
+        :param rds_client: boto3 rds client
+        :param group_id: security group id
+
+        :return: list with rds instance details
+        """
+        # describe rds instances with security group attached
+        rds_instances = []
+
+        # this will include both DB and Cluster instances
+        rds_response = rds_client.describe_db_instances()
+        for db_instance in rds_response["DBInstances"]:
+            active_security_groups = [ sg["VpcSecurityGroupId"] for sg in db_instance['VpcSecurityGroups'] if sg["Status"] == "active" ]
+            if group_id in active_security_groups:
+                rds_instances.append(RDSInstance(
+                    id=db_instance["DBInstanceIdentifier"],
+                    engine=db_instance["Engine"],
+                    arn=db_instance["DBInstanceArn"],
+                    status=db_instance["DBInstanceStatus"],
+                    public=db_instance["PubliclyAccessible"],
+                ))
+
+        return rds_instances
 
 
 class RdsSnapshotOperations(object):
@@ -395,4 +440,3 @@ class RdsEncryptionChecker(object):
             instance_cls=RdsCluster
         )
         return instance and cluster
-
