@@ -119,5 +119,12 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0
+    },
+    "rds_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-rds-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
     }
 }

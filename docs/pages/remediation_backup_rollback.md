@@ -24,6 +24,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[EBS Unencrypted Volumes](playbook7_ebs_unencrypted_volumes.html#3-issue-remediation) | `No`      | `No`                |
 |[EBS Public Snapshots](playbook8_ebs_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
 |[RDS Public Snapshots](playbook9_rds_snapshots_public.html#3-issue-remediation)       | Yes       | `No`                |
+|[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
 
 ## 2. How Remediation Backup Works
 

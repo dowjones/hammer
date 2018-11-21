@@ -56,6 +56,8 @@ class Config(object):
         self.ebsSnapshot = ModuleConfig(self._config, "ebs_public_snapshot")
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
+        # RDS encryption issue config
+        self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
