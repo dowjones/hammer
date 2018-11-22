@@ -97,11 +97,11 @@ class CreateCloudTrailLoggingTickets:
                     logging.debug(f"Reporting '{region}' CloudTrail logging issue")
 
                     if issue.issue_details.disabled:
-                        issue_summary = f"Disabled CloudTrail in '{account_name} / {region}' "
+                        issue_summary = f"Disabled CloudTrail in '{account_name} / {account_id} / {region}' "
                         issue_description = "No enabled CloudTrails for region available."
                         recommendation = f"Create CloudTrail for region"
                     elif issue.issue_details.delivery_errors:
-                        issue_summary = f"CloudTrail logging issues in '{account_name} / {region}' "
+                        issue_summary = f"CloudTrail logging issues in '{account_name} / {account_id} / {region}' "
                         issue_description = "CloudTrail has issues with logging."
                         recommendation = f"Check policies for CloudTrail logging"
                     else:
