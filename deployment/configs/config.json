@@ -75,6 +75,7 @@
     "user_inactivekeys": {
         "enabled": true,
         "ddb.table_name": "hammer-iam-user-keys-inactive",
+        "ignore_accounts": ["654321210987"],
         "inactive_criteria_days": 1,
         "reporting": false,
         "remediation": false,
