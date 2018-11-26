@@ -29,7 +29,7 @@ class CleanS3BucketUnencrypted:
         ddb_table = main_account.resource("dynamodb").Table(self.config.s3Encrypt.ddb_table_name)
 
         retention_period = self.config.s3Encrypt.remediation_retention_period
-        notification_days_list = self.config.slack.notification_days_list
+        remediation_warning_days = self.config.slack.remediation_warning_days
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
@@ -66,10 +66,10 @@ class CleanS3BucketUnencrypted:
                 product = issue.jira_details.product
 
                 issue_remediation_days = retention_period - no_of_days_issue_created
-                if issue_remediation_days in notification_days_list:
+                if issue_remediation_days in remediation_warning_days:
                     slack.report_issue(
-                        msg=f"S3 bucket '{s3bucket.name}' is going to remediate in "
-                            f"{issue_remediation_days}",
+                        msg=f"S3 bucket '{s3bucket.name}' unencrypted issue is going to be remediated in "
+                            f"{issue_remediation_days} days",
                         owner=owner,
                         account_id=account_id,
                         bu=bu, product=product,
