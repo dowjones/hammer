@@ -16,7 +16,8 @@
             "#hammer-slave1": ["ERROR|WARNING|ALARM|Task timed out after|Access denied"]
         },
         "ignore": [],
-        "default_channel": "#hammer-dev"
+        "default_channel": "#hammer-dev",
+        "notification_days_list": [14, 7, 2]
     },
     "csv": {
         "enabled": false,
