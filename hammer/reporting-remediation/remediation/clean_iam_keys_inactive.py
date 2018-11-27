@@ -29,6 +29,7 @@ class CleanIAMUserInactiveKeys:
         ddb_table = main_account.resource("dynamodb").Table(self.config.iamUserInactiveKeys.ddb_table_name)
 
         retention_period = self.config.iamUserInactiveKeys.remediation_retention_period
+        remediation_warning_days = self.config.slack.remediation_warning_days
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
@@ -58,7 +59,14 @@ class CleanIAMUserInactiveKeys:
                 updated_date = issue.timestamp_as_datetime
                 no_of_days_issue_created = (self.config.now - updated_date).days
 
-                if no_of_days_issue_created >= retention_period:
+                issue_remediation_days = retention_period - no_of_days_issue_created
+                if issue_remediation_days in remediation_warning_days:
+                    slack.report_issue(
+                        msg=f"Inactive access key {key_id} ' issue is going to be remediated in "
+                            f"{issue_remediation_days} days",
+                        account_id=account_id
+                    )
+                elif no_of_days_issue_created >= retention_period:
                     try:
                         if not batch and \
                            not confirm(f"Do you want to remediate inactive access key '{key_id} / {username}'", False):

@@ -30,6 +30,7 @@ class CleanSecurityGroups(object):
         backup_bucket = config.aws.s3_backup_bucket
 
         retention_period = self.config.sg.remediation_retention_period
+        remediation_warning_days = self.config.slack.remediation_warning_days
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
@@ -61,11 +62,20 @@ class CleanSecurityGroups(object):
                 updated_date = issue.timestamp_as_datetime
                 no_of_days_issue_created = (self.config.now - updated_date).days
 
-                if no_of_days_issue_created >= retention_period:
-                    owner = issue.jira_details.owner
-                    bu = issue.jira_details.business_unit
-                    product = issue.jira_details.product
+                owner = issue.jira_details.owner
+                bu = issue.jira_details.business_unit
+                product = issue.jira_details.product
 
+                issue_remediation_days = retention_period - no_of_days_issue_created
+                if issue_remediation_days in remediation_warning_days:
+                    slack.report_issue(
+                        msg=f"SecurityGroup {group_name} ' public access issue is going to be remediated in "
+                            f"{issue_remediation_days} days",
+                        owner=owner,
+                        account_id=account_id,
+                        bu=bu, product=product,
+                    )
+                elif no_of_days_issue_created >= retention_period:
                     try:
                         account = Account(id=account_id,
                                           name=account_name,
