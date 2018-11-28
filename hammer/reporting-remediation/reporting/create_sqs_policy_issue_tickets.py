@@ -131,6 +131,10 @@ class CreateSQSPolicyIssueTickets:
                         f"Check if global access is truly needed and "
                         f"if not - update SQS queue permissions to restrict access to specific private IP ranges from [RFC1918|https://tools.ietf.org/html/rfc1918].")
 
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
+
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
