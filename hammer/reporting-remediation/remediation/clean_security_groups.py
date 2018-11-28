@@ -69,7 +69,7 @@ class CleanSecurityGroups(object):
                 issue_remediation_days = retention_period - no_of_days_issue_created
                 if issue_remediation_days in remediation_warning_days:
                     slack.report_issue(
-                        msg=f"SecurityGroup {group_name} ' public access issue is going to be remediated in "
+                        msg=f"SecurityGroup '{group_name}' public access issue is going to be remediated in "
                             f"{issue_remediation_days} days",
                         owner=owner,
                         account_id=account_id,

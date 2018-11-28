@@ -62,7 +62,7 @@ class CleanIAMUserInactiveKeys:
                 issue_remediation_days = retention_period - no_of_days_issue_created
                 if issue_remediation_days in remediation_warning_days:
                     slack.report_issue(
-                        msg=f"Inactive access key {key_id} ' issue is going to be remediated in "
+                        msg=f"Inactive access key '{key_id}' issue is going to be remediated in "
                             f"{issue_remediation_days} days",
                         account_id=account_id
                     )
