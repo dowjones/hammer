@@ -357,6 +357,7 @@ class SecurityGroup(object):
         self.source = source
         self.name = self.source["GroupName"]
         self.id = self.source["GroupId"]
+        self.vpc_id = self.source["VpcId"]
         self.tags = convert_tags(source.get('Tags', []))
         # list with all `SecurityGroupPermission` elements
         self.permissions = []
