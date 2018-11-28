@@ -56,8 +56,15 @@ class Config(object):
         self.ebsSnapshot = ModuleConfig(self._config, "ebs_public_snapshot")
         # RDS public snapshot issue config
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
+        # SQS public access issue config
+        self.sqspolicy = ModuleConfig(self._config, "sqs_public_access")
+        # S3 encryption issue config
+        self.s3Encrypt = ModuleConfig(self._config, "s3_encryption")
+        # RDS encryption issue config
+        self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
         self.bu_list = self._config.get("bu_list", [])
+        self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 
         jira_config = self._config.get('jira', {})
         # credentials to access JIRA
@@ -450,10 +457,12 @@ class ModuleConfig(BaseConfig):
         """
         module_accounts = self._config.get(option, None)
         if module_accounts is None:
-            return self._accounts
+            accounts = self._accounts
         else:
             # construct dict similar to main accounts dict
-            return {account: self._accounts.get(account, "") for account in module_accounts}
+            accounts = {account: self._accounts.get(account, "") for account in module_accounts}
+        # exclude 'ignore_accounts' from resulting dict
+        return {k: v for k, v in accounts.items() if k not in self._config.get("ignore_accounts", [])}
 
     @property
     def accounts(self):

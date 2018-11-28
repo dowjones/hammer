@@ -169,8 +169,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                           |
 |---------------|----------------------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-iam-user-inactive-keys`|
-|Identification |`/aws-lambda/hammer-describe-iam-user-inactive-keys`|
+|Initialization |`/aws/lambda/hammer-initiate-iam-user-inactive-keys`|
+|Identification |`/aws/lambda/hammer-describe-iam-user-inactive-keys`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

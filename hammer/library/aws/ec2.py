@@ -22,6 +22,20 @@ EC2Instance = namedtuple('EC2Instance', [
     'state',
     # boolean if instance has network interfaces in public subnets (with Internet Gateway attached)
     'public_subnet',
+    # instance iam profile id and arn details.
+    'iam_profile_id'
+    ])
+
+# structure which describes EC2 instance
+ELB = namedtuple('ELBDetails', [
+    # Load Balancer Name
+    'id',
+    # scheme details of Load balancer
+    'scheme',
+    # load balancer type (classic or application)
+    'elb_type',
+    # ELB instance details
+    'instances'
     ])
 
 
@@ -126,6 +140,7 @@ class EC2Operations:
             tags=convert_tags(instance.get("Tags", [])),
             state=instance["State"]["Name"],
             public_subnet=None,
+            iam_profile_id=instance.get("IamInstanceProfile", {}).get("Id"),
         )
         return ec2_instance
 
@@ -183,6 +198,35 @@ class EC2Operations:
                     tags=convert_tags(instance.get("Tags", [])),
                     state=instance["State"]["Name"],
                     public_subnet=public_subnet,
+                    iam_profile_id=instance.get("IamInstanceProfile", {}).get("Id"),
                 )
                 ec2_instances.append(ec2_instance)
         return ec2_instances
+
+    @classmethod
+    @timeit
+    def get_elb_details_of_sg_associated(cls, elb_client, elbv2_client, group_id):
+        """ Retrieve elb meta data with security group attached
+        :param elb_client: boto3 elb client
+        :param elbv2_client: boto3 elb v2 client
+        :param group_id: security group id
+         :return: list with elb details
+        """
+        # describe elb with security group attached
+        elb_details = []
+
+        elb_response = elb_client.describe_load_balancers()["LoadBalancerDescriptions"]
+        elb_response += elbv2_client.describe_load_balancers()["LoadBalancers"]
+
+        for elb in elb_response:
+            if group_id in elb.get("SecurityGroups", []):
+                elb_details.append(
+                    ELB(
+                        id=elb["LoadBalancerName"],
+                        scheme=elb["Scheme"],
+                        elb_type=elb.get("Type", "classic"),
+                        instances=[ instance['InstanceId'] for instance in elb.get("Instances", []) ],
+                    )
+                )
+
+        return elb_details

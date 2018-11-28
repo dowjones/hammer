@@ -108,4 +108,14 @@ entries:
       url: /playbook9_rds_snapshots_public.html
       output: web, pdf
 
+    - title: SQS Public Policy Access
+      url: /playbook10_sqs_public_policy.html
+      output: web, pdf
 
+    - title: S3 Unencrypted buckets
+      url: /playbook11_s3_unencryption.html
+      output: web, pdf
+
+    - title: RDS Unencrypted instances
+      url: /playbook12_rds_unencryption.html
+      output: web, pdf
