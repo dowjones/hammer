@@ -4,44 +4,38 @@ from responses import server_error
 from botocore.exceptions import ClientError
 
 
-def remediate(security_feature, account, caller_reference, domain_name, origin_id, target_origin_id, cnames):
+def remediate(security_feature, account, cloudfront_id, cnames):
     cf_client = account.client("cloudfront")
 
     try:
-        response = cf_client.create_distribution(
+        dist_config_details = cf_client.get_distribution_config(
+            Id=cloudfront_id
+        )
+
+        response = cf_client.update_distribution(
             DistributionConfig={
-                'CallerReference': caller_reference,
+                'CallerReference': dist_config_details["DistributionConfig"]["CallerReference"],
                 'Aliases': {
-                    'Quantity': 4,
+                    'Quantity': len(cnames),
                     'Items': cnames
                 },
-                'DefaultCacheBehavior' :{
-                    'TargetOriginId': target_origin_id,
-                    'ForwardedValues': {
-                        'QueryString': True,
-                        'Cookies': {
-                            'Forward': 'none'
-                        }
-                    },
-                    'TrustedSigners': {
-                        'Enabled': True,
-                        'Quantity': 123
-                    },
-                    'ViewerProtocolPolicy': 'allow-all',
-                    'MinTTL': 1
-                },
-                'Origins': {
-                    'Quantity': 1,
-                    'Items': [
-                        {
-                            'Id': origin_id,
-                            'DomainName': domain_name,
-                        },
-                    ]
-                },
-                'Comment': 'creating new cf distribution with cname list.',
-                'Enabled': True,
+                'DefaultRootObject': dist_config_details["DistributionConfig"]["DefaultRootObject"],
+                'Origins': dist_config_details["DistributionConfig"]["Origins"],
+                'DefaultCacheBehavior': dist_config_details["DistributionConfig"]["DefaultCacheBehavior"],
+                'CacheBehaviors': dist_config_details["DistributionConfig"]["CacheBehaviors"],
+                'CustomErrorResponses': dist_config_details["DistributionConfig"]["CustomErrorResponses"],
+                'Comment': 'Updated with CNAME details',
+                'Logging': dist_config_details["DistributionConfig"]["Logging"],
+                'PriceClass': dist_config_details["DistributionConfig"]["PriceClass"],
+                'Enabled': dist_config_details["DistributionConfig"]["Enabled"],
+                'ViewerCertificate': dist_config_details["DistributionConfig"]["ViewerCertificate"],
+                'Restrictions': dist_config_details["DistributionConfig"]["Restrictions"],
+                'WebACLId': dist_config_details["DistributionConfig"]["WebACLId"],
+                'HttpVersion': dist_config_details["DistributionConfig"]["HttpVersion"],
+                'IsIPV6Enabled': dist_config_details["DistributionConfig"]["IsIPV6Enabled"]
             },
+            Id = cloudfront_id,
+            IfMatch = dist_config_details["ETag"]
         )
 
         return "Success"
@@ -51,6 +45,6 @@ def remediate(security_feature, account, caller_reference, domain_name, origin_i
             logging.error(f"Access denied in {self.account} "
                           f"(cf:{err.operation_name})")
         else:
-            logging.exception(f"Failed to create cloud front distribution")
+            logging.exception(f"Failed to update cloud front distribution")
 
-        return server_error(text="Failed to create cloud front distribution")
+        return server_error(text="Failed to update cloud front distribution")
