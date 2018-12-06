@@ -29,11 +29,12 @@ class CreatePublicAMIIssueTickets:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.publicAMIs.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, PublicAMIIssue)
             for issue in issues:
                 ami_id = issue.issue_id
+                ami_region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
@@ -45,7 +46,7 @@ class CreatePublicAMIIssueTickets:
                         logging.debug(f"Closing {issue.status.value} AMI '{ami_id}' public access issue")
 
                         comment = (f"Closing {issue.status.value} AMI '{ami_id}' public access issue "
-                                   f"in '{account_name} / {account_id}' account ")
+                                   f"in '{account_name} / {account_id}' account, {ami_region} region")
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
@@ -71,7 +72,7 @@ class CreatePublicAMIIssueTickets:
                         )
                         slack.report_issue(
                             msg=f"AMI '{ami_id}' pubic access issue is changed "
-                                f"in '{account_name} / {account_id}' account"
+                                f"in '{account_name} / {account_id}' account, {ami_region} region"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
                             account_id=account_id,
@@ -101,6 +102,7 @@ class CreatePublicAMIIssueTickets:
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
+                        f"*Region*: {ami_region}\n"
                         f"*AMI Id*: {ami_id}\n"                        
                         f"\n")
 

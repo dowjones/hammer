@@ -41,37 +41,35 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for Public AMI issues for {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, PublicAMIChecker)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, PublicAMIIssue)
         # make dictionary for fast search by id
         # and filter by current region
-        open_issues = {issue.issue_id: issue for issue in open_issues}
+        open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
         logging.debug(f"Public AMIs in DDB:\n{open_issues.keys()}")
 
         checker = PublicAMIChecker(account=account)
-        if not checker.check():
-            return
+        if checker.check():
+            for ami in checker.amis:
+                logging.debug(f"Checking {ami.id}")
+                if ami.public_access:
+                    issue = PublicAMIIssue(account_id, ami.id)
+                    issue.issue_details.tags = ami.tags
+                    issue.issue_details.name = ami.name
+                    issue.issue_details.region = region
+                    if config.publicAMIs.in_whitelist(account_id, ami.id):
+                        issue.status = IssueStatus.Whitelisted
+                    else:
+                        issue.status = IssueStatus.Open
+                    logging.debug(f"Setting {ami.id}/{ami.id} status {issue.status}")
+                    IssueOperations.update(ddb_table, issue)
+                    # remove issue id from issues_list_from_db (if exists)
+                    # as we already checked it
+                    open_issues.pop(ami.id, None)
 
-        for ami in checker.amis:
-            logging.debug(f"Checking {ami.id}")
-            if ami.public_access:
-                issue = PublicAMIIssue(account_id, ami.id)
-                issue.issue_details.tags = ami.tags
-                issue.issue_details.name = ami.name
-                issue.issue_details.region = region
-                if config.publicAMIs.in_whitelist(account_id, ami.id) or config.publicAMIs.in_whitelist(account_id, ami.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
-                logging.debug(f"Setting {ami.id}/{ami.id} status {issue.status}")
-                IssueOperations.update(ddb_table, issue)
-                # remove issue id from issues_list_from_db (if exists)
-                # as we already checked it
-                open_issues.pop(ami.id, None)
-
-        logging.debug(f"Public AMIs in DDB:\n{open_issues.keys()}")
-        # all other unresolved issues in DDB are for removed/remediated keys
-        for issue in open_issues.values():
-            IssueOperations.set_status_resolved(ddb_table, issue)
+            logging.debug(f"Public AMIs in DDB:\n{open_issues.keys()}")
+            # all other unresolved issues in DDB are for removed/remediated keys
+            for issue in open_issues.values():
+                IssueOperations.set_status_resolved(ddb_table, issue)
     except Exception:
         logging.exception(f"Failed to check AMI public access for '{account_id} ({account_name})'")
         return
@@ -81,6 +79,6 @@ def lambda_handler(event, context):
         try:
             Sns.publish(payload["sns_arn"], payload)
         except Exception:
-            logging.exception("Failed to chain insecure services checking")
+            logging.exception("Failed to chain public AMI checking")
 
     logging.debug(f"Checked AMI public access for '{account_id} ({account_name})'")

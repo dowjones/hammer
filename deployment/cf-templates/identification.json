@@ -1719,7 +1719,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate public AMI access evaluations",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {

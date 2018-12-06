@@ -79,8 +79,7 @@
                                         "ec2:DescribeNetworkInterfaces",
                                         "ec2:CreateNetworkInterface",
                                         "ec2:DeleteNetworkInterface",
-                                        "ec2:DescribeImages",
-                                        "ec2:DescribeImageAttribute"
+                                        "ec2:DescribeImages"
                                     ],
                                     "Resource": "*"
                                 },

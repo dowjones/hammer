@@ -194,19 +194,23 @@ class EC2Operations:
         :param ec2_client: EC2 boto3 client
         :param ami_id: AMI Id to update as private 
 
-        :return: nothing
+        :return: True, if image attribute was successfully modified
         """
-        ec2_client.modify_image_attribute(
-            ImageId=ami_id,
-            LaunchPermission={
-                'Remove': [
-                    {
-                        'Group': 'all',
-                        'UserId': 'string'
-                    },
-                ]
-            },
-        )
+        try:
+            ec2_client.modify_image_attribute(
+                ImageId=ami_id,
+                LaunchPermission={
+                    'Remove': [
+                        {
+                            'Group': 'all',
+                        },
+                    ]
+                },
+            )
+        except Exception:
+            logging.exception(f"Failed to make {ami_id} AMI private")
+            return False
+        return True
 
 
 class AMIAccess(object):
@@ -235,6 +239,7 @@ class AMIAccess(object):
                 f"Id={self.id}, "
                 f"Status={self.public_access}, "
                 f")")
+
     def modify_image_attribute(self):
         EC2Operations.modify_image_attribute(self.account.client("ec2"), self.id)
 
@@ -272,8 +277,12 @@ class PublicAMIChecker(object):
                           False - otherwise
         """
         try:
-            # get all AMIs in account
-            amis = self.account.client("ec2").describe_images(Owners=['self'])
+            # boto3 doesn't support boolean values in filters
+            filters = [{"Name": "is-public", "Values": ["true"]}]
+            if amis_to_check is not None:
+                filters.append({"Name": "image-id", "Values": amis_to_check})
+            amis = self.account.client("ec2").describe_images(Owners=['self'],
+                                                              Filters=filters)
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
@@ -286,22 +295,12 @@ class PublicAMIChecker(object):
         for ami_details in amis["Images"]:
             ami_id = ami_details["ImageId"]
             ami_name = ami_details["Name"]
-            public_access = ami_details["Public"]
             tags = {}
 
-            if amis_to_check is not None and ami_id not in amis_to_check:
-                continue
             if "Tags" in ami_details:
                 tags = ami_details["Tags"]
-
-            if public_access:
-                if "ProductCodes" in ami_details:
-                    for product_code in ami_details["ProductCodes"]:
-                        if product_code["ProductCodeType"] == "marketplace":
-                            continue
-                else:
-                    ami = AMIAccess(account=self.account, ami_id=ami_id, ami_name=ami_name, tags=tags,
-                                 public_access=True)
-                    self.amis.append(ami)
+            ami = AMIAccess(account=self.account, ami_id=ami_id, ami_name=ami_name, tags=tags,
+                            public_access=True)
+            self.amis.append(ami)
 
         return True

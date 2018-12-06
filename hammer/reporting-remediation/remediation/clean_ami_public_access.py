@@ -10,7 +10,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import PublicAMIAccess
+from library.ddb_issues import PublicAMIIssue
 from library.aws.ec2 import PublicAMIChecker
 from library.aws.utility import Account
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -33,7 +33,7 @@ class CleanAMIPublicAccess:
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
-            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, PublicAMIAccess)
+            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, PublicAMIIssue)
             for issue in issues:
                 ami_id = issue.issue_id
 

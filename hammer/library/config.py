@@ -58,7 +58,7 @@ class Config(object):
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
 
         # AMI public access issue config
-        self.publicAMIs = ModuleConfig(self._config, "public_ami_issues")
+        self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
 
         self.bu_list = self._config.get("bu_list", [])
 
