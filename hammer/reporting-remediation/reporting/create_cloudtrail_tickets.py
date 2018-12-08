@@ -97,11 +97,11 @@ class CreateCloudTrailLoggingTickets:
                     logging.debug(f"Reporting '{region}' CloudTrail logging issue")
 
                     if issue.issue_details.disabled:
-                        issue_summary = f"Disabled CloudTrail in '{account_name} / {region}' "
+                        issue_summary = f"Disabled CloudTrail in '{account_name} / {account_id} / {region}' "
                         issue_description = "No enabled CloudTrails for region available."
                         recommendation = f"Create CloudTrail for region"
                     elif issue.issue_details.delivery_errors:
-                        issue_summary = f"CloudTrail logging issues in '{account_name} / {region}' "
+                        issue_summary = f"CloudTrail logging issues in '{account_name} / {account_id} / {region}' "
                         issue_description = "CloudTrail has issues with logging."
                         recommendation = f"Check policies for CloudTrail logging"
                     else:
@@ -118,7 +118,11 @@ class CreateCloudTrailLoggingTickets:
 
                     issue_description += self.build_trails_table(issue.issue_details.trails)
 
-                    issue_description += f"\n\n*Recommendation*: {recommendation}."
+                    issue_description += f"\n\n*Recommendation*: {recommendation}. "
+
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(

@@ -222,23 +222,9 @@
                     },
                     {
                         "IpProtocol": "TCP",
-                        "FromPort": "80",
-                        "ToPort": "80",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
-                    }
-                ],
-                "SecurityGroupEgress": [
-                    {
-                        "IpProtocol": "-1",
-                        "FromPort": "0",
-                        "ToPort": "65535",
-                        "CidrIp": "0.0.0.0/0"
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "192.168.0.0/16"
                     }
                 ],
                 "Tags": [

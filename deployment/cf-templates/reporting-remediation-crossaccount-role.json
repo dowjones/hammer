@@ -53,7 +53,15 @@
                                         "ec2:AuthorizeSecurityGroupIngress",
                                         "ec2:RevokeSecurityGroupIngress",
                                         "ec2:DescribeImages",
-                                        "ec2:ModifyImageAttribute"
+                                        "ec2:ModifyImageAttribute",
+                                        "elasticloadbalancing:DescribeLoadBalancers",
+                                        "iam:ListInstanceProfiles",
+                                        "iam:GetInstanceProfile",
+                                        "iam:ListRolePolicies",
+                                        "iam:GetRolePolicy",
+                                        "iam:ListAttachedRolePolicies",
+                                        "iam:GetPolicy",
+                                        "iam:GetPolicyVersion"
                                     ],
                                     "Resource": "*"
                                 },
@@ -66,7 +74,8 @@
                                         "s3:GetBucketPolicy",
                                         "s3:GetBucketTagging",
                                         "s3:PutBucketAcl",
-                                        "s3:PutBucketPolicy"
+                                        "s3:PutBucketPolicy",
+                                        "s3:PutEncryptionConfiguration"
                                     ],
                                     "Resource": "*"
                                 },
@@ -103,14 +112,30 @@
                                     "Resource": "*"
                                 },
                                 {
-                                    "Sid": "RdsSnapshot",
+                                    "Sid": "RdsIssues",
                                     "Effect": "Allow",
                                     "Action": [
                                         "rds:ListTagsForResource",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:DescribeDBSnapshots",
                                         "rds:DescribeDBClusterSnapshots",
+                                        "rds:DescribeDBInstances",
+                                        "rds:DescribeDBClusters",
                                         "rds:ModifyDBClusterSnapshotAttribute",
                                         "rds:ModifyDBSnapshotAttribute"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "SQSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:ListQueues",
+                                        "sqs:GetQueueUrl",
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:ListQueueTags",
+                                        "sqs:SetQueueAttributes"
                                     ],
                                     "Resource": "*"
                                 }

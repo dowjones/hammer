@@ -166,8 +166,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name           |
 |---------------|------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-s3-acl`|
-|Identification |`/aws-lambda/hammer-describe-s3-acl`|
+|Initialization |`/aws/lambda/hammer-initiate-s3-acl`|
+|Identification |`/aws/lambda/hammer-describe-s3-acl`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

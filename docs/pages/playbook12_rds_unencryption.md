@@ -1,32 +1,29 @@
 ---
-title: CloudTrail Logging Issues
-keywords: playbook6
+title: RDS unencrypted instances
+keywords: playbook12
 sidebar: mydoc_sidebar
-permalink: playbook6_cloudtrail.html
+permalink: playbook12_rds_unencryption.html
 ---
 
-# Playbook 6: CloudTrail Logging Issues
+# Playbook 12: RDS unencrypted instances
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to address the issues with CloudTrail operation or log delivery in your accounts.
+This playbook describes how to configure Dow Jones Hammer to detect RDS instances that are not encrypted at rest.
 
 ## 1. Issue Identification
 
-Dow Jones Hammer checks the status of CloudTrail for the following triggers:
-
-* CloudTrail is not enabled for any region;
-* CloudTrail experiences problems with log delivery to S3 (permission denied);
-* CloudTrail experiences problems with log delivery to CloudWatch (permission denied).
+Dow Jones Hammer identifies those RDS instances for which ```StorageEncrypted``` parameter value is ```false```.
 
 When Dow Jones Hammer detects an issue, it writes the issue to the designated DynamoDB table.
 
-According to the [Dow Jones Hammer architecture](/index.html), the issue identification functionality uses two Lambda functions. The table lists the Python modules that implement this functionality:
+According to the [Dow Jones Hammer architecture](/index.html), the issue identification functionality uses two Lambda functions.
+The table lists the Python modules that implement this functionality:
 
 |Designation   |Path                  |
 |--------------|:--------------------:|
-|Initialization|`hammer/identification/lambdas/cloudtrails-issues-identification/initiate_to_desc_cloudtrails.py`|
-|Identification|`hammer/identification/lambdas/cloudtrails-issues-identification/describe_cloudtrails.py`|
+|Initialization|`hammer/identification/lambdas/rds-unencrypted-instance-identification/initiate_to_desc_rds_instance_encryption.py`|
+|Identification|`hammer/identification/lambdas/rds-unencrypted-instance-identification/describe_rds_instance_encryption.py`        |
 
 ## 2. Issue Reporting
 
@@ -37,57 +34,58 @@ Thus, in case you have turned on the reporting functionality for this issue and 
 * raise a JIRA ticket and assign it to a specific person in your organization;
 * send the issue notification to the Slack channel or directly to a Slack user.
 
+Additionally Dow Jones Hammer tries to detect person to report issue to by examining `owner` tag on affected RDS instance. In case when such tag **exists** and is **valid JIRA/Slack user**:
+* for JIRA: `jira_owner` parameter from [ticket_owners.json](#43-the-ticket_ownersjson-file) **is ignored** and discovered `owner` **is used instead** as a JIRA assignee;
+* for Slack: discovered `owner` **is used in addition to** `slack_owner` value from [ticket_owners.json](#43-the-ticket_ownersjson-file).
+
 This Python module implements the issue reporting functionality:
 ```
-hammer/reporting-remediation/reporting/create_cloudtrail_tickets.py
+hammer/reporting-remediation/reporting/create_rds_unencrypted_instance_issue_tickets.py
 ```
 
-## 3. Issue Remediation
 
-In this specific case, automated remediation **is not available**.
+## 3. Setup Instructions For This Issue
 
-## 4. Setup Instructions For This Issue
+To configure the detection, reporting, you should edit the following sections of the Dow Jones Hammer configuration files:
 
-To configure the detection and reporting of this issue, you should edit the following sections of the Dow Jones Hammer configuration files:
-
-### 4.1. The config.json File
+### 3.1. The config.json File
 
 The **config.json** file is the main configuration file for Dow Jones Hammer that is available at `deployment/terraform/accounts/sample/config/config.json`.
-To identify, report, and remediate issues of this type, you should add the following parameters in the **cloudtrails** section of the **config.json** file:
+To identify and report issues of this type, you should add the following parameters in the **rds_encryption** section of the **config.json** file:
 
 |Parameter Name                |Description                            | Default Value|
 |------------------------------|---------------------------------------|:------------:|
-|`enabled`                     |Toggles issue detection for this issue |`true`        |
-|`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type|`hammer-cloudtrails`|
+|`enabled`                     |Toggles issue detection for this issue |`true`|
+|`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-rds-unencrypted` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 
 Sample **config.json** section:
 ```
-"cloudtrails": {
-    "enabled": "true",
-    "ddb.table_name": "hammer-cloudtrails",
-    "reporting": false,
+"rds_encryption": {
+    "enabled": true,
+    "ddb.table_name": "hammer-rds-unencrypted",
+    "reporting": true
 }
 ```
 
-### 4.2. The whitelist.json File
+### 3.2. The whitelist.json File
 
-You can define exceptions to the general automatic remediation settings for specific AWS account regions. To configure such exceptions, you should edit the **cloudtrails** section of the **whitelist.json** configuration file as follows:
+You can define exceptions to the general automatic remediation settings for specific RDS instances. To configure such exceptions, you should edit the **rds_encryption** section of the **whitelist.json** configuration file as follows:
 
-|Parameter Key | Parameter Value(s) |
-|:----:|:-----:|
-|AWS Account ID|AWS Account Regions
+|Parameter Key | Parameter Value(s)|
+|:------------:|:-----------------:|
+|AWS Account ID|RDS Instance ARN(s)|
 
 Sample **whitelist.json** section:
 ```
-"cloudtrails": {
-    "123456789012": ["eu-west-1", "us-east-2"]
-}	
+"rds_encryption": {
+    "123456789012": ["instance_arn1", "instance_arn2"]
+}
 ```
 
-### 4.3. The ticket_owners.json File
+### 3.3. The ticket_owners.json File
 
-You should use the **ticket_owners.json** file to configure the integration of Dow Jones Hammer with JIRA and/or Slack for issue reporting purposes.
+You should use the **ticket_owners.json** file to configure the integration of Dow Jones Hammer with JIRA and/or Slack for the issue reporting purposes.
 
 You can configure these parameters for specific AWS accounts and globally. Account-specific settings precede the global settings in the **ticket_owners.json** configuration file.
 
@@ -120,13 +118,13 @@ Account-specific settings:
 }
 ```
 
-## 5. Logging
+## 4. Logging
 
 Dow Jones Hammer uses **CloudWatch Logs** for logging purposes.
 
 Dow Jones Hammer automatically sets up CloudWatch Log Groups and Log Streams for this issue when you deploy Dow Jones Hammer.
 
-### 5.1. Issue Identification Logging
+### 4.1. Issue Identification Logging
 
 Dow Jones Hammer issue identification functionality uses two Lambda functions:
 
@@ -135,27 +133,27 @@ Dow Jones Hammer issue identification functionality uses two Lambda functions:
 
 You can see the logs for each of these Lambda functions in the following Log Groups:
 
-|Lambda Function|CloudWatch Log Group Name                |
-|---------------|-----------------------------------------|
-|Initialization |`/aws/lambda/hammer-initiate-cloudtrails`|
-|Identification |`/aws/lambda/hammer-describe-cloudtrails`|
+|Lambda Function|CloudWatch Log Group Name                   |
+|---------------|--------------------------------------------|
+|Initialization |`/aws/lambda/hammer-initiate-rds-encryption`|
+|Identification |`/aws/lambda/hammer-describe-rds-encryption`|
 
-### 5.2. Issue Reporting/Remediation Logging
+### 4.2. Issue Reporting Logging
 
-Dow Jones Hammer issue reporting/remediation functionality uses ```/aws/ec2/hammer-reporting-remediation``` CloudWatch Log Group for logging. The Log Group contains issue-specific Log Streams named as follows:
+Dow Jones Hammer issue reporting functionality uses ```/aws/ec2/hammer-reporting-remediation``` CloudWatch Log Group for logging. The Log Group contains issue-specific Log Streams named as follows:
 
-|Designation|CloudWatch Log Stream Name            |
-|-----------|--------------------------------------|
-|Reporting  |`reporting.create_cloudtrails_tickets`|
-|Remediation|`remediation.clean_cloudtrails`       |
+|Designation|CloudWatch Log Stream Name                               |
+|-----------|---------------------------------------------------------|
+|Reporting  |`reporting.create_rds_unencrypted_instance_issue_tickets`|
 
-### 5.3. Slack Reports
 
-In case you have enabled Dow Jones Hammer and Slack integration, Dow Jones Hammer sends notifications about issue identification and remediation to the designated Slack channel and/or recipient(s).
+### 4.3. Slack Reports
+
+In case you have enabled Dow Jones Hammer and Slack integration, Dow Jones Hammer sends notifications about issue identification and reporting to the designated Slack channel and/or recipient(s).
 
 Check [ticket_owners.json](#43-the-ticket_ownersjson-file) configuration for further guidance.
 
-### 5.4. Using CloudWatch Logs for Dow Jones Hammer
+### 4.4. Using CloudWatch Logs for Dow Jones Hammer
 
 To access Dow Jones Hammer logs, proceed as follows:
 
@@ -167,11 +165,12 @@ To access Dow Jones Hammer logs, proceed as follows:
 
 Check [CloudWatch Logs documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html) for further guidance.
 
-## 6. Issue specific details in DynamoDB
+## 5. Issue specific details in DynamoDB
 
 Dow Jones Hammer stores various issue specific details in DynamoDB as a map under `issue_details` key. You can use it to create your own reporting modules.
 
-|Key              |Type   |Description                                             |Example                    |
-|-----------------|:-----:|--------------------------------------------------------|---------------------------|
-|`delivery_errors`|map    |CloudTrails which have logging issues                   |`{"ARN": {"errors": {...}, "events": "All", "multi_region": true}}`|
-|`disabled`       |boolean|Indicates whether CloudTrail logging is disabled or not |`false` \| `true`          |
+|Key          |Type  |Description                       |Example                                         |
+|-------------|:----:|----------------------------------|------------------------------------------------|
+|`name`       |string|RDS instance name                 |`test-rds-instances`                            |
+|`engine`     |string|Name of the database engine       |`mysql`                                         |
+|`tags`       |map   |Tags associated with RDS instance |`{"Name": "TestInstance", "service": "archive"}`|
