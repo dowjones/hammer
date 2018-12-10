@@ -37,8 +37,13 @@ def remediate(security_feature, account, cloudfront_id, cnames):
             Id = cloudfront_id,
             IfMatch = dist_config_details["ETag"]
         )
+        
+        result = "remediated"
+        response = {
+            security_feature: result
+        }
 
-        return "Success"
+        return response
 
     except ClientError as err:
         if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
