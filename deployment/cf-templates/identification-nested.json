@@ -82,7 +82,6 @@
     "Resources": {
         "LambdaInitiateEvaluation": {
             "Type": "AWS::Lambda::Function",
-            "DependsOn": ["SNSNotifyLambdaEvaluate", "LogGroupLambdaInitiateEvaluation"],
             "Properties": {
                 "Code": {
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
@@ -111,7 +110,6 @@
         },
         "SubscriptionFilterLambdaInitiateEvaluation": {
             "Type" : "AWS::Logs::SubscriptionFilter",
-            "DependsOn": ["LogGroupLambdaInitiateEvaluation"],
             "Properties" : {
                 "DestinationArn" : { "Ref" : "LambdaLogsForwarderArn" },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
@@ -161,7 +159,6 @@
         },
         "SubscriptionFilterLambdaLambdaEvaluate": {
             "Type" : "AWS::Logs::SubscriptionFilter",
-            "DependsOn": ["LogGroupLambdaEvaluate"],
             "Properties" : {
                 "DestinationArn" : { "Ref" : "LambdaLogsForwarderArn" },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
@@ -171,7 +168,6 @@
 
         "EventInitiateEvaluation": {
             "Type": "AWS::Events::Rule",
-            "DependsOn": ["LambdaInitiateEvaluation"],
             "Properties": {
                 "Description": {"Ref":  "EventRuleDescription"},
                 "Name": {"Ref":  "EventRuleName"},
@@ -188,7 +184,6 @@
 
         "PermissionToInvokeLambdaInitiateEvaluationCloudWatchEvents": {
             "Type": "AWS::Lambda::Permission",
-            "DependsOn": ["LambdaInitiateEvaluation", "EventInitiateEvaluation"],
             "Properties": {
                 "FunctionName": { "Ref": "LambdaInitiateEvaluation" },
                 "Action": "lambda:InvokeFunction",
@@ -199,7 +194,6 @@
 
         "SNSNotifyLambdaEvaluate": {
             "Type": "AWS::SNS::Topic",
-            "DependsOn": ["LambdaEvaluate"],
             "Properties": {
                 "DisplayName": { "Ref": "SNSDisplayName" },
                 "TopicName": { "Ref": "SNSTopicName" },
@@ -214,7 +208,6 @@
 
         "PermissionToInvokeLambdaEvaluateSNS": {
             "Type": "AWS::Lambda::Permission",
-            "DependsOn": ["SNSNotifyLambdaEvaluate", "LambdaEvaluate"],
             "Properties": {
                 "Action": "lambda:InvokeFunction",
                 "Principal": "sns.amazonaws.com",
@@ -225,7 +218,6 @@
 
         "AlarmErrorsLambdaInitiateEvaluation": {
             "Type": "AWS::CloudWatch::Alarm",
-            "DependsOn": ["LambdaInitiateEvaluation"],
             "Properties": {
                 "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
@@ -248,7 +240,6 @@
         },
         "AlarmErrorsLambdaEvaluation": {
             "Type": "AWS::CloudWatch::Alarm",
-            "DependsOn": ["LambdaEvaluate"],
             "Properties": {
                 "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
