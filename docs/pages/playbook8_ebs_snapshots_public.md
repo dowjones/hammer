@@ -166,8 +166,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                         |
 |---------------|--------------------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-ebs-public-snapshots`|
-|Identification |`/aws-lambda/hammer-describe-ebs-public-snapshots`|
+|Initialization |`/aws/lambda/hammer-initiate-ebs-public-snapshots`|
+|Identification |`/aws/lambda/hammer-describe-ebs-public-snapshots`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

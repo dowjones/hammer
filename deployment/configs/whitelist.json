@@ -38,5 +38,13 @@
 	},
     "kms_keys_rotation":{
 
+	},
+    "sqs_public_access":{
+		"__comment__": "Detects public SQS polices (with 'all' in 'restore' attribute). Key - account id, values - SQS ARNs.",
+		"123456789012": [""]
+	},
+    "s3_encryption": {
+	},
+    "rds_encryption": {
 	}
 }

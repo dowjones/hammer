@@ -40,6 +40,7 @@
             "654321210987": "slave2"
         }
     },
+    "whitelisting_procedure_url": "",
     "credentials": {
         "ddb.table_name": "hammer-credentials"
     },
@@ -74,6 +75,7 @@
     "user_inactivekeys": {
         "enabled": true,
         "ddb.table_name": "hammer-iam-user-keys-inactive",
+        "ignore_accounts": ["654321210987"],
         "inactive_criteria_days": 1,
         "reporting": false,
         "remediation": false,
@@ -125,5 +127,24 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 21
+    },
+    "sqs_public_access": {
+        "enabled": true,
+        "ddb.table_name": "hammer-sqs-public-access",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
+    },
+    "s3_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-s3-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 0
+    },
+    "rds_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-rds-unencrypted",
+        "reporting": true
     }
 }
