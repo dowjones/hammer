@@ -39,11 +39,12 @@ class CleanSecurityGroups(object):
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, SecurityGroupIssue)
             for issue in issues:
                 group_name = issue.issue_details.name
+                group_vpc_id = issue.issue_details.vpc_id
                 group_id = issue.issue_id
                 group_region = issue.issue_details.region
                 # status = issue.jira_details.status
 
-                name_in_whitelist = self.config.sg.in_whitelist(account_id, group_name)
+                name_in_whitelist = self.config.sg.in_whitelist(account_id, f"{group_vpc_id}:{group_name}")
                 id_in_whitelist = self.config.sg.in_whitelist(account_id, group_id)
 
                 if name_in_whitelist or id_in_whitelist:
