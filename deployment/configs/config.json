@@ -121,8 +121,8 @@
     },
     "kms_keys_rotation": {
         "enabled": true,
-        "ddb.table_name": "djif-hammer-kms-key-rotation",
-        "reporting": true,
+        "ddb.table_name": "hammer-kms-key-rotation",
+        "reporting": false,
         "remediation": false,
         "remediation_retention_period": 21
     }

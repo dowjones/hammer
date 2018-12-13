@@ -1,6 +1,8 @@
 import logging
 
 from botocore.exceptions import ClientError
+
+from library.aws import utility
 from library.utility import jsonDumps
 
 
@@ -17,18 +19,6 @@ class KMSOperations:
         """
         kms_client.enable_key_rotation(KeyId=key_id)
 
-    def convert_tags(tags):
-        """
-        Convert tags from AWS format [{'Key': '...', 'Value': '...'}, ...] to {'Key': 'Value', ...} format
-
-        :param tags: tags in native AWS format
-
-        :return: dict with tags ready to store in DynamoDB
-        """
-        # dynamodb does not like empty strings
-        # but Value can be empty, so convert it to None
-        empty_converter = lambda x: x if x != "" else None
-        return {tag['TagKey']: empty_converter(tag['TagValue']) for tag in tags} if tags else {}
 
 class KMSKey(object):
     """
@@ -46,9 +36,8 @@ class KMSKey(object):
         self.account = account
         self.id = key_id
         self.arn = key_arn
-        self.tags = KMSOperations.convert_tags(tags)
+        self.tags = utility.convert_tags(tags)
         self.rotation_status = key_rotation_status
-
 
     def __str__(self):
         return (f"{self.__class__.__name__}("
@@ -59,6 +48,7 @@ class KMSKey(object):
     def enable(self):
         """ Make `Inactive` current access key """
         KMSOperations.enable_key_rotation(self.account.client("kms"), self.id)
+
 
 class KMSKeyChecker(object):
     """
@@ -150,8 +140,8 @@ class KMSKeyChecker(object):
                             logging.exception(f"Failed to get '{key_id}' tags in {self.account}")
                             continue
 
-
-                    key = KMSKey(account=self.account, key_id=key_id, key_arn=key_arn, tags=tags,key_rotation_status=key_rotation_status)
+                    key = KMSKey(account=self.account, key_id=key_id, key_arn=key_arn, tags=tags,
+                                 key_rotation_status=key_rotation_status)
                     self.keys.append(key)
 
         return True

@@ -44,33 +44,31 @@ def lambda_handler(event, context):
         open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, KMSKeyRotationIssue)
         # make dictionary for fast search by id
         # and filter by current region
-        open_issues = {issue.issue_id: issue for issue in open_issues}
+        open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
         logging.debug(f"KMS keys to rotate in DDB:\n{open_issues.keys()}")
 
         checker = KMSKeyChecker(account=account)
-        if not checker.check():
-            return
+        if checker.check():
+            for key in checker.keys:
+                logging.debug(f"Checking {key.id}")
+                if not key.rotation_status:
+                    issue = KMSKeyRotationIssue(account_id, key.id)
+                    issue.issue_details.tags = key.tags
+                    issue.issue_details.region = region
+                    if config.kmsKeysRotation.in_whitelist(account_id, key.id):
+                        issue.status = IssueStatus.Whitelisted
+                    else:
+                        issue.status = IssueStatus.Open
+                    logging.debug(f"Setting {key.id}/{key.id} status {issue.status}")
+                    IssueOperations.update(ddb_table, issue)
+                    # remove issue id from issues_list_from_db (if exists)
+                    # as we already checked it
+                    open_issues.pop(key.id, None)
 
-        for key in checker.keys:
-            logging.debug(f"Checking {key.id}")
-            if not key.rotation_status:
-                issue = KMSKeyRotationIssue(account_id, key.id)
-                issue.issue_details.tags = key.tags
-                issue.issue_details.region = region
-                if config.kmsKeysRotation.in_whitelist(account_id, key.id) or config.kmsKeysRotation.in_whitelist(account_id, key.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
-                logging.debug(f"Setting {key.id}/{key.id} status {issue.status}")
-                IssueOperations.update(ddb_table, issue)
-                # remove issue id from issues_list_from_db (if exists)
-                # as we already checked it
-                open_issues.pop(key.id, None)
-
-        logging.debug(f"Keys to rotate in DDB:\n{open_issues.keys()}")
-        # all other unresolved issues in DDB are for removed/remediated keys
-        for issue in open_issues.values():
-            IssueOperations.set_status_resolved(ddb_table, issue)
+            logging.debug(f"Keys to rotate in DDB:\n{open_issues.keys()}")
+            # all other unresolved issues in DDB are for removed/remediated keys
+            for issue in open_issues.values():
+                IssueOperations.set_status_resolved(ddb_table, issue)
     except Exception:
         logging.exception(f"Failed to check KMS keys rotation for '{account_id} ({account_name})'")
         return
