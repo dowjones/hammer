@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating insecure services checking")
 
     try:
-        sns_arn = os.environ["SNS_SG_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.sg.enabled:

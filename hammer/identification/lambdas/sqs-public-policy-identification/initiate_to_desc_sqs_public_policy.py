@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating SQS policies checking")
 
     try:
-        sns_arn = os.environ["SNS_SQS_POLICY_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.sqspolicy.enabled:
