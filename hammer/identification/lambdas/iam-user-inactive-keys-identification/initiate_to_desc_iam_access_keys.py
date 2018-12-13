@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating IAM user inactive keys checking")
 
     try:
-        sns_arn = os.environ["SNS_IAM_USER_INACTIVE_KEYS_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.iamUserInactiveKeys.enabled:
