@@ -90,7 +90,7 @@
                 },
                 "Environment": {
                     "Variables": {
-                        "SNS_SG_ARN": { "Ref": "SNSNotifyLambdaEvaluate" }
+                        "SNS_ARN": { "Ref": "SNSNotifyLambdaEvaluate" }
                     }
                 },
                 "Description": { "Ref": "InitiateLambdaDescription" },
