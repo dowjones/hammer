@@ -129,7 +129,9 @@ class CreateSQSPolicyIssueTickets:
                     issue_description += (
                         f"*Recommendation*: "
                         f"Check if global access is truly needed and "
-                        f"if not - update SQS queue permissions to restrict access to specific private IP ranges from [RFC1918|https://tools.ietf.org/html/rfc1918].")
+                        f"if not - update SQS queue policy with "
+                        f"an [*IpAddress* condition|https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-customer-managed-policy-examples.html#grant-all-permissions-to-all-users-in-cidr-range] "
+                        f"in order to restrict access to specific private IP ranges from [RFC1918|https://tools.ietf.org/html/rfc1918].")
 
                     if self.config.whitelisting_procedure_url:
                         issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "

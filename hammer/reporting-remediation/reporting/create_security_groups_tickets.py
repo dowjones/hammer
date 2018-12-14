@@ -230,6 +230,7 @@ class CreateSecurityGroupsTickets(object):
                 group_id = issue.issue_id
                 group_name = issue.issue_details.name
                 group_region = issue.issue_details.region
+                group_vpc_id = issue.issue_details.vpc_id
                 tags = issue.issue_details.tags
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
@@ -295,7 +296,9 @@ class CreateSecurityGroupsTickets(object):
                                        f"*Account ID*: {account_id}\n"
                                        f"*SG Name*: {group_name}\n"
                                        f"*SG ID*: {group_id}\n"
-                                       f"*Region*: {group_region}\n\n")
+                                       f"*Region*: {group_region}\n")
+
+                    account_details += f"*VPC*: {group_vpc_id}\n\n" if group_vpc_id else "\n"
 
                     account = Account(id=account_id,
                                       name=account_name,
