@@ -35,6 +35,7 @@ def create_env(secgroups, region):
     for secgroup, rule in secgroups.items():
         groupId = ec2_client.create_security_group(
                 GroupName=secgroup,
+                VpcId="vpc-12345678",
                 Description=secgroup,
         )['GroupId']
 
