@@ -31,7 +31,6 @@ class KMSKey(object):
         :param key_id: KMS key id
         :param key_arn: KMS key arn
         :param key_rotation_enabled: KMS key rotation status is enabled or not
-        
         """
         self.account = account
         self.id = key_id
@@ -77,7 +76,7 @@ class KMSKeyChecker(object):
         Put all gathered Keys to `self.keys`.
 
         :param keys_to_check: list with KMS kesy to check, if it is not supplied - all KMS keys must be checked
-        
+
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
