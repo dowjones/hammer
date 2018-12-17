@@ -101,49 +101,48 @@ class KMSKeyChecker(object):
                 continue
 
             try:
-                key_details = self.account.client("kms").describe_key(KeyId=key_id)
+                key_metadata = self.account.client("kms").describe_key(KeyId=key_id)["KeyMetadata"]
             except ClientError as err:
                 if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                     logging.error(f"Access denied in {self.account} "
                                   f"(kms:{err.operation_name})")
                 else:
-                    logging.exception(f"Failed to describe kms key details in {self.account} for key id: {key_id}")
+                    logging.exception(f"Failed to get kms key metadata in {self.account} for key id: {key_id}")
                 return False
 
-            if "KeyMetadata" in key_details:
-                key_state = key_details["KeyMetadata"]["Enabled"]
-                origin = key_details["KeyMetadata"]["Origin"]
-                key_manager = key_details["KeyMetadata"]["KeyManager"]
-                if origin == "AWS_KMS" and key_manager == "CUSTOMER" and key_state:
-                    try:
-                        key_rotation_enabled = self.account.client("kms").get_key_rotation_status(
-                            KeyId=key_id
-                        )["KeyRotationEnabled"]
-                    except ClientError as err:
-                        if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
-                            logging.error(f"Access denied in {self.account} "
-                                          f"(kms:{err.operation_name})")
-                        else:
-                            logging.exception(f"Failed to get kms key rotation status in {self.account} for key id: {key_id}")
-                        return False
+            key_state = key_metadata["Enabled"]
+            origin = key_metadata["Origin"]
+            key_manager = key_metadata["KeyManager"]
+            if origin == "AWS_KMS" and key_manager == "CUSTOMER" and key_state:
+                try:
+                    key_rotation_enabled = self.account.client("kms").get_key_rotation_status(
+                        KeyId=key_id
+                    )["KeyRotationEnabled"]
+                except ClientError as err:
+                    if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                        logging.error(f"Access denied in {self.account} "
+                                      f"(kms:{err.operation_name})")
+                    else:
+                        logging.exception(f"Failed to get kms key rotation status in {self.account} for key id: {key_id}")
+                    return False
 
-                    try:
-                        tags_response = self.account.client("kms").list_resource_tags(KeyId=key_id)
-                        tags = {}
-                        if "Tags" in tags_response:
-                            tags = tags_response["Tags"]
-                    except ClientError as err:
-                        if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
-                            logging.error(f"Access denied in {self.account} "
-                                          f"(kms:{err.operation_name}, "
-                                          f"resource='{key_id}')")
-                            continue
-                        else:
-                            logging.exception(f"Failed to get '{key_id}' tags in {self.account}")
-                            continue
+                try:
+                    tags_response = self.account.client("kms").list_resource_tags(KeyId=key_id)
+                    tags = {}
+                    if "Tags" in tags_response:
+                        tags = tags_response["Tags"]
+                except ClientError as err:
+                    if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                        logging.error(f"Access denied in {self.account} "
+                                      f"(kms:{err.operation_name}, "
+                                      f"resource='{key_id}')")
+                        continue
+                    else:
+                        logging.exception(f"Failed to get '{key_id}' tags in {self.account}")
+                        continue
 
-                    key = KMSKey(account=self.account, key_id=key_id, key_arn=key_arn, tags=tags,
-                                 key_rotation_enabled=key_rotation_enabled)
-                    self.keys.append(key)
+                key = KMSKey(account=self.account, key_id=key_id, key_arn=key_arn, tags=tags,
+                             key_rotation_enabled=key_rotation_enabled)
+                self.keys.append(key)
 
         return True
