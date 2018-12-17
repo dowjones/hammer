@@ -51,7 +51,7 @@ def lambda_handler(event, context):
         if checker.check():
             for key in checker.keys:
                 logging.debug(f"Checking {key.id}")
-                if not key.rotation_status:
+                if not key.rotation_enabled:
                     issue = KMSKeyRotationIssue(account_id, key.id)
                     issue.issue_details.tags = key.tags
                     issue.issue_details.region = region
