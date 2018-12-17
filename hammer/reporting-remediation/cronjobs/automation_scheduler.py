@@ -56,7 +56,7 @@ def automation_cronjob(config):
         ("SQS Public Access",         config.sqspolicy,           "create_sqs_policy_issue_tickets",          "clean_sqs_policy_permissions"),
         ("S3 Unencrypted Buckets",    config.s3Encrypt,           "create_s3_unencrypted_bucket_issue_tickets", "clean_s3bucket_unencrypted"),
         ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
-        ("KMS Key Rotation",          config.kmsKeysRotation,     "create_kms_key_rotation_issue_tickets", "clean_kms_key_rotation.py")
+        ("KMS Key Rotation",          config.kmsKeysRotation,     "create_kms_key_rotation_issue_tickets", "clean_kms_key_rotation")
     ]
 
     for title, module_config, reporting_script, remediation_script in modules:
