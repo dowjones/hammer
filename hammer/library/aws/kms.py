@@ -127,19 +127,14 @@ class KMSKeyChecker(object):
                     return False
 
                 try:
-                    tags_response = self.account.client("kms").list_resource_tags(KeyId=key_id)
-                    tags = {}
-                    if "Tags" in tags_response:
-                        tags = tags_response["Tags"]
+                    tags = self.account.client("kms").list_resource_tags(KeyId=key_id).get("Tags", [])
                 except ClientError as err:
                     if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                         logging.error(f"Access denied in {self.account} "
                                       f"(kms:{err.operation_name}, "
                                       f"resource='{key_id}')")
-                        continue
                     else:
                         logging.exception(f"Failed to get '{key_id}' tags in {self.account}")
-                        continue
 
                 key = KMSKey(account=self.account, key_id=key_id, key_arn=key_arn, tags=tags,
                              key_rotation_enabled=key_rotation_enabled)
