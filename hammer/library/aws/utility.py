@@ -269,7 +269,7 @@ class CloudWatch:
         )
 
 
-def convert_tags(tags):
+def convert_tags(tags, tagKey="Key", tagValue="Value"):
     """
     Convert tags from AWS format [{'Key': '...', 'Value': '...'}, ...] to {'Key': 'Value', ...} format
 
@@ -280,4 +280,4 @@ def convert_tags(tags):
     # dynamodb does not like empty strings
     # but Value can be empty, so convert it to None
     empty_converter = lambda x: x if x != "" else None
-    return {tag['Key']: empty_converter(tag['Value']) for tag in tags} if tags else {}
+    return {tag[tagKey]: empty_converter(tag[tagValue]) for tag in tags} if tags else {}

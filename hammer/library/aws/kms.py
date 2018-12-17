@@ -35,7 +35,10 @@ class KMSKey(object):
         self.account = account
         self.id = key_id
         self.arn = key_arn
-        self.tags = utility.convert_tags(tags)
+        self.tags = utility.convert_tags(
+            tags,
+            tagKey="TagKey", tagValue="TagValue"
+        )
         self.rotation_enabled = key_rotation_enabled
 
     def __str__(self):
