@@ -10,7 +10,7 @@ class KMSOperations:
     @classmethod
     def enable_key_rotation(cls, kms_client, key_id):
         """
-        Make `Inactive` given access key.
+        Enable rotation of given KMS key.
 
         :param kms_client: KMS boto3 client
         :param key_id: key Id to enable key rotation
@@ -46,7 +46,7 @@ class KMSKey(object):
                 f")")
 
     def enable(self):
-        """ Make `Inactive` current access key """
+        """ Enable rotation of current KMS key """
         KMSOperations.enable_key_rotation(self.account.client("kms"), self.id)
 
 
@@ -99,6 +99,7 @@ class KMSKeyChecker(object):
 
             if keys_to_check is not None and key_id not in keys_to_check:
                 continue
+
             try:
                 key_details = self.account.client("kms").describe_key(KeyId=key_id)
             except ClientError as err:

@@ -90,7 +90,7 @@
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
                 },
-                "SourceIdentificationKMSKeyRotation":{
+                "SourceIdentificationKMSKeyRotation": {
                     "default": "Relative path to KMS key rotation sources"
                 }
             }

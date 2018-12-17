@@ -78,6 +78,6 @@ def lambda_handler(event, context):
         try:
             Sns.publish(payload["sns_arn"], payload)
         except Exception:
-            logging.exception("Failed to chain insecure services checking")
+            logging.exception("Failed to chain KMS keys rotation checking")
 
     logging.debug(f"Checked KMS keys rotation for '{account_id} ({account_name})'")
