@@ -430,7 +430,7 @@
             }
         },
 
-        "DynamoDBSQSUnencrypted": {
+        "DynamoDBSQSQueueUnencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
             "DependsOn": ["DynamoDBCredentials"],
