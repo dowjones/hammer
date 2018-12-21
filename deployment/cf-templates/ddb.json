@@ -429,10 +429,11 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
         },
+
         "DynamoDBSQSUnencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials", "DynamoDBRDSUnencrypted"],
+            "DependsOn": ["DynamoDBCredentials"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
