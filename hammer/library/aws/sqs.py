@@ -30,13 +30,25 @@ class SQSOperations(object):
             }
         )
 
+    @staticmethod
+    def set_queue_encryption(sqs_client, queue_url, kms_master_key_id=None):
+        if not kms_master_key_id:
+            kms_master_key_id = ""
+
+        sqs_client.set_queue_attributes(
+            QueueUrl=queue_url,
+            Attributes={
+                "KmsMasterKeyId": kms_master_key_id
+            }
+        )
+
 
 class SQSQueue(object):
     """
     Basic class for SQS queue.
     Encapsulates `Tags`, dict with policy.
     """
-    def __init__(self, account, url, tags, policy=None):
+    def __init__(self, account, url, tags, policy=None, encrypted=None):
         """
         :param account: `Account` instance where SQS queue is present
 
@@ -49,6 +61,7 @@ class SQSQueue(object):
         self.name = os.path.basename(self.url)
         self.tags = tags
         self._policy = json.loads(policy) if policy else {}
+        self.encrypted = encrypted
         self.backup_filename = pathlib.Path(f"{self.name}.json")
 
     def __str__(self):
@@ -101,6 +114,19 @@ class SQSQueue(object):
             SQSOperations.put_queue_policy(self.account.client("sqs"), self.url, restricted_policy)
         except Exception:
             logging.exception(f"Failed to put {self.name} restricted policy")
+            return False
+
+        return True
+
+    def encrypt_queue(self, kms_key_id=None):
+        """
+        Encrypt queue with AWS KMS-managed keys (SSE-KMS).
+        :return: nothing
+        """
+        try:
+            SQSOperations.set_queue_encryption(self.account.client("sqs"), self.url, kms_key_id)
+        except Exception:
+            logging.exception(f"Failed to encrypt {self.url} queue")
             return False
 
         return True
@@ -184,6 +210,92 @@ class SQSPolicyChecker(object):
                 url=queue_url,
                 tags=tags,
                 policy=policy,
+            )
+            self.queues.append(sqs_queue)
+        return True
+
+class SQSEncryptionChecker(object):
+    """
+    Basic class for checking unencrypted SQS queues in account.
+    Encapsulates discovered SQS queue.
+    """
+    def __init__(self, account):
+        """
+        :param account: `Account` instance with SQS queue to check
+        """
+        self.account = account
+        self.queues = []
+
+    def get_queue(self, name):
+        """
+        :return: `SQS Queue` by name
+        """
+        for queue_url in self.queues:
+            if queue_url.name == name:
+                return queue_url
+        return None
+
+    def check(self, queues=None):
+        """
+        Walk through SQS queues in the account and check them (encrypted or not).
+        Put all gathered queues to `self.queues`.
+
+        :param queues: list with SQS queue names to check, if it is not supplied - all queue must be checked
+
+        :return: boolean. True - if check was successful,
+                          False - otherwise
+        """
+        try:
+            # AWS does not support filtering dirung list, so get all queues for account
+            queue_urls = self.account.client("sqs").list_queues().get("QueueUrls", [])
+        except ClientError as err:
+            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                logging.error(f"Access denied in {self.account} "
+                              f"(sqs:{err.operation_name})")
+            else:
+                logging.exception(f"Failed to list queues in {self.account}")
+            return False
+
+        for queue_url in queue_urls:
+            if queues is not None and queue_url not in queues:
+                continue
+
+            # get queue policy
+            try:
+                response = self.account.client("sqs").get_queue_attributes(
+                    QueueUrl=queue_url,
+                    AttributeNames=['KmsMasterKeyId']
+                ).get("Attributes", {}).get("KmsMasterKeyId", None)
+                if response:
+                    queue_encrypted = True
+                else:
+                    queue_encrypted = False
+            except ClientError as err:
+                if err.response['Error']['Code'] == "AccessDenied":
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(sqs:{err.operation_name}, "
+                                  f"resource='{queue_url}')")
+                    continue
+                else:
+                    logging.exception(f"Failed to get '{queue_url}' encyption details in {self.account}")
+                    continue
+            # get queue tags
+            try:
+                tags = self.account.client("sqs").list_queue_tags(QueueUrl=queue_url).get("Tags", {})
+            except ClientError as err:
+                tags = {}
+                if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                    logging.error(f"Access denied in {self.account} "
+                                  f"(sqs:{err.operation_name}, "
+                                  f"resource='{queue_url}')")
+                else:
+                    logging.exception(f"Failed to get '{queue_url}' tags in {self.account}")
+
+            sqs_queue = SQSQueue(
+                account=self.account,
+                url=queue_url,
+                tags=tags,
+                encrypted=queue_encrypted,
             )
             self.queues.append(sqs_queue)
         return True
