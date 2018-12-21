@@ -27,7 +27,7 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
-                        "SourceIdentificationSQSUnencryptedQueues"
+                        "SourceIdentificationSQSEncryption"
                     ]
                 },
                 {
@@ -90,7 +90,7 @@
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
                 },
-                "SourceIdentificationSQSUnencryptedQueues":{
+                "SourceIdentificationSQSEncryption":{
                     "default": "Relative path to Unencrypted SQS queues lambda sources"
                 }
             }
@@ -181,7 +181,7 @@
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
         },
-        "SourceIdentificationSQSUnencryptedQueues": {
+        "SourceIdentificationSQSEncryption": {
             "Type": "String",
             "Default": "sqs-unencrypted-queues-identification.zip"
         }
