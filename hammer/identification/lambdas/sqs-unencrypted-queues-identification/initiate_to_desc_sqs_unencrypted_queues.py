@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating unencrypted SQS queues checking")
 
     try:
-        sns_arn = os.environ["SNS_SQS_QUEUE_ARN"]
+        sns_arn = os.environ["SNS_SQS_ENCRYPT_ARN"]
         config = Config()
 
         if not config.sqsEncrypt.enabled:

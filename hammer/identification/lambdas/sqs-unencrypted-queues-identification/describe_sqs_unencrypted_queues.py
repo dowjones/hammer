@@ -50,7 +50,7 @@ def lambda_handler(event, context):
         if checker.check():
             for queue in checker.queues:
                 logging.debug(f"Checking {queue.name}")
-                if queue.encrypted:
+                if not queue.encrypted:
                     issue = SQSEncryptionIssue(account_id, queue.url)
                     issue.issue_details.tags = queue.tags
                     issue.issue_details.name = queue.name
