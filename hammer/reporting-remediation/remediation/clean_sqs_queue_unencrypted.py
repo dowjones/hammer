@@ -29,6 +29,9 @@ class CleanSQSUnencryptedQueue:
         retention_period = self.config.sqsEncrypt.remediation_retention_period
         remediation_warning_days = self.config.slack.remediation_warning_days
 
+        #kms_key_id = self.config.sqsEncrypt.kms_key_id
+        kms_key_id = None
+
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
@@ -84,11 +87,11 @@ class CleanSQSUnencryptedQueue:
                         queue = checker.get_queue(queue_name)
                         if queue is None:
                             logging.debug(f"Queue {queue_name} was removed by user")
-                        elif not queue.encrypted:
+                        elif queue.encrypted:
                             logging.debug(f"Queue {queue.name} unencrypted issue was remediated by user")
                         else:
                             logging.debug(f"Remediating unencrypted '{queue.name}' ")
-                            kms_key_id = None
+
                             remediation_succeed = True
                             if queue.encrypt_queue(kms_key_id):
                                 comment = (f"Queue '{queue.name}' unencrypted issue "

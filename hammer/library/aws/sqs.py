@@ -31,9 +31,7 @@ class SQSOperations(object):
         )
 
     @staticmethod
-    def set_queue_encryption(sqs_client, queue_url, kms_master_key_id=None):
-        if not kms_master_key_id:
-            kms_master_key_id = ""
+    def set_queue_encryption(sqs_client, queue_url, kms_master_key_id):
 
         sqs_client.set_queue_attributes(
             QueueUrl=queue_url,
@@ -124,7 +122,11 @@ class SQSQueue(object):
         :return: nothing
         """
         try:
-            SQSOperations.set_queue_encryption(self.account.client("sqs"), self.url, kms_key_id)
+            if kms_key_id:
+                SQSOperations.set_queue_encryption(self.account.client("sqs"), self.url, kms_key_id)
+            else:
+                logging.exception(f"Encryption key not found for  {self.url} queue")
+                return False
         except Exception:
             logging.exception(f"Failed to encrypt {self.url} queue")
             return False
