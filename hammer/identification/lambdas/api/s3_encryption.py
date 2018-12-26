@@ -9,7 +9,7 @@ def identify(security_feature, account, config, ids, tags):
         buckets = []
         for bucket in checker.buckets:
             buckets.append(f"{bucket.name}")
-            if not bucket.is_encrypted:
+            if not bucket.encrypted:
                 result.append({
                     'name': bucket.name
                 })
@@ -34,7 +34,7 @@ def remediate(security_feature, account, config, ids, tags):
     checker = S3EncryptionChecker(account=account)
     if checker.check(buckets=ids):
         for bucket in checker.buckets:
-            if bucket.is_encrypted:
+            if bucket.encrypted:
                 result = "skipped"
             else:
                 if bucket.encrypt_bucket():

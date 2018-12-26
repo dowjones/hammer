@@ -139,6 +139,7 @@
                                         "s3:GetBucketTagging",
                                         "s3:PutBucketAcl",
                                         "s3:PutBucketPolicy",
+                                        "s3:GetEncryptionConfiguration",
                                         "s3:PutEncryptionConfiguration"
                                     ],
                                     "Resource": "*"
