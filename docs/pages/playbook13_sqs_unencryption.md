@@ -78,7 +78,7 @@ You can define exceptions to the general automatic remediation settings for spec
 
 Sample **whitelist.json** section:
 ```
-"sas_encryption": {
+"sqs_encryption": {
     "123456789012": ["queue_url1", "queue_url2"]
 }
 ```
