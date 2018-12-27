@@ -115,3 +115,7 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+
+    - title: SQS Unencrypted queues
+      url: /playbook13_sqs_unencryption.html
+      output: web, pdf
