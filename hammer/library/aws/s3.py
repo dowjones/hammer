@@ -442,6 +442,9 @@ class S3Bucket(object):
 
         return True
 
+    def contains_tags(self, tags):
+        return all(tag in self.tags.items() for tag in tags.items())
+
 
 class S3BucketsPolicyChecker(object):
     """

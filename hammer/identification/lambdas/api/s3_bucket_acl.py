@@ -8,6 +8,8 @@ def identify(security_feature, account, config, ids, tags):
     if checker.check(buckets=ids):
         buckets = []
         for bucket in checker.buckets:
+            if not bucket.contains_tags(tags):
+                continue
             buckets.append(f"{bucket.name}")
             if bucket.public:
                 result.append({
@@ -20,8 +22,6 @@ def identify(security_feature, account, config, ids, tags):
         }
         if ids:
             response.setdefault("filterby", {})["ids"] = ids
-        if tags:
-            response.setdefault("errors", []).append("At the moment, S3 does not offer filtering objects by tags")
         return response
     else:
         return server_error(text="Failed to check S3 public acls")
