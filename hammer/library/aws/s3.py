@@ -443,7 +443,12 @@ class S3Bucket(object):
         return True
 
     def contains_tags(self, tags):
-        return all(tag in self.tags.items() for tag in tags.items())
+        for tag_name in tags:
+            if tag_name not in self.tags:
+                return False
+            if self.tags[tag_name] not in tags[tag_name]:
+                return False
+        return True
 
 
 class S3BucketsPolicyChecker(object):
