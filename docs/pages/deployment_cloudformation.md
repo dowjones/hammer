@@ -5,14 +5,14 @@ sidebar: mydoc_sidebar
 permalink: deployment_cloudformation.html
 ---
 
-You should perform the following steps to deploy Dow Jones Hammer using CloudFormation:
+You should perform the steps mentioned below to deploy Dow Jones Hammer using CloudFormation:
 
 1. Accomplish the preliminary steps
 2. Put the Dow Jones Hammer packages into the Dow Jones Hammer deployment bucket
 3. Deploy CloudFormation stacks to the master AWS account
 4. Deploy CloudFormation stacks to the slave AWS accounts
 
-## 1. Preliminary Steps
+## 1. Preliminary steps
 
 Check [this section](configuredeploy_overview.html#2-preliminary-steps) to make sure you have performed all necessary steps before proceeding further.
 
