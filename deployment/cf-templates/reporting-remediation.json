@@ -182,6 +182,10 @@
                                 "pip3.6 install -r requirements.txt\n",
                                 "echo LOG_GROUP=", { "Ref": "LogGroupReportingRemediation" }, " >> config.ini\n",
                                 "mkdir -p /var/log/hammer\n",
+                                "/bin/cp -f bot/hammer-bot.service /etc/systemd/system/\n",
+                                "systemctl daemon-reload\n",
+                                "systemctl enable hammer-bot\n",
+                                "systemctl restart hammer-bot\n",
                                 "python3.6 -m cronjobs.automation_scheduler\n"
                             ]
                         ]
@@ -218,23 +222,9 @@
                     },
                     {
                         "IpProtocol": "TCP",
-                        "FromPort": "80",
-                        "ToPort": "80",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
-                    }
-                ],
-                "SecurityGroupEgress": [
-                    {
-                        "IpProtocol": "-1",
-                        "FromPort": "0",
-                        "ToPort": "65535",
-                        "CidrIp": "0.0.0.0/0"
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "192.168.0.0/16"
                     }
                 ],
                 "Tags": [

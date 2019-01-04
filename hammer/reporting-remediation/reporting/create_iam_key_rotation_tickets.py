@@ -13,6 +13,7 @@ from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, IAMKeyRotationIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateTicketIamKeyRotation:
@@ -29,7 +30,7 @@ class CreateTicketIamKeyRotation:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.iamUserKeysRotation.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, IAMKeyRotationIssue)
             for issue in issues:
@@ -76,7 +77,11 @@ class CreateTicketIamKeyRotation:
                     # auto_remediation_date = (self.config.now + self.config.iamUserKeysRotation.issue_retention_date).date()
                     # issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
-                    issue_description += f"*Recommendation*: Rotate specified stale access key."
+                    issue_description += f"*Recommendation*: Rotate specified stale access key. "
+
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(
@@ -109,6 +114,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateTicketIamKeyRotation(config)
         obj.create_jira_ticket()

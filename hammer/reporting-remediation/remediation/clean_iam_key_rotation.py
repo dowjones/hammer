@@ -15,6 +15,7 @@ from library.ddb_issues import IAMKeyRotationIssue
 from library.aws.iam import IAMOperations
 from library.aws.utility import Account
 from library.utility import confirm
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CleanIAMUserStaleKeys:
@@ -32,7 +33,7 @@ class CleanIAMUserStaleKeys:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.iamUserKeysRotation.remediation_accounts.items():
             logging.debug("* Account Name:" + account_name + " :::Account ID:::" + account_id)
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, IAMKeyRotationIssue)
             for issue in issues:
@@ -110,6 +111,11 @@ if __name__ == "__main__":
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch', action='store_true', help='Do not ask confirmation for remediation')

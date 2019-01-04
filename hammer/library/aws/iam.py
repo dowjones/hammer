@@ -2,9 +2,103 @@ import logging
 
 from botocore.exceptions import ClientError
 from library.utility import jsonDumps
+from library.utility import timeit
+from collections import namedtuple
+
+
+# structure which describes Instance Iam profile details
+IAMUnsafeRole = namedtuple('IAMUnsafeRole', [
+    # iam profile role name
+    'role_name',
+    # policy name
+    'policy_name',
+    # list with unsafe actions
+    'actions'
+    ])
 
 
 class IAMOperations:
+    @staticmethod
+    def unsafe_statement(statement):
+        """
+        Check if supplied IAM policy statement allows unsafe access (with * in action).
+
+        :param statement: dict with IAM policy statement (as AWS returns)
+
+        :return: boolean, True - if statement allows access from '*' `Principal`, not restricted by `IpAddress` condition
+                          False - otherwise
+        """
+        effect = statement['Effect']
+        actions = statement.get('Action', [])
+        if isinstance(actions, str):
+            action = [actions]
+        resource = statement.get('Resource', [])
+        if isinstance(resource, str):
+            resource = [resource]
+        result = []
+        if effect == "Allow" and \
+           "*" in resource:
+            for action in actions:
+                if "*" in action:
+                    result.append(action)
+        return result
+
+    @classmethod
+    @timeit
+    def get_instance_profile_policy_details(cls, iam_client, instance_profile_id):
+        # try to find profile name
+        for profile in iam_client.list_instance_profiles()['InstanceProfiles']:
+            if instance_profile_id == profile['InstanceProfileId']:
+                profile_name = profile['InstanceProfileName']
+                break
+        else:
+            # unknown profile id
+            return []
+
+        iam_unsafe_roles = []
+
+        roles = iam_client.get_instance_profile(InstanceProfileName=profile_name)['InstanceProfile']['Roles']
+        for role in roles:
+            role_name = role['RoleName']
+            # [{'PolicyName': 'AmazonChimeReadOnly', 'PolicyArn': 'arn:aws:iam::aws:policy/AmazonChimeReadOnly'}]
+            managed_policies = iam_client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
+            for policy in managed_policies:
+                policy_info = iam_client.get_policy(PolicyArn=policy['PolicyArn'])['Policy']
+                policy_name = policy_info['PolicyName']
+                policy_version = policy_info['DefaultVersionId']
+                policy_arn = policy_info['Arn']
+                policy_doc = iam_client.get_policy_version(
+                    PolicyArn=policy_arn,
+                    VersionId=policy_version,
+                )['PolicyVersion']
+
+                for statement in policy_doc["Document"]["Statement"]:
+                    actions = cls.unsafe_statement(statement)
+                    if len(actions) > 0:
+                        iam_unsafe_roles.append(
+                            IAMUnsafeRole(
+                                role_name=role_name,
+                                policy_name=f"aws:{policy_name} ({policy_version})",
+                                actions=", ".join(actions)
+                            )
+                        )
+
+            inline_policies = iam_client.list_role_policies(RoleName=role_name)['PolicyNames']
+            for policy_name in inline_policies:
+                policy_doc = iam_client.get_role_policy(RoleName=role_name, PolicyName=policy_name)
+                for statement in policy_doc["PolicyDocument"]["Statement"]:
+                    actions = cls.unsafe_statement(statement)
+                    if len(actions) > 0:
+                        iam_unsafe_roles.append(
+                            IAMUnsafeRole(
+                                role_name=role_name,
+                                policy_name=f"inline: {policy_name}",
+                                actions=actions
+                            )
+                        )
+
+        return iam_unsafe_roles
+
     @staticmethod
     def update_access_key(iam_client, user_name, key_id, status):
         """

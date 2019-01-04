@@ -103,7 +103,7 @@
         "DynamoDBS3PublicAcls": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBS3Unencrypted"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -136,7 +136,7 @@
         "DynamoDBS3PublicPolicies": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBS3Unencrypted"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -169,7 +169,7 @@
         "DynamoDBIAMUserKeysRotation": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBEBSVolumesUnencrypted"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -202,7 +202,7 @@
         "DynamoDBIAMUserKeysInactive": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBEBSSnapshotsPublic"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -235,7 +235,7 @@
         "DynamoDBEBSVolumesUnencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSGUnrestrectedAccess"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -268,7 +268,7 @@
         "DynamoDBEBSSnapshotsPublic": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSGUnrestrectedAccess"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -301,7 +301,7 @@
         "DynamoDBRDSSnapshots": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
@@ -328,6 +328,105 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-public-snapshots" ] ]}
+            }
+        },
+
+        "DynamoDBSQSPublicPolicy": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "sqs-public-access" ] ]}
+            }
+        },
+
+        "DynamoDBS3Unencrypted": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBCloudTrailIssues"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "s3-unencrypted" ] ]}
+            }
+        },
+
+        "DynamoDBRDSUnencrypted": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
         }
     }

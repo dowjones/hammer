@@ -12,6 +12,7 @@ from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, S3PolicyIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateS3BucketPolicyIssueTickets:
@@ -31,7 +32,7 @@ class CreateS3BucketPolicyIssueTickets:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3policy.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, S3PolicyIssue)
             for issue in issues:
@@ -123,8 +124,14 @@ class CreateS3BucketPolicyIssueTickets:
                     issue_description += f"\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Check if global access is truly needed and "
-                        f"if not - update bucket permissions to restrict access to specific private IP ranges from RFC1819.")
+                        f"Grant CloudFront OAI applicable permissions on bucket "
+                        f"or update bucket permissions with VPC CIDRs ranges or ip addresses/ranges from "
+                        f"[RFC1918|https://tools.ietf.org/html/rfc1918]. "
+                    )
+
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(
@@ -169,6 +176,12 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
+
     try:
         obj = CreateS3BucketPolicyIssueTickets(config)
         obj.create_tickets_s3buckets()

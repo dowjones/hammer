@@ -5,6 +5,8 @@ import time
 import logging
 import linecache
 import tracemalloc
+import tempfile
+import fcntl
 
 
 from datetime import datetime
@@ -29,7 +31,7 @@ def jsonDumps(obj, **kwargs):
     return json.dumps(obj, indent=4, default=jsonEncoder, **kwargs)
 
 
-def list_converter(x): return ", ".join(x) if len(x) > 0 else '-'
+def list_converter(x, separator=", "): return separator.join(x) if len(x) > 0 else '-'
 def empty_converter(x): return '-' if not x else x
 def bool_converter(x): return 'Yes' if x else 'No'
 
@@ -116,3 +118,24 @@ def confirm(question, default=None):
             return valid[choice]
         else:
             print("Please respond with 'yes' or 'no'")
+
+
+class SingletonInstanceException(BaseException):
+    pass
+
+
+class SingletonInstance(object):
+    """ Class that can be instantiated only once per instance_id to prevent
+        reporting/remediation scripts from running in parallel.
+
+        Remember that you should assign SingleInstance() to some variable available till script end
+        to prevent class instance from been garbage collected thus closing file handler and releasing lock.
+    """
+    def __init__(self, instance_id):
+        filename = f"hammer-{instance_id}.lock"
+        self.lockfile = os.path.join(tempfile.gettempdir(), filename)
+        self.fh = open(self.lockfile, 'w')
+        try:
+            fcntl.lockf(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            raise SingletonInstanceException()

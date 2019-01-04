@@ -21,8 +21,8 @@
 		"123456789012": ["public-site-bucket", "public-bucket-available-via-cloudfront"]
 	},
 	"secgrp_unrestricted_access": {
-		"__comment__": "Detects security groups with world-wide open ports from the list. Key - account id, values - security group ids or names.",
-		"123456789012": ["sg-7c124307", "sg-2132a25b"]
+		"__comment__": "Detects security groups with world-wide open ports from the list. Key - account id, values - 1) security group ID or 2) VPC ID + security group Name separated by colon.",
+		"123456789012": ["sg-7c124307", "sg-2132a25b", "vpc-a372f3ca:default"]
 	},
 	"ebs_unencrypted_volume": {
 		"__comment__": "Detects unencrypted EBS volumes. Key - account id, values - volume ids.",
@@ -35,5 +35,13 @@
 	"rds_public_snapshot":{
 		"__comment__": "Detects public RDS snapshots (with 'all' in 'restore' attribute). Key - account id, values - snapshot ARNs.",
 		"123456789012": ["arn:aws:rds:eu-central-1:123456789012:snapshot:public", "arn:aws:rds:eu-west-1:123456789012:snapshot:rds:snapshot1"]
+	},
+    "sqs_public_access":{
+		"__comment__": "Detects public SQS polices (with 'all' in 'restore' attribute). Key - account id, values - SQS ARNs.",
+		"123456789012": [""]
+	},
+    "s3_encryption": {
+	},
+    "rds_encryption": {
 	}
 }

@@ -62,6 +62,7 @@ def set_logging(ident=None, level=logging.ERROR, logfile=None):
     logging.getLogger('oauthlib').setLevel(logging.CRITICAL)
     logging.getLogger('requests_oauthlib').setLevel(logging.CRITICAL)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.CRITICAL)
+    logging.getLogger('urllib3.util.retry').setLevel(logging.CRITICAL)
     logging.getLogger('ipwhois').setLevel(logging.CRITICAL)
 
     return logger

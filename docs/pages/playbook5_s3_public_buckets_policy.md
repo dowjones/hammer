@@ -87,6 +87,8 @@ To identify, report, and remediate issues of this type, you should add the follo
 |------------------------------|---------------------------------------|:------------:|
 |`enabled`                     |Toggles issue detection for this issue |`true`        |
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type|`hammer-s3-public-bucket-policy`|
+|`accounts`                    |*Optional* comma-separated list of accounts to check and report for this issue type | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
+|`remediation_accounts`        |*Optional* comma-separated list of accounts to remediate this issue type            | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
 |`remediation_retention_period`|The amount of days to pass between issue detection and its automatic remediation. The value `0` denotes that Dow Jones Hammer will remediate the issue at the next remediation job run.|`7`|
@@ -170,8 +172,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name              |
 |---------------|---------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-s3-policy`|
-|Identification |`/aws-lambda/hammer-describe-s3-policy`|
+|Initialization |`/aws/lambda/hammer-initiate-s3-policy`|
+|Identification |`/aws/lambda/hammer-describe-s3-policy`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

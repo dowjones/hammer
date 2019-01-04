@@ -137,8 +137,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                |
 |---------------|-----------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-cloudtrails`|
-|Identification |`/aws-lambda/hammer-describe-cloudtrails`|
+|Initialization |`/aws/lambda/hammer-initiate-cloudtrails`|
+|Identification |`/aws/lambda/hammer-describe-cloudtrails`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

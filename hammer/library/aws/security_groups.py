@@ -357,6 +357,7 @@ class SecurityGroup(object):
         self.source = source
         self.name = self.source["GroupName"]
         self.id = self.source["GroupId"]
+        self.vpc_id = self.source.get("VpcId", None)
         self.tags = convert_tags(source.get('Tags', []))
         # list with all `SecurityGroupPermission` elements
         self.permissions = []
@@ -528,6 +529,9 @@ class SecurityGroupsChecker(object):
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
                               f"(ec2:{err.operation_name})")
+            elif err.response['Error']['Code'] == "InvalidGroup.NotFound":
+                logging.error(err.response['Error']['Message'])
+                return False
             else:
                 logging.exception(f"Failed to describe security groups in {self.account}")
             return False

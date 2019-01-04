@@ -83,6 +83,8 @@ To identify, report, and remediate issues of this type, you should add the follo
 |------------------------------|---------------------------------------|:------------:|
 |`enabled`                     |Toggles issue detection for this issue |`true`        |
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-security-groups-unrestricted`|
+|`accounts`                    |*Optional* comma-separated list of accounts to check and report for this issue type | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
+|`remediation_accounts`        |*Optional* comma-separated list of accounts to remediate this issue type            | **aws.accounts** from [config.json](editconfig.html#11-master-aws-account-settings) |
 |`restricted_ports`            |Comma-separated list of ports for which you want to restrict public access |`[21, 22, 23, 3389,1433,1521,3306,5432, 27017]`|
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
@@ -106,14 +108,15 @@ Sample **secgrp_unrestricted_access** section of the **config.json** file:
 You can define exceptions to the general automatic remediation settings for specific security groups. To configure such exceptions, you should edit the  **secgrp_unrestricted_access** section of the **whitelist.json** configuration file as follows:
 
 |Parameter Key | Parameter Value(s) |
-|:----:|:-----:|
-|AWS Account ID|Security Group Names or IDs|
+|:------------:|:------------------:|
+|AWS Account ID|Security Group ID<br>VPC ID and Security Group Name, separated by colon|
 
 Sample **whitelist.json** section:
 
 ```
 "secgrp_unrestricted_access": {
-    "123456789012": ["sg-7c228307", "sg-21f2ad5b"],"067463091988": ["PAN-Dataplane_sg"]
+    "123456789012": ["sg-7c228307", "sg-21f2ad5b", "vpc-654321:default"],
+    "067463091988": ["vpc-123456:PAN-Dataplane_sg"]
 }	
 ```
 
@@ -169,8 +172,8 @@ You can see the logs for each of these Lambda functions in the following Log Gro
 
 |Lambda Function|CloudWatch Log Group Name                    |
 |---------------|---------------------------------------------|
-|Initialization |`/aws-lambda/hammer-initiate-security-groups`|
-|Identification |`/aws-lambda/hammer-describe-security-groups`|
+|Initialization |`/aws/lambda/hammer-initiate-security-groups`|
+|Identification |`/aws/lambda/hammer-describe-security-groups`|
 
 ### 5.2. Issue Reporting/Remediation Logging
 

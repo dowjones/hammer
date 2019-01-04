@@ -1,7 +1,6 @@
 import logging
 import xlwt
 import sys
-import os
 
 
 from io import BytesIO
@@ -112,7 +111,7 @@ class CSVReport(object):
             )
 
         if self.config.slack.enabled:
-            channel = self.config.slack.default_channel
+            channel = self.config.csv.slack_channel
             slack_obj = SlackNotification(config=self.config)
             logging.debug(f"Uploading CSV report to slack ({channel})")
             slack_obj.send_file_notification(

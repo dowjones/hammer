@@ -10,6 +10,7 @@ from library.slack_utility import SlackNotification
 from library.ddb_issues import IssueStatus, CloudTrailIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.utility import bool_converter, list_converter
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CreateCloudTrailLoggingTickets:
@@ -48,7 +49,7 @@ class CreateCloudTrailLoggingTickets:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.cloudtrails.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, CloudTrailIssue)
             for issue in issues:
@@ -96,11 +97,11 @@ class CreateCloudTrailLoggingTickets:
                     logging.debug(f"Reporting '{region}' CloudTrail logging issue")
 
                     if issue.issue_details.disabled:
-                        issue_summary = f"Disabled CloudTrail in '{account_name} / {region}' "
+                        issue_summary = f"Disabled CloudTrail in '{account_name} / {account_id} / {region}' "
                         issue_description = "No enabled CloudTrails for region available."
                         recommendation = f"Create CloudTrail for region"
                     elif issue.issue_details.delivery_errors:
-                        issue_summary = f"CloudTrail logging issues in '{account_name} / {region}' "
+                        issue_summary = f"CloudTrail logging issues in '{account_name} / {account_id} / {region}' "
                         issue_description = "CloudTrail has issues with logging."
                         recommendation = f"Check policies for CloudTrail logging"
                     else:
@@ -117,7 +118,11 @@ class CreateCloudTrailLoggingTickets:
 
                     issue_description += self.build_trails_table(issue.issue_details.trails)
 
-                    issue_description += f"\n\n*Recommendation*: {recommendation}."
+                    issue_description += f"\n\n*Recommendation*: {recommendation}. "
+
+                    if self.config.whitelisting_procedure_url:
+                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                                              f"and provide a strong business reasoning. ")
 
                     try:
                         response = jira.add_issue(
@@ -150,6 +155,11 @@ if __name__ == '__main__':
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     try:
         obj = CreateCloudTrailLoggingTickets(config)

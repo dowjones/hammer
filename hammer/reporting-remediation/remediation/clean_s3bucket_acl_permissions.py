@@ -15,6 +15,7 @@ from library.ddb_issues import S3AclIssue
 from library.aws.s3 import S3BucketsAclChecker
 from library.aws.utility import Account
 from library.utility import confirm
+from library.utility import SingletonInstance, SingletonInstanceException
 
 
 class CleanS3BucketAclPermissions:
@@ -33,7 +34,7 @@ class CleanS3BucketAclPermissions:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3acl.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3AclIssue)
             for issue in issues:
@@ -66,10 +67,6 @@ class CleanS3BucketAclPermissions:
                     product = issue.jira_details.product
 
                     try:
-                        if not batch and \
-                           not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket ACL", False):
-                            continue
-
                         account = Account(id=account_id,
                                           name=account_name,
                                           role_name=self.config.aws.role_name_reporting)
@@ -85,6 +82,10 @@ class CleanS3BucketAclPermissions:
                         elif not s3bucket.public_by_acl:
                             logging.debug(f"Bucket {s3bucket.name} ACL issue was remediated by user")
                         else:
+                            if not batch and \
+                               not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket ACL", False):
+                                continue
+
                             logging.debug(f"Remediating '{s3bucket.name}' ACL")
 
                             backup_path = s3bucket.backup_acl_s3(main_account.client("s3"), backup_bucket)
@@ -130,6 +131,11 @@ if __name__ == "__main__":
                    log_stream=module_name,
                    level=logging.DEBUG,
                    region=config.aws.region)
+    try:
+        si = SingletonInstance(module_name)
+    except SingletonInstanceException:
+        logging.error(f"Another instance of '{module_name}' is already running, quitting")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch', action='store_true', help='Do not ask confirmation for remediation')

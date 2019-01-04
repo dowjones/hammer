@@ -310,6 +310,9 @@ class JiraOperations(object):
 
         :return: nothing
         """
+        if not ticket_id:
+            return
+
         issue = self.session.issue(ticket_id)
         if issue.fields.status.name == "Closed":
             logging.debug(f"{ticket_id} is already closed")

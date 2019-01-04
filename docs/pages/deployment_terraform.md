@@ -64,7 +64,7 @@ You should add ```provider``` sections for the master account and the slave acco
 
 **Note**: ```profile``` values in the `provider` sections have to match AWS CLI profile names you configured during [Configure AWS CLI Access Credentials](#2-configure-aws-cli-access-credentials) step.
 
-**Note**: `region` value have to match `aws.region` parameter you configured in [config.json](/editconfig.html#11-master-aws-account-settings).
+**Note**: `region` value has to match `aws.region` parameter you configured in [config.json](/editconfig.html#11-master-aws-account-settings).
 
 Sample configuration for the master account:
 
@@ -145,7 +145,9 @@ Terraform needs to pass a number of parameters to CloudFormation to create the C
 |`keyPair`                          | Name of the EC key pair you have created at [preliminary steps](configuredeploy_overview.html#25-create-ec2-key-pair-for-hammer) |``` joe.bloggs ``` |
 |`vpcId`                            | ID of the VPC for deployment of the reporting/remediation EC2              |`vpc-2dedc54a`    |
 |`subnet`                           | ID of the Subnet for deployment of the reporting/remediation EC2           |`subnet-37d28b50` |
-|`resources-prefix`                 | The prefix for all Dow Jones Hammer resources                                        |`hammer-`         |
+|`lambdaSubnets`                    | IDs of VPC Subnets for deployment of identification lambdas (**optional**)         | |
+|`lambdaSecurityGroups`             | IDs of VPC Security Groups for deployment of identification lambdas (**optional**) | |
+|`resources-prefix`                 | The prefix for all Dow Jones Hammer resources                              |`hammer-`         |
 |`tag`                              | Map with tags to apply to AWS resources                                    |`{}`              |
 
 **Note**: Make sure that DynamoDB tables prefix is consistent with **ddb.table_name** for [all issue configurations](editconfig.html#2-configure-issue-specific-hammer-configuration-parameters) and [credentials](editconfig.html#13-reporting-setup-jiraslack) table name.
@@ -184,6 +186,12 @@ variable "vpcId" {
 }
 variable "subnet" {
     default = "subnet-37d28b50"
+}
+variable "lambdaSubnets" {
+    default = ""
+}
+variable "lambdaSecurityGroups" {
+    default = ""
 }
 
 variable "resources-prefix" {

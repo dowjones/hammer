@@ -72,10 +72,13 @@ You will need to set the following parameters:
 
 #### 3.1.3. Identification Functionality
 
+**Common parameters**:
 * **ResourcesPrefix**: the prefix for all Dow Jones Hammer resources. The default value is **hammer-**.
 * **S3BucketInfo**: the name of the S3 bucket you [created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) to deploy Dow Jones Hammer.
 * **IdentificationIAMRole**: the name of identification IAM role for the Dow Jones Hammer identification functionality in master account. Use the same value as for **IdentificationIAMRole** parameter in [IAM Identification Role](#311-iam-identification-role) step. The default value is **cloudsec-master-id**.
 * **IdentificationCheckRateExpression**: [CloudWatch Schedule Cron Expression](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions) for the interval between Dow Jones Hammer identification runs **without minutes part**. The default value is **\* * * ? \***.
+
+**Sources**:
 * **SourceLogsForwarder**: the relative path to the Lambda package that handles log forwarding from CloudWatch to Slack. The default value is **logs-forwarder.zip**.
 * **SourceBackupDDB**: the relative path to the Lambda package that handles the backing up of DynamoDB tables. The default value is **ddb-tables-backup.zip**.
 * **SourceIdentificationSG**: the relative path to the Lambda package that handles insecure services identification. The default value is **sg-issues-identification.zip**.
@@ -87,6 +90,13 @@ You will need to set the following parameters:
 * **SourceIdentificationEBSVolumes**: the relative path to the Lambda package that identifies EBS volume issues. The default value is **ebs-unencrypted-volume-identification.zip**.
 * **SourceIdentificationEBSSnapshots**: the relative path to the Lambda package that identifies EBS snapshot issues. The default value is **ebs-public-snapshots-identification.zip**.
 * **SourceIdentificationRDSSnapshots**: the relative path to the Lambda package that identifies RDS snapshot issues. The default value is **rds-public-snapshots-identification.zip**.
+* **SourceIdentificationSQSPublicPolicy**: the relative path to the Lambda package that identifies SQS public queue issues. The default value is **sqs-public-policy-identification.zip**.
+* **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
+* **SourceIdentificationRDSEncryption**: the relative path to the Lambda package that identifies RDS unencrypted instances. The default value is **rds-unencrypted-instance-identification.zip**.
+
+**VPC config (optional)**:
+* **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.
+* **LambdaSecurityGroups**: comma-separated list, without spaces, of Security Group IDs in your VPC to associate identification lambdas with.
 
 #### 3.1.4. IAM Reporting/Remediation Role
 
