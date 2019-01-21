@@ -22,7 +22,7 @@ def lambda_handler(event, context):
                       }
             logging.debug(f"Initiating to get CNAME recordsets for account'{account_name}'")
             Sns.publish(sns_arn, payload)
-        except Exception:
+    except Exception:
         logging.exception("Error occurred while initiation of retrieving CNAME recordsets")
         return
 
