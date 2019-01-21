@@ -8,7 +8,7 @@ import logging
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
 from library.aws.utility import Account
-from library.utility import empty_converter, list_converter
+from library.utility import list_converter
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.aws.dns import DNSOperations

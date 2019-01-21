@@ -6,7 +6,6 @@ from library.logger import set_logging
 from library.config import Config
 from library.aws.utility import Account
 from library.aws.s3 import S3Operations
-from library.ddb_issues import Operations as IssueOperations
 
 
 def lambda_handler(event, context):
