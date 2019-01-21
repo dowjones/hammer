@@ -58,6 +58,8 @@ class Config(object):
         self.rdsSnapshot = ModuleConfig(self._config, "rds_public_snapshot")
         # DNS takeover issue config
         self.dnsTakeover = ModuleConfig(self._config, "dns_takeover")
+        
+        self.cnameRecordsets = ModuleConfig(self._config, "cnameRecordsets")
 
         self.bu_list = self._config.get("bu_list", [])
 

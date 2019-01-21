@@ -1,16 +1,16 @@
 import json
 import logging
 
+from datetime import datetime, timezone
 from library.logger import set_logging
 from library.config import Config
-from library.aws.dns import DNSTakeoverChecker
 from library.aws.utility import Account
-from library.ddb_issues import IssueStatus, DNSTakeoverIssue
+from library.aws.s3 import S3Operations
 from library.ddb_issues import Operations as IssueOperations
 
 
 def lambda_handler(event, context):
-    """ Lambda handler to evaluate DNS takeover issue details."""
+    """ Lambda handler to cname record_sets details."""
     set_logging(level=logging.DEBUG)
 
     try:
@@ -25,7 +25,8 @@ def lambda_handler(event, context):
         config = Config()
 
         main_account = Account(region=config.aws.region)
-        ddb_table = main_account.resource("dynamodb").Table(config.dnsTakeover.ddb_table_name)
+
+        backup_bucket = config.aws.s3_backup_bucket
 
         account = Account(id=account_id,
                           name=account_name,
@@ -33,41 +34,47 @@ def lambda_handler(event, context):
         if account.session is None:
             return
 
-        logging.debug(f"Checking for DNS takeover issue in {account}")
+        matching_record_sets = config.cnameRecordsets.matching_record_sets
 
-        # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, DNSTakeoverIssue)
-        # make dictionary for fast search by id
-        # and filter by current region
-        open_issues = {issue.issue_id: issue for issue in open_issues}
-        logging.debug(f"DNS takeover issues in DDB:\n{open_issues.keys()}")
+        s3client = main_account.client("s3"),
+        upload_cname_record_sets(s3client, account, backup_bucket, matching_record_sets)
 
-        checker = DNSTakeoverChecker(account=account,
-                                     now=config.now,
-                                     takeover_criteria=config.dnsTakeover.take_over_criteria_days)
-        if not checker.check():
-            return
-
-        for domain in checker.domains:
-            logging.debug(f"Checking {domain.name}")
-            if domain.validate_expiry:
-                issue = DNSTakeoverIssue(account_id, domain.name)
-                if config.dnsTakeover.in_whitelist(account_id, domain.name):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
-                logging.debug(f"Setting {domain.name} status {issue.status}")
-                IssueOperations.update(ddb_table, issue)
-                # remove issue id from issues_list_from_db (if exists)
-                # as we already checked it
-                open_issues.pop(domain.name, None)
-
-        logging.debug(f"DNS takeover issues in DDB:\n{open_issues.keys()}")
-        # all other unresolved issues in DDB are for removed/remediated domains
-        for issue in open_issues.values():
-            IssueOperations.set_status_resolved(ddb_table, issue)
     except Exception:
-        logging.exception(f"Failed to check DNS takeover issue for '{account_id} ({account_name})'")
+        logging.exception(f"Failed to get record_sets for '{account_id} ({account_name})'")
         return
 
-    logging.debug(f"Checked DNS takeover issuefor '{account_id} ({account_name})'")
+    logging.debug(f"Completed record_set for '{account_id} ({account_name})'")
+
+
+def upload_cname_record_sets(s3_client, account, bucket, matching_record_sets):
+    resulted_record_sets = {}
+    client = account.client("route53")
+
+    hosted_zones_res = client.list_hosted_zones()
+    for hosted_zone in hosted_zones_res["HostedZones"]:
+        id = hosted_zone["Id"]
+        resource_record_sets = client.list_resource_record_sets(
+            HostedZoneId=id
+        )
+        record_sets = {}
+        for resource_record_set in resource_record_sets["ResourceRecordSets"]:
+            name = resource_record_set["Name"]
+            type = resource_record_set["Type"]
+
+            if type == "CNAME":
+                for record_set in matching_record_sets:
+                    if record_set in name:
+                        record_sets[record_set] = resource_record_set["ResourceRecords"]
+        if bool(record_sets):
+            resulted_record_sets[id] = record_sets
+
+        if bool(resulted_record_sets):
+            timestamp = datetime.now(timezone.utc).isoformat('T', 'seconds')
+            # this prefix MUST match prefix in find_source_s3
+            path = f"hosted_zones/{account.id}/{id}_{timestamp}.json"
+            if S3Operations.object_exists(s3_client, bucket, path):
+                raise Exception(f"s3://{bucket}/{path} already exists")
+            S3Operations.put_object(s3_client, bucket, path, resulted_record_sets)
+
+
+

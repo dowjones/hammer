@@ -126,5 +126,9 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
+    },
+    "cnameRecordsets":{
+        "enabled": true,
+        "matching_record_sets": ["wsj.com", "marketwatch.com", "barrons.com"]
     }
 }
