@@ -27,6 +27,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[SQS Queue Public Access](playbook10_sqs_public_policy.html#3-issue-remediation)      | Yes       | Yes                 |
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
+|[SQS Unencrypted queues](playbook13_sqs_unencryption.html#3-issue-remediation)     | `Yes`      | `Yes`                |
 
 ## 2. How Remediation Backup Works
 
@@ -103,4 +104,11 @@ aws sqs set-queue-attributes --queue-url [queue_url] --attributes [backup_file_n
 To rollback a remediation of this issue, run the following command using the AWS CLI:
 ```
 aws s3 put-bucket-encryption --bucket [bucket_name] --server-side-encryption-configuration [rules]
+```
+
+### 3.10. SQS Unencrypted Queues
+
+To rollback a remediation of this issue, run the following command using the AWS CLI:
+```
+aws sqs set-queue-attributes --queue-url [queue_url] --attributes file://set-queue-attributes.json
 ```

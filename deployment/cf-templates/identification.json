@@ -26,7 +26,8 @@
                         "SourceIdentificationIAMUserInactiveKeys",
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
-                        "SourceIdentificationRDSSnapshots"
+                        "SourceIdentificationRDSSnapshots",
+                        "SourceIdentificationSQSEncryption"
                     ]
                 },
                 {
@@ -88,6 +89,9 @@
                 },
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
+                },
+                "SourceIdentificationSQSEncryption":{
+                    "default": "Relative path to Unencrypted SQS queues lambda sources"
                 }
             }
         }
@@ -176,6 +180,10 @@
         "SourceIdentificationRDSEncryption": {
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
+        },
+        "SourceIdentificationSQSEncryption": {
+            "Type": "String",
+            "Default": "sqs-unencrypted-queues-identification.zip"
         }
     },
     "Conditions": {
@@ -229,6 +237,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricSQSEncryptionError": {
+                "value": "SQSEncryptionError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -301,6 +312,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameSQSEncryption": {
+                "value": "describe-sqs-encryption-sns"
+            },
+            "SNSTopicNameSQSEncryption": {
+                "value": "describe-sqs-encryption-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -379,6 +396,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateSQSEncryptionLambdaFunctionName": {
+                "value": "initiate-sqs-encryption"
+            },
+            "IdentifySQSEncryptionLambdaFunctionName": {
+                "value": "describe-sqs-encryption"
             }
         }
     },
@@ -1840,6 +1863,107 @@
             }
         },
 
+        "LambdaInitiateSQSEncryptionEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateSQSEncryption", "LogGroupLambdaInitiateSQSEncryptionEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationSQSEncryption" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_SQS_ENCRYPT_ARN": { "Ref": "SNSNotifyLambdaEvaluateSQSEncryption" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify unencrypted SQS queues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateSQSEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_sqs_unencrypted_queues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateSQSEncryptionEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateSQSEncryptionLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateSQSEncryptionEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateSQSEncryptionEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSQSEncryptionEvaluation" }
+            }
+        },
+
+        "LambdaEvaluateSQSEncryption": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateSQSEncryption"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationSQSEncryption" }
+                },
+                "Description": "Lambda function to describe un-encrypted SQS queues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifySQSEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_sqs_unencrypted_queues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateSQSEncryption": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifySQSEncryptionLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateSQSEncryption": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateSQSEncryption"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSQSEncryption" }
+            }
+        },
+
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
@@ -2004,6 +2128,22 @@
                 ]
             }
         },
+        "EventInitiateEvaluationSQSEncryption": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateSQSEncryptionEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate sqs queue encryption evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSQSEncryption"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateSQSEncryptionEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateSQSEncryptionEvaluation"
+                  }
+                ]
+            }
+        },
 
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
@@ -2145,6 +2285,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSEncryption", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateSQSEncryptionEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateSQSEncryptionEvaluation", "EventInitiateEvaluationSQSEncryption"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateSQSEncryptionEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationSQSEncryption", "Arn"] }
             }
         },
 
@@ -2364,6 +2514,24 @@
                 }]
             }
         },
+        "SNSNotifyLambdaEvaluateSQSEncryption": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateSQSEncryption",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameSQSEncryption", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameSQSEncryption", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateSQSEncryption", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
 
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
@@ -2483,6 +2651,16 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateRDSEncryption" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSEncryption", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateSQSEncryptionSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateSQSEncryption", "LambdaEvaluateSQSEncryption"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateSQSEncryption" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateSQSEncryption", "Arn"] }
             }
         },
 
@@ -3080,6 +3258,52 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateRDSEncryption" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateSQSEncryptionEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateSQSEncryptionEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateSQSEncryptionEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateSQSEncryptionEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaSQSEncryptionEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateSQSEncryption"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateSQSEncryption" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateSQSEncryption" }
                     }
                 ],
                 "Period": 3600,

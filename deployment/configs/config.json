@@ -135,6 +135,13 @@
         "remediation": false,
         "remediation_retention_period": 0
     },
+    "sqs_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-sqs-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
     "rds_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
