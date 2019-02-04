@@ -87,9 +87,9 @@ class Config(object):
         self.api = ApiConfig({
             'credentials':  self.json_load_from_ddb(self._config["credentials"]["ddb.table_name"],
                                                     self.aws.region,
-                                                    "api")
+                                                    "api"),
+            'table': self._config["api"]["ddb.table_name"]
         })
-
 
     def get_bu_by_name(self, name):
         """
@@ -114,6 +114,11 @@ class Config(object):
     @property
     def now(self):
         return datetime.now(timezone.utc)
+
+    def get_module_config_by_name(self, name):
+        for module in self.modules:
+            if module.name == name:
+                return module
 
     def json_load_from_file(self, filename, default=None):
         """
@@ -283,6 +288,14 @@ class ApiConfig(object):
     def token(self):
         return self._config.get("credentials", {}).get("token", None)
 
+    @property
+    def url(self):
+        return self._config.get("credentials", {}).get("url", None)
+
+    @property
+    def ddb_table_name(self):
+        return self._config['table']
+
 
 class SlackConfig(object):
     """ Base class for Slack logging """
@@ -446,6 +459,7 @@ class ModuleConfig(BaseConfig):
         self._fixnow = config["fixnow"].get(section, {})
         # main accounts dict
         self._accounts = config["aws"]["accounts"]
+        self.name = section
 
     def module_accounts(self, option):
         """
@@ -509,6 +523,10 @@ class ModuleConfig(BaseConfig):
     def ddb_table_name(self):
         """ :return: DDB table name to use for storing issue details """
         return self._config["ddb.table_name"]
+
+    @property
+    def sns_topic_name(self):
+        return self._config['topic_name']
 
     @property
     def reporting(self):

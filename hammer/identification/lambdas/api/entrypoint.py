@@ -1,12 +1,16 @@
+import functools
 import json
 import logging
-import functools
-import importlib
+import uuid
+import time
 
+import boto3
 
-from library.logger import set_logging
+from library.aws.utility import Account, DDB, Sns
 from library.config import Config
-from library.aws.utility import Account
+from library.ddb_issues import Operations as IssueOperations
+from library.logger import set_logging
+from library import utility
 from responses import bad_request, server_error
 
 
@@ -21,45 +25,45 @@ def logger(handler):
     return wrapper
 
 
-@logger
-def lambda_handler(event, context):
-    try:
-        payload = json.loads(event.get('body', "{}"))
-    except Exception:
-        logging.exception("failed to parse payload")
-        return bad_request(text="malformed payload")
+def get_sns_topic_arn(config, topic_name):
+    # it assumes that lambda and sns are in the same region
+    region = config.aws.region
+    account_id = boto3.client('sts').get_caller_identity()['Account']
+    return f"arn:aws:sns:{region}:{account_id}:{topic_name}"
 
-    if not payload:
-        return bad_request(text="empty payload")
 
-    account_id = payload.get("account_id", None)
-    region = payload.get("region", None)
-    security_feature = payload.get("security_feature", None)
-    tags = payload.get("tags", None)
-    ids = payload.get("ids", None)
+GLOBAL_SECURITY_FEATURES = ['s3_bucket_acl', 'user_inactivekeys', 'user_keysrotation', 's3_bucket_policy',
+                            's3_encryption']
 
+
+def start_scan(account_id, regions, security_features, tags, ids):
     config = Config()
 
-    action = event.get("path", "")[1:]
-    # do not forget to allow path in authorizer.py while extending this list
-    if action == "identify":
-        role = config.aws.role_name_identification
-    elif action == "remediate":
-        role = config.aws.role_name_reporting
-    else:
-        return bad_request(text="wrong action")
-
     account_name = config.aws.accounts.get(account_id, None)
+
+    if not account_id:
+        return bad_request(text="account_id is required parameter")
 
     if account_name is None:
         return bad_request(text=f"account '{account_id}' is not defined")
 
-    if not all([account_id, security_feature]):
-        return bad_request(text="wrong payload, missing required parameter")
-
     valid_security_features = [ module.section for module in config.modules ]
-    if security_feature not in valid_security_features:
-        return bad_request(text=f"wrong security feature - '{security_feature}', available choices - {valid_security_features}")
+    for security_feature in security_features:
+        if security_feature not in valid_security_features:
+            return bad_request(
+                text=f"wrong security feature - '{security_feature}', available choices - {valid_security_features}")
+
+    if not security_features:
+        security_features = valid_security_features
+
+    all_regions = config.aws.regions
+
+    for region in regions:
+        if region not in all_regions:
+            return bad_request(text=f"Region '{region} is not supported")
+    # empty list means we want to scan all supported regions
+    if not regions:
+        regions = all_regions
 
     if ids is not None and not isinstance(ids, list):
         return bad_request(text=f"'ids' parameter must be list")
@@ -67,28 +71,131 @@ def lambda_handler(event, context):
     if tags is not None and not isinstance(tags, dict):
         return bad_request(text=f"'tags' parameter must be dict")
 
-    account = Account(id=account_id,
-                      name=account_name,
-                      region=region,
-                      role_name=role)
-    if account.session is None:
-        return server_error(text=f"Failed to create session in {account}")
+    main_account = Account(region=config.aws.region)
+    api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+    regional_services = set(security_features) - set(GLOBAL_SECURITY_FEATURES)
+    global_services = set(security_features).intersection(set(GLOBAL_SECURITY_FEATURES))
+    total = len(regional_services) * len(regions) + len(global_services)
+    request_params = {
+        "account_id": account_id,
+        "regions": regions,
+        "security_features": security_features,
+        "tags": tags
+    }
+    request_id = uuid.uuid4().hex
 
-    try:
-        module = importlib.import_module(security_feature)
-        handler = getattr(module, action)
-    except (ModuleNotFoundError, AttributeError):
-        logging.exception("Module or attribute was not found")
-        response = f"{action} for '{security_feature}' resources in '{region}' of '{account_id} / {account_name}' is not implemented yet"
-    else:
-        try:
-            response = handler(security_feature, account, config, ids, tags)
-        except Exception:
-            text=f"{security_feature}:{action} execution error"
-            logging.exception(text)
-            return server_error(text=text)
+    DDB.add_request(api_table, request_id, request_params, total)
+
+    for security_feature in security_features:
+        topic_name = config.get_module_config_by_name(security_feature).sns_topic_name
+        topic_arn = get_sns_topic_arn(config, topic_name)
+        payload = {
+            "account_id": account_id,
+            "account_name": account_name,
+            "regions": regions,
+            "sns_arn": topic_arn,
+            "request_id": request_id
+        }
+        Sns.publish(topic_arn, payload)
+
+    response = {'request_id': request_id}
 
     return {
         "statusCode": 200,
         "body": json.dumps(response, indent=4) if isinstance(response, dict) else response
     }
+
+
+def start_remediate(account_id, regions, security_features, tags, ids):
+    return {
+        "statusCode": 200,
+        "body": json.dumps({}, indent=4)
+    }
+
+
+def collect_results(request_info, main_account):
+    security_features = request_info['request_params']['security_features']
+    regions = request_info['request_params']['regions']
+    scan_account_id = request_info['request_params']['account_id']
+    tags = request_info['request_params']['tags']
+    response = dict({'global': {}})
+    for region in regions:
+        response[region] = {}
+        for sec_feature in security_features:
+            if sec_feature not in GLOBAL_SECURITY_FEATURES:
+                response[region][sec_feature] = []
+            else:
+                response['global'][sec_feature] = []
+
+    config = Config()
+    for security_feature in security_features:
+        sec_feature_config = config.get_module_config_by_name(security_feature)
+        ddb_table = main_account.resource("dynamodb").Table(sec_feature_config.ddb_table_name)
+        for issue in IssueOperations.get_account_open_issues(ddb_table, scan_account_id):
+            if issue.contains_tags(tags) and (
+                    issue.issue_details.region in regions or security_feature in GLOBAL_SECURITY_FEATURES):
+                issue_region = issue.issue_details.region if issue.issue_details.region else 'global'
+                response[issue_region][security_feature].append({'id': issue.issue_id,
+                                                                 'issue_details': issue.issue_details.as_dict()})
+    return response
+
+
+def get_scan_results(request_id):
+    config = Config()
+    main_account = Account(region=config.aws.region)
+    api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+    request_info = DDB.get_request_data(api_table, request_id)
+    if not request_info:
+        status_code = 404
+        body = {"message": "Request id has not been found."}
+    elif request_info['progress'] == request_info['total']:
+        status_code = 200
+        body = {
+            "scan_status": "COMPLETE",
+            "scan_results": collect_results(request_info, main_account)
+        }
+    elif time.time() - request_info['updated'] <= 300:
+        status_code = 200
+        body = {
+            "scan_status": "IN_PROGRESS"
+        }
+    else:
+        status_code = 200
+        body = {
+            "scan_status": "FAILED"
+        }
+    return {
+        "statusCode": status_code,
+        "body": json.dumps(body, indent=4, default=utility.jsonEncoder)
+    }
+
+
+@logger
+def lambda_handler(event, context):
+    try:
+        body = event.get('body') if event.get('body') else "{}"
+        payload = json.loads(body)
+    except Exception:
+        logging.exception("failed to parse payload")
+        return bad_request(text="malformed payload")
+
+    account_id = payload.get("account_id", None)
+    regions = payload.get("regions", [])
+    security_features = payload.get("security_features", [])
+    tags = payload.get("tags", None)
+    ids = payload.get("ids", None)
+
+    action = event.get("path", "")[1:]
+    method = event.get("httpMethod")
+    # do not forget to allow path in authorizer.py while extending this list
+    if action.startswith('identify'):
+        if method == "POST":
+            return start_scan(account_id, regions, security_features, tags, ids)
+        if method == "GET":
+            # get request id from url path
+            request_id = action.split('/')[1]
+            return get_scan_results(request_id)
+    elif action == "remediate":
+        return start_remediate(account_id, regions, security_features, tags, ids)
+    else:
+        return bad_request(text="wrong action")

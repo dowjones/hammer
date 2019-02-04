@@ -28,6 +28,11 @@ def lambda_handler(event, context):
     policy.restApiId = apiGatewayArnTmp[0]
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
+    # a quick hack to allow GET calls to /identify/{request_id}, request_id is hex string
+    # rewrite this solution to more generic variant
+    if len(apiGatewayArnTmp) == 5:
+        full_path = '/identify/' + apiGatewayArnTmp[4]
+        policy.allowMethod(HttpVerb.GET, full_path)
     policy.allowMethod(HttpVerb.POST, '/identify')
     policy.allowMethod(HttpVerb.POST, '/remediate')
 
