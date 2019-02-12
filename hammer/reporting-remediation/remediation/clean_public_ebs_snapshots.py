@@ -44,6 +44,12 @@ class CleanPublicEBSSnapshots(object):
                 in_whitelist = self.config.ebsSnapshot.in_whitelist(account_id, issue.issue_id)
                 if in_whitelist:
                     logging.debug(f"Skipping '{issue.issue_id}' (in whitelist)")
+
+                    # adding label as whitelisted.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        labels="whitelisted"
+                    )
                     continue
 
                 if issue.timestamps.reported is None:

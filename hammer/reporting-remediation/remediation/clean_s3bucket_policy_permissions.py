@@ -45,6 +45,12 @@ class CleanS3BucketPolicyPermissions:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")
+
+                    # adding label as whitelisted.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        labels="whitelisted"
+                    )
                     continue
                 # if not in_fixlist:
                 #     logging.debug(f"Skipping {bucket_name} (not in fixlist)")

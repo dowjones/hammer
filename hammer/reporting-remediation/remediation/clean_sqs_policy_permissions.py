@@ -44,6 +44,12 @@ class CleanSQSPolicyPermissions:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {queue_name} (in whitelist)")
+                    
+                    # adding label as whitelisted.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        labels="whitelisted"
+                    )
                     continue
 
                 if issue.timestamps.reported is None:

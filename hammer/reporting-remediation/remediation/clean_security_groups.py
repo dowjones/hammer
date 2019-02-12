@@ -49,6 +49,12 @@ class CleanSecurityGroups(object):
 
                 if name_in_whitelist or id_in_whitelist:
                     logging.debug(f"Skipping '{group_name} / {group_id}' (in whitelist)")
+
+                    # adding label as whitelisted.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        labels="whitelisted"
+                    )
                     continue
 
                 if issue.timestamps.reported is None:

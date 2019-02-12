@@ -45,6 +45,12 @@ class CleanIAMUserStaleKeys:
 
                 if user_in_whitelist or key_in_whitelist:
                     logging.debug(f"Skipping '{key_id} / {username}' (in whitelist)")
+
+                    # adding label as whitelisted.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        labels="whitelisted"
+                    )
                     continue
 
                 if issue.timestamps.reported is None:
