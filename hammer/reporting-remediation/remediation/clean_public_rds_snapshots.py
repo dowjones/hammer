@@ -12,7 +12,7 @@ from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.aws.rds import RdsSnapshotOperations
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import RdsPublicSnapshotIssue
+from library.ddb_issues import IssueStatus, RdsPublicSnapshotIssue
 from library.aws.utility import Account
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -46,10 +46,10 @@ class CleanPublicRDSSnapshots(object):
                 if in_whitelist:
                     logging.debug(f"Skipping '{issue.issue_id}' (in whitelist)")
 
-                    # adding label as whitelisted.
+                    # Adding label with "whitelisted" to jira ticket.
                     jira.add_label(
                         ticket_id=issue.jira_details.ticket,
-                        labels="whitelisted"
+                        labels=IssueStatus.Whitelisted
                     )
                     continue
 

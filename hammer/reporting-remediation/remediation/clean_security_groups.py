@@ -13,7 +13,7 @@ from library.slack_utility import SlackNotification
 from library.aws.security_groups import SecurityGroupsChecker, RestrictionStatus
 from library.aws.utility import Account
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import SecurityGroupIssue
+from library.ddb_issues import IssueStatus, SecurityGroupIssue
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
 
@@ -50,10 +50,10 @@ class CleanSecurityGroups(object):
                 if name_in_whitelist or id_in_whitelist:
                     logging.debug(f"Skipping '{group_name} / {group_id}' (in whitelist)")
 
-                    # adding label as whitelisted.
+                    # Adding label with "whitelisted" to jira ticket.
                     jira.add_label(
                         ticket_id=issue.jira_details.ticket,
-                        labels="whitelisted"
+                        labels=IssueStatus.Whitelisted
                     )
                     continue
 

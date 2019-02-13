@@ -11,7 +11,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import EBSPublicSnapshotIssue
+from library.ddb_issues import IssueStatus, EBSPublicSnapshotIssue
 from library.aws.ebs import EBSPublicSnapshotsChecker
 from library.aws.utility import Account
 from library.utility import confirm
@@ -45,10 +45,10 @@ class CleanPublicEBSSnapshots(object):
                 if in_whitelist:
                     logging.debug(f"Skipping '{issue.issue_id}' (in whitelist)")
 
-                    # adding label as whitelisted.
+                    # Adding label with "whitelisted" to jira ticket.
                     jira.add_label(
                         ticket_id=issue.jira_details.ticket,
-                        labels="whitelisted"
+                        labels=IssueStatus.Whitelisted
                     )
                     continue
 
