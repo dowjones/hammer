@@ -21,6 +21,7 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
+from library.aws.redshift import RedshiftClusterOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -214,6 +215,23 @@ class CreateSecurityGroupsTickets(object):
 
         return elb_instance_details, in_use
 
+    @staticmethod
+    def build_redshift_clusters_table(redshift_clusters):
+        cluster_details = ""
+        in_use = False
+
+        if len(redshift_clusters) > 0:
+            in_use = True
+            cluster_details += (
+                f"\n*Redshift Clustes:*\n"
+                f"||Redshift Cluster ID||Subnet_Group_Name||\n")
+            for cluster in redshift_clusters:
+                cluster_details += (
+                    f"|{id}|{subnet_group_name}|\n"
+                )
+
+        return cluster_details, in_use
+
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
         table_name = self.config.sg.ddb_table_name
@@ -315,7 +333,7 @@ class CreateSecurityGroupsTickets(object):
                     elbv2_client = account.client("elbv2") if account.session is not None else None
 
                     iam_client = account.client("iam") if account.session is not None else None
-
+                    redshift_client = account.client("redshift") if account.session is not None else None
                     rds_instance_details = elb_instance_details = None
 
                     if ec2_client is not None:
@@ -338,7 +356,15 @@ class CreateSecurityGroupsTickets(object):
                         except Exception:
                             logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
+                    if redshift_client is not None:
+                        try:
+                            redshift_clusters = RedshiftClusterOperations.get_redshift_vpc_security_groups(redshift_client, group_id)
+                            sg_redshift_details, sg_in_use_redshift_clusters = self.build_redshift_clusters_table(redshift_clusters)
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift_clusters
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -431,6 +457,8 @@ class CreateSecurityGroupsTickets(object):
                     issue_description += f"{elb_instance_details if elb_instance_details else ''}"
 
                     issue_description += f"{instance_profile_details if instance_profile_details else ''}"
+
+                    issue_description += f"{sg_redshift_details if sg_redshift_details else ''}"
 
                     issue_description += (
                         f"*Recommendation*: "
