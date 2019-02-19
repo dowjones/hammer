@@ -227,7 +227,7 @@ class CreateSecurityGroupsTickets(object):
                 f"||Redshift Cluster ID||Subnet_Group_Name||\n")
             for cluster in redshift_clusters:
                 cluster_details += (
-                    f"|{id}|{subnet_group_name}|\n"
+                    f"|{cluster.id}|{cluster.subnet_group_name}|\n"
                 )
 
         return cluster_details, in_use
@@ -325,7 +325,7 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_redshift = None
                     sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
@@ -359,12 +359,12 @@ class CreateSecurityGroupsTickets(object):
                     if redshift_client is not None:
                         try:
                             redshift_clusters = RedshiftClusterOperations.get_redshift_vpc_security_groups(redshift_client, group_id)
-                            sg_redshift_details, sg_in_use_redshift_clusters = self.build_redshift_clusters_table(redshift_clusters)
+                            sg_redshift_details, sg_in_use_redshift = self.build_redshift_clusters_table(redshift_clusters)
                         except Exception:
                             logging.exception(
                                 f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift_clusters
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu

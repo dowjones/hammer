@@ -3,7 +3,6 @@ import logging
 import mimetypes
 import pathlib
 
-
 from datetime import datetime, timezone
 from io import BytesIO
 from copy import deepcopy
@@ -11,10 +10,11 @@ from botocore.exceptions import ClientError
 from library.utility import jsonDumps
 from library.utility import timeit
 from library.aws.security_groups import SecurityGroup
+from collections import namedtuple
 
 
 # structure which describes EC2 instance
-RedshiftCluster = namedtuple('RedshiftCluster', [
+RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     # cluster_id
     'id',
     # subnet_group_id
@@ -42,7 +42,7 @@ class RedshiftClusterOperations(object):
             active_security_groups = [sg["VpcSecurityGroupId"] for sg in cluster['VpcSecurityGroups'] if
                                       sg["Status"] == "active"]
             if group_id in active_security_groups:
-                redshift_clusters.append(RedshiftCluster(
+                redshift_clusters.append(RedshiftCluster_Details(
                     id=cluster["ClusterIdentifier"],
                     subnet_group_name=cluster["ClusterSubnetGroupName"]
                 ))
