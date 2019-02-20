@@ -160,6 +160,7 @@ def format_scan_account_result(scan_result):
 
 @respond_to('^scan account (?P<account_num>.*)$', re.IGNORECASE)
 def scan_account(message, account_num):
+    print("\n")
     api_token = config.api.token
     api_url = config.api.url + '/identify'
     headers = {'Auth': api_token}
