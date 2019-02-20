@@ -448,7 +448,7 @@
                     "ReadCapacityUnits": "10",
                     "WriteCapacityUnits": "2"
                 },
-                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "credentials" ] ]}
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
             }
         }
     }
