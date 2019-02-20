@@ -431,6 +431,7 @@
         },
         "DynamoDBApiRequests": {
             "Type": "AWS::DynamoDB::Table",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
             "Properties": {
                 "AttributeDefinitions": [
                     {
