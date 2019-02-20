@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Tagging standards enforcement",
+    "Description": "Tagging standards enforcement bla bla bla",
     "Parameters": {
         "ResourcesPrefix": {
             "Type": "String",
