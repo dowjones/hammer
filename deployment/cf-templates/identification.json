@@ -1888,7 +1888,7 @@
 
         "LambdaInitiateRedshiftClusterEncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
-            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftClusterEncryption", "LogGroupLambdaInitiateRedshiftClusterEncryption"],
+            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftClusterEncryption", "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation"],
             "Properties": {
                 "Code": {
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
