@@ -27,7 +27,7 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
-                        "SourceIdentificationRedshiftEncryption",
+                        "SourceIdentificationRedshiftClusterEncryption",
                         "SourceIdentificationRedshiftPublicAccess"
                     ]
                 },
@@ -91,7 +91,7 @@
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
                 },
-                "SourceIdentificationRedshiftEncryption":{
+                "SourceIdentificationRedshiftClusterEncryption":{
                     "default": "Relative path to unencrypted Redshift Cluster sources"
                 },
                 "SourceIdentificationRedshiftPublicAccess":{
@@ -185,7 +185,7 @@
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
         },
-        "SourceIdentificationRedshiftEncryption": {
+        "SourceIdentificationRedshiftClusterEncryption": {
             "Type": "String",
             "Default": "redshift-unencrypted-cluster-identification.zip"
         },
