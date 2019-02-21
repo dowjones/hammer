@@ -139,5 +139,12 @@
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
         "reporting": true
+    },
+    "redshift_public_access": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-redshift-public-access",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }
