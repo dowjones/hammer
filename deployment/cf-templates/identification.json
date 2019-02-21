@@ -2664,6 +2664,43 @@
             }
         },
 
+        "SNSNotifyLambdaEvaluateRedshiftClusterEncryption": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateRedshiftClusterEncryption",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftClusterEncryption", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftClusterEncryption", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateRedshiftClusterEncryption", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+
+        "SNSNotifyLambdaEvaluateRedshiftPublicAccess": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateRedshiftPublicAccess",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftPublicAccess", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftPublicAccess", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateRedshiftPublicAccess", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
