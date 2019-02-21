@@ -130,6 +130,14 @@ class Issue(object):
         issue.jira_details = Details(item['jira_details'])
         return issue
 
+    def contains_tags(self, tags):
+        if not tags:
+            return True
+        for k in tags:
+            if k not in self.issue_details.tags:
+                return False
+        return True
+
 
 class SecurityGroupIssue(Issue):
     def __init__(self, *args):

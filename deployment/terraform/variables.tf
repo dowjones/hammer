@@ -32,6 +32,10 @@ variable "subnet" {
     default = "subnet-12345678"
 }
 
+variable "apiIAMRole" {
+    default = "cloudsec-crossact-ec2"
+}
+
 variable "lambdaSubnets" {
     default = ""
 }

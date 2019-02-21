@@ -1,5 +1,7 @@
 import json
 import re
+import requests
+import time
 
 
 from slackbot.bot import respond_to
@@ -123,3 +125,57 @@ def whitelisted(message, term):
         return
 
     message.reply(response)
+
+
+message_mapping = {
+    's3_bucket_policy': '*These buckets have public policy:* ',
+    's3_bucket_acl': '*These buckets contain public ACLs:* ',
+    's3_encryption': '*These buckets are unencrypted:* ',
+    'user_inactivekeys': '*Users with inactive keys:* ',
+    'user_keysrotation': '*Users with keys to rotate:* ',
+    'secgrp_unrestricted_access': '*Insecure services:* ',
+    'cloudtrails': '*These trails are disabled or contain delivery errors:* ',
+    'ebs_unencrypted_volume': '*These EBS volumes are unencrypted:* ',
+    'ebs_public_snapshot': '*These EBS snapshots are public:* ',
+    'rds_public_snapshot': '*These RDS snapshots are public:* ',
+    'sqs_public_access': '*These SQS are publicly accessible:* ',
+    'rds_encryption': '*These RDS instances are unencrypted:* '
+}
+
+
+def format_scan_account_result(scan_result):
+    result = ""
+    for region in scan_result:
+        if not any(v for k, v in scan_result[region].items()):
+            continue
+        result += f"*Found these issues in {region} region:* \n"
+        for sec_feature in scan_result[region]:
+            if scan_result[region][sec_feature]:
+                result += message_mapping[sec_feature]
+                issues_id = [issue['id'] for issue in scan_result[region][sec_feature]]
+                issues = ','.join(issues_id)
+                result += '[' + issues + ']\n'
+    return result
+
+
+@respond_to('^scan account (?P<account_num>.*)$', re.IGNORECASE)
+def scan_account(message, account_num):
+    api_token = config.api.token
+    api_url = config.api.url + '/identify'
+    headers = {'Auth': api_token}
+    resp = requests.post(api_url, json={'account_id': account_num}, headers=headers)
+    if resp.status_code != 200:
+        message.reply(f'Failed to start scan for account {account_num}, {resp.text}')
+        return
+    message.reply(f'Scan for account {account_num} has been started. When the scan is finished,'
+                  f'you will be notified with results.')
+    request_id = resp.json()['request_id']
+    time_start = time.time()
+    while time.time() - time_start < 300:
+        resp = requests.get(api_url + '/' + request_id, headers=headers)
+        if resp.json()['scan_status'] == 'COMPLETE':
+            return message.reply(format_scan_account_result(resp.json()['scan_results']))
+        if resp.json()['scan_status'] == 'FAILED':
+            return message.reply(f'Scan of account {account_num} is failed. Please try again later.')
+        time.sleep(5)
+    return message.reply('Sorry, but current scan takes too long to finish.')

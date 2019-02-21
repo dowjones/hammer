@@ -11,6 +11,7 @@ You should perform the following steps to deploy Dow Jones Hammer using Terrafor
 2. Configure AWS CLI access credentials
 3. Edit Terraform configuration files
 4. Launch Dow Jones Hammer deployment
+5. Check Terraform output variables
 
 ## 1. Preliminary Steps
 
@@ -215,4 +216,18 @@ To launch Dow Jones Hammer deployment, run the following commands in ```hammer/d
 ```
 terraform init
 terraform apply
+```
+
+## 5. Check Terraform output variables
+
+After successful Terraform deployment a few variables, you may be interested in, will be shown back:
+* **ApiUrl**: URL for quering Dow Jones Hammer REST API
+* **ReportingRemediationPrivateIP**: private IP address of reporting and remediation EC2 instance  
+* **ReportingRemediationPublicIP**: public IP address of reporting and remediation EC2 instance
+
+Sample output:
+``` 
+ApiUrl = https://qosfsduzasrh.execute-api.<region>.amazonaws.com/LATEST/scan
+ReportingRemediationPrivateIP = 172.16.x.x
+ReportingRemediationPublicIP = w.x.y.z
 ```

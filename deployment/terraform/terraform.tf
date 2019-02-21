@@ -64,3 +64,23 @@ module "reporting-remediation" {
     resources-prefix = "${var.resources-prefix}"
     tags = "${var.tags}"
 }
+
+module "api" {
+    source = "modules/api"
+    s3bucket = "${var.s3bucket}"
+    apiIAMRole = "${var.ApiIAMRole}"
+    resources-prefix = "${var.resources-prefix}"
+    tags = "${var.tags}"
+}
+
+output "ApiUrl" {
+    value = "${module.api.ApiUrl}"
+}
+
+output "ReportingRemediationPublicIP" {
+  value = "${module.reporting-remediation.ReportingRemediationPublicIP}"
+}
+
+output "ReportingRemediationPrivateIP" {
+    value = "${module.reporting-remediation.ReportingRemediationPrivateIP}"
+}
