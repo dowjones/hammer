@@ -1989,7 +1989,7 @@
 
         "LambdaInitiateRedshiftPublicAccessEvaluation": {
             "Type": "AWS::Lambda::Function",
-            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftPublicAccess", "LogGroupLambdaInitiateRedshiftPublicAccess"],
+            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftPublicAccess", "LogGroupLambdaInitiateRedshiftPublicAccessEvaluation"],
             "Properties": {
                 "Code": {
                     "S3Bucket": { "Ref": "SourceS3Bucket" },
