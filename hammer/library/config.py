@@ -63,6 +63,11 @@ class Config(object):
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
+        
+
+		self.redshiftEncrypt = ModuleConfig(self._config, "redshift_encryption")
+        self.redshift_public_access = ModuleConfig(self._config, "redshift_public_access")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 
