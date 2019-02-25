@@ -133,7 +133,7 @@ message_mapping = {
     's3_encryption': '*These buckets are unencrypted:* ',
     'user_inactivekeys': '*Users with inactive keys:* ',
     'user_keysrotation': '*Users with keys to rotate:* ',
-    'secgrp_unrestricted_access': '*Insecure services:* ',
+    'secgrp_unrestricted_access': '*These security groups are open to outside world:*  \n',
     'cloudtrails': '*These trails are disabled or contain delivery errors:* ',
     'ebs_unencrypted_volume': '*These EBS volumes are unencrypted:* ',
     'ebs_public_snapshot': '*These EBS snapshots are public:* ',
@@ -151,6 +151,18 @@ def format_scan_account_result(scan_result):
         result += f"*Found these issues in {region} region:* \n"
         for sec_feature in scan_result[region]:
             if scan_result[region][sec_feature]:
+                if sec_feature == 'secgrp_unrestricted_access':
+                    result += message_mapping[sec_feature]
+                    for issue in scan_result[region][sec_feature]:
+                        open_ports = ''
+                        for open_ports_info in issue['issue_details']['perms']:
+                            to_port = open_ports_info['to_port'] if open_ports_info['to_port'] else 'All'
+                            protocol = open_ports_info['protocol'] if open_ports_info['protocol'] != '-1' else 'All'
+                            open_ports += f"port {to_port}, " \
+                                f"protocol: {protocol}, " \
+                                f"cidr: {open_ports_info['cidr']}; "
+                        result += f"Security group id: {issue['id']}, Open ports: {open_ports}\n"
+                    continue
                 result += message_mapping[sec_feature]
                 issues_id = [issue['id'] for issue in scan_result[region][sec_feature]]
                 issues = ','.join(issues_id)
