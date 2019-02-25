@@ -88,6 +88,10 @@ def start_scan(account_id, regions, security_features, tags, ids):
 
     for security_feature in security_features:
         topic_name = config.get_module_config_by_name(security_feature).sns_topic_name
+        accounts = config.get_module_config_by_name(security_feature).accounts
+        if account_id not in accounts:
+            # check for this security feature is disabled for this specific account
+            continue
         topic_arn = get_sns_topic_arn(config, topic_name)
         payload = {
             "account_id": account_id,
