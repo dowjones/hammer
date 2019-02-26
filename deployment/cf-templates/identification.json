@@ -262,7 +262,6 @@
             "IdentificationMetricRedshiftPublicAccessError": {
                 "value": "RedshiftPublicAccessError"
             },
-            ,
             "IdentificationMetricRedshiftLoggingError": {
                 "value": "RedshiftLoggingError"
             },
