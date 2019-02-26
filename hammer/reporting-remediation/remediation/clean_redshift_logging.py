@@ -1,5 +1,5 @@
 """
-Class to remediate Redshift cluster public access issues.
+Class to remediate Redshift cluster logging issues.
 """
 import sys
 import logging
@@ -11,35 +11,36 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import IssueStatus, RedshiftPublicAccessIssue
-from library.aws.redshift import RedshiftClusterPublicAccessChecker
+from library.ddb_issues import IssueStatus, RedshiftLoggingIssue
+from library.aws.redshift import RedshiftLoggingChecker
 from library.aws.utility import Account
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
-class CleanRedshiftPublicAccess:
-    """ Class to remediate Redshift cluster public access issues """
+class CleanRedshiftLogging:
+    """ Class to remediate Redshift cluster logging issues """
     def __init__(self, config):
         self.config = config
 
-    def clean_redshift_public_access(self, batch=False):
+    def cleanredshiftlogging(self, batch=False):
         """ Class method to clean Redshift cluster which are violating aws best practices """
         main_account = Account(region=config.aws.region)
-        ddb_table = main_account.resource("dynamodb").Table(self.config.redshift_public_access.ddb_table_name)
+        ddb_table = main_account.resource("dynamodb").Table(self.config.redshift_logging.ddb_table_name)
 
-        retention_period = self.config.redshift_public_access.remediation_retention_period
+        retention_period = self.config.redshift_logging.remediation_retention_period
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
+        s3_bucket = ""
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
-            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, RedshiftPublicAccessIssue)
+            issues = IssueOperations.get_account_open_issues(ddb_table, account_id, RedshiftLoggingIssue)
             for issue in issues:
                 cluster_id = issue.issue_id
 
-                in_whitelist = self.config.redshift_public_access.in_whitelist(account_id, cluster_id)
+                in_whitelist = self.config.redshift_logging.in_whitelist(account_id, cluster_id)
                 in_fixlist = True
 
                 if in_whitelist:
@@ -72,36 +73,36 @@ class CleanRedshiftPublicAccess:
 
                     try:
                         if not batch and \
-                           not confirm(f"Do you want to remediate '{cluster_id}' Redshift cluster public access", False):
+                           not confirm(f"Do you want to remediate '{cluster_id}' Redshift cluster logging issue ", False):
                             continue
 
                         account = Account(id=account_id,
                                           name=account_name,
-                                          region= issue.issue_details.region,
+                                          region=issue.issue_details.region,
                                           role_name=self.config.aws.role_name_reporting)
                         if account.session is None:
                             continue
 
-                        checker = RedshiftClusterPublicAccessChecker(account=account)
+                        checker = RedshiftLoggingChecker(account=account)
                         checker.check(clusters=[cluster_id])
                         cluster_details = checker.get_cluster(cluster_id)
 
                         if cluster_id is None:
                             logging.debug(f"Redshift Cluster {cluster_details.name} was removed by user")
-                        elif not cluster_details.is_public:
-                            logging.debug(f"Cluster {cluster_details.name} public access issue was remediated by user")
+                        elif cluster_details.is_logging:
+                            logging.debug(f"Cluster {cluster_details.name} logging issue was remediated by user")
                         else:
-                            logging.debug(f"Remediating '{cluster_details.name}' public access")
-                            # kms_key_id = None
+                            logging.debug(f"Remediating '{cluster_details.name}' logging")
+
                             remediation_succeed = True
-                            if cluster_details.modify_cluster(False):
-                                comment = (f"Cluster '{cluster_details.name}' public access issue "
-                                           f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
+                            if cluster_details.enable_logging(s3_bucket):
+                                comment = (f"Cluster '{cluster_details.name}' logging enabled "
+                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
                                            f"was remediated by hammer")
                             else:
                                 remediation_succeed = False
-                                comment = (f"Failed to remediate cluster '{cluster_details.name}' public access issue "
-                                           f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
+                                comment = (f"Failed to remediate cluster '{cluster_details.name}' logging issue "
+                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
                                            f"due to some limitations. Please, check manually")
 
                             jira.remediate_issue(
@@ -118,7 +119,7 @@ class CleanRedshiftPublicAccess:
                             )
                             IssueOperations.set_status_remediated(ddb_table, issue)
                     except Exception:
-                        logging.exception(f"Error occurred while updating cluster '{cluster_id}' public access "
+                        logging.exception(f"Error occurred while updating cluster '{cluster_id}' logging "
                                           f"in '{account_name} / {account_id}'")
                 else:
                     logging.debug(f"Skipping '{cluster_id}' "
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        class_object = CleanRedshiftPublicAccess(config)
-        class_object.clean_redshift_public_access(batch=args.batch)
+        class_object = CleanRedshiftLogging(config)
+        class_object.cleanredshiftlogging(batch=args.batch)
     except Exception:
-        logging.exception("Failed to clean Redshift cluster public access")
+        logging.exception("Failed to clean Redshift cluster logging issue")

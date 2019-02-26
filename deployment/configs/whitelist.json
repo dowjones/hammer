@@ -43,5 +43,14 @@
     "s3_encryption": {
 	},
     "rds_encryption": {
-	}
+	},
+	"redshift_encryption":{
+
+	},
+	"redshift_public_access":{
+
+	},
+    "redshift_logging":{
+    
+    }
 }

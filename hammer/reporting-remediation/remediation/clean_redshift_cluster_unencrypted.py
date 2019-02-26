@@ -12,7 +12,7 @@ from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import IssueStatus, RedshiftEncryptionIssue
-from library.aws.redshift import RedshiftClusterChecker
+from library.aws.redshift import RedshiftEncryptionChecker
 from library.aws.utility import Account
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -77,11 +77,12 @@ class CleanRedshiftClusterUnencryption:
 
                         account = Account(id=account_id,
                                           name=account_name,
+                                          region=issue.issue_details.region,
                                           role_name=self.config.aws.role_name_reporting)
                         if account.session is None:
                             continue
 
-                        checker = RedshiftClusterChecker(account=account)
+                        checker = RedshiftEncryptionChecker(account=account)
                         checker.check(clusters=[cluster_id])
                         cluster_details = checker.get_cluster(cluster_id)
 
@@ -95,12 +96,12 @@ class CleanRedshiftClusterUnencryption:
                             remediation_succeed = True
                             if cluster_details.encrypt_cluster():
                                 comment = (f"Cluster '{cluster_details.name}' un-encryption issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
                                            f"was remediated by hammer")
                             else:
                                 remediation_succeed = False
                                 comment = (f"Failed to remediate cluster '{cluster_details.name}' un-encryption issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
                                            f"due to some limitations. Please, check manually")
 
                             jira.remediate_issue(
@@ -117,10 +118,10 @@ class CleanRedshiftClusterUnencryption:
                             )
                             IssueOperations.set_status_remediated(ddb_table, issue)
                     except Exception:
-                        logging.exception(f"Error occurred while updating cluster '{cluster_details.name}' un-encryption "
+                        logging.exception(f"Error occurred while updating cluster '{cluster_id}' un-encryption "
                                           f"in '{account_name} / {account_id}'")
                 else:
-                    logging.debug(f"Skipping '{cluster_details.name}' "
+                    logging.debug(f"Skipping '{cluster_id}' "
                                   f"({retention_period - no_of_days_issue_created} days before remediation)")
 
 

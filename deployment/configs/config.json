@@ -150,9 +150,30 @@
         "remediation_retention_period": 0
     },
     "rds_encryption": {
-        "enabled": true,
+     `   "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
+    },
+    "redshift_encryption": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-redshift-unencrypted",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
+    "redshift_public_access": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-redshift-public-access",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
+     "redshift_logging": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-redshift-logging",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }
