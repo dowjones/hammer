@@ -2122,7 +2122,7 @@
                 },
                 "Environment": {
                     "Variables": {
-                        "SNS_REDSHIFT_PUBLIC_ACCESS_ARN": { "Ref": "SNSNotifyLambdaEvaluateRedshiftLogging" }
+                        "SNS_REDSHIFT_LOGGING_ARN": { "Ref": "SNSNotifyLambdaEvaluateRedshiftLogging" }
                     }
                 },
                 "Description": "Lambda function for initiate to identify disabled audit logging Redshift clusters.",
