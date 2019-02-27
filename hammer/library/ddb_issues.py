@@ -136,6 +136,8 @@ class Issue(object):
         for k in tags:
             if k not in self.issue_details.tags:
                 return False
+            if self.issue_details.tags[k] not in tags[k]:
+                return False
         return True
 
 
