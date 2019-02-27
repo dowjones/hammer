@@ -73,25 +73,26 @@ def start_scan(account_id, regions, security_features, tags, ids):
 
     main_account = Account(region=config.aws.region)
     api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
-    regional_services = set(security_features) - set(GLOBAL_SECURITY_FEATURES)
-    global_services = set(security_features).intersection(set(GLOBAL_SECURITY_FEATURES))
+    to_scan = []
+    for security_feature in security_features:
+        accounts = config.get_module_config_by_name(security_feature).accounts
+        if account_id in accounts:
+            to_scan.append(security_feature)
+    regional_services = set(to_scan) - set(GLOBAL_SECURITY_FEATURES)
+    global_services = set(to_scan).intersection(set(GLOBAL_SECURITY_FEATURES))
     total = len(regional_services) * len(regions) + len(global_services)
     request_params = {
         "account_id": account_id,
         "regions": regions,
-        "security_features": security_features,
+        "security_features": to_scan,
         "tags": tags
     }
     request_id = uuid.uuid4().hex
 
     DDB.add_request(api_table, request_id, request_params, total)
 
-    for security_feature in security_features:
+    for security_feature in to_scan:
         topic_name = config.get_module_config_by_name(security_feature).sns_topic_name
-        accounts = config.get_module_config_by_name(security_feature).accounts
-        if account_id not in accounts:
-            # check for this security feature is disabled for this specific account
-            continue
         topic_arn = get_sns_topic_arn(config, topic_name)
         payload = {
             "account_id": account_id,
