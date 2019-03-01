@@ -95,7 +95,7 @@ class CleanRedshiftLogging:
                             logging.debug(f"Remediating '{cluster_details.name}' logging")
 
                             remediation_succeed = True
-                            if cluster_details.enable_logging(s3_bucket):
+                            if cluster_details.enable_cluster_logging(s3_bucket):
                                 comment = (f"Cluster '{cluster_details.name}' logging enabled "
                                            f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
                                            f"was remediated by hammer")

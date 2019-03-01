@@ -92,7 +92,7 @@ class CleanRedshiftClusterUnencryption:
                             logging.debug(f"Cluster {cluster_details.name} Un-encryption issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{cluster_details.name}' Un-encryption")
-                            # kms_key_id = None
+
                             remediation_succeed = True
                             if cluster_details.encrypt_cluster():
                                 comment = (f"Cluster '{cluster_details.name}' un-encryption issue "

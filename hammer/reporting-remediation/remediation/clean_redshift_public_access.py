@@ -92,7 +92,7 @@ class CleanRedshiftPublicAccess:
                             logging.debug(f"Cluster {cluster_details.name} public access issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{cluster_details.name}' public access")
-                            # kms_key_id = None
+
                             remediation_succeed = True
                             if cluster_details.modify_cluster(False):
                                 comment = (f"Cluster '{cluster_details.name}' public access issue "
