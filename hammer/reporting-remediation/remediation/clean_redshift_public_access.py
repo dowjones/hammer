@@ -77,6 +77,7 @@ class CleanRedshiftPublicAccess:
 
                         account = Account(id=account_id,
                                           name=account_name,
+                                          region= issue.issue_details.region,
                                           role_name=self.config.aws.role_name_reporting)
                         if account.session is None:
                             continue
@@ -87,20 +88,20 @@ class CleanRedshiftPublicAccess:
 
                         if cluster_id is None:
                             logging.debug(f"Redshift Cluster {cluster_details.name} was removed by user")
-                        elif cluster_details.is_public:
+                        elif not cluster_details.is_public:
                             logging.debug(f"Cluster {cluster_details.name} public access issue was remediated by user")
                         else:
                             logging.debug(f"Remediating '{cluster_details.name}' public access")
-                            # kms_key_id = None
+
                             remediation_succeed = True
-                            if cluster_details.modify_cluster(True):
+                            if cluster_details.modify_cluster(False):
                                 comment = (f"Cluster '{cluster_details.name}' public access issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                           f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
                                            f"was remediated by hammer")
                             else:
                                 remediation_succeed = False
                                 comment = (f"Failed to remediate cluster '{cluster_details.name}' public access issue "
-                                           f"in '{account_name} / {account_id}' account "
+                                           f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
                                            f"due to some limitations. Please, check manually")
 
                             jira.remediate_issue(
@@ -117,10 +118,10 @@ class CleanRedshiftPublicAccess:
                             )
                             IssueOperations.set_status_remediated(ddb_table, issue)
                     except Exception:
-                        logging.exception(f"Error occurred while updating cluster '{cluster_details.name}' public access "
+                        logging.exception(f"Error occurred while updating cluster '{cluster_id}' public access "
                                           f"in '{account_name} / {account_id}'")
                 else:
-                    logging.debug(f"Skipping '{cluster_details.name}' "
+                    logging.debug(f"Skipping '{cluster_id}' "
                                   f"({retention_period - no_of_days_issue_created} days before remediation)")
 
 

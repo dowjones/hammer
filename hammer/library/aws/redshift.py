@@ -11,6 +11,7 @@ from library.utility import jsonDumps
 from library.utility import timeit
 from library.aws.security_groups import SecurityGroup
 from collections import namedtuple
+from library.aws.utility import convert_tags
 
 
 # structure which describes EC2 instance
@@ -63,17 +64,16 @@ class RedshiftClusterOperations(object):
 
         redshift_client.modify_cluster(
             ClusterIdentifier=cluster_id,
-            Encryption=True,
-            KmsKeyId=kms_master_key_id
+            Encrypted=True
         )
 
     @staticmethod
     def set_cluster_access(redshift_client, cluster_id, public_access):
         """
-        Sets the cluster encryption using Server side encryption.
+        Sets the cluster access as private.
 
         :param redshift_client: Redshift boto3 client
-        :param cluster_id: Redshift cluster name which to encrypt
+        :param cluster_id: Redshift cluster name which to make as private
         :param public_access: Redshift cluster public access True or False.
 
         :return: nothing
@@ -84,13 +84,30 @@ class RedshiftClusterOperations(object):
             PubliclyAccessible=public_access
         )
 
+    @staticmethod
+    def enable_logging(redshift_client, cluster_id, s3_bucket):
+        """
+        Enable cluster audit logging.
+
+        :param redshift_client: Redshift boto3 client
+        :param cluster_id: Redshift cluster name which to make as private
+        :param s3_bucket: S3 bucket to store audit logs.
+
+        :return: nothing
+        """
+
+        redshift_client.enable_logging(
+            ClusterIdentifier=cluster_id,
+            BucketName=s3_bucket
+        )
+
 
 class RedshiftCluster(object):
     """
     Basic class for Redshift Cluster.
     Encapsulates `Owner`/`Tags`.
     """
-    def __init__(self, account, name, tags, is_encrypted=None, is_public=None):
+    def __init__(self, account, name, tags, is_encrypted=None, is_public=None, is_logging=None):
         """
         :param account: `Account` instance where redshift cluster is present
 
@@ -100,9 +117,10 @@ class RedshiftCluster(object):
         """
         self.account = account
         self.name =name
-        self.tags = tags
+        self.tags = convert_tags(tags)
         self.is_encrypt = is_encrypted
         self.is_public = is_public
+        self.is_logging = is_logging
 
     def encrypt_cluster(self, kms_key_id=None):
         """
@@ -119,19 +137,34 @@ class RedshiftCluster(object):
 
     def modify_cluster(self, public_access):
         """
-        Encrypt bucket with SSL encryption.
+        Modify cluster as private.
         :return: nothing        
         """
         try:
             RedshiftClusterOperations.set_cluster_access(self.account.client("redshift"), self.name, public_access)
         except Exception:
-            logging.exception(f"Failed to encrypt {self.name} cluster ")
+            logging.exception(f"Failed to modify {self.name} cluster ")
+            return False
+
+        return True
+
+    def enable_cluster_logging(self, s3_bucket):
+        """
+        Enable audit logging for cluster.
+        
+        @:param s3_bucket: s3 bucket to store audit logs.
+        :return: nothing        
+        """
+        try:
+            RedshiftClusterOperations.enable_logging(self.account.client("redshift"), self.name, s3_bucket)
+        except Exception:
+            logging.exception(f"Failed to enable logging for {self.name} cluster ")
             return False
 
         return True
 
 
-class RedshiftClusterChecker(object):
+class RedshiftEncryptionChecker(object):
     """
     Basic class for checking Redshift cluster in account.
     Encapsulates discovered Redshift cluster.
@@ -254,6 +287,75 @@ class RedshiftClusterPublicAccessChecker(object):
                                           name=cluster_id,
                                           tags=tags,
                                           is_public=is_public)
+                self.clusters.append(cluster)
+
+        return True
+
+
+class RedshiftLoggingChecker(object):
+    """
+    Basic class for checking redshift cluster's logging enabled or not in account/region.
+    Encapsulates check settings and discovered clusters.
+    """
+
+    def __init__(self, account):
+        """
+        :param account: `Account` clusters to check
+
+        """
+        self.account = account
+        self.clusters = []
+
+    def get_cluster(self, name):
+        """
+        :return: `Redshift cluster` by name
+        """
+        for cluster in self.clusters:
+            if cluster.name == name:
+                return cluster
+        return None
+
+    def check(self, clusters=None):
+        """
+        Walk through clusters in the account/region and check them.
+        Put all gathered clusters to `self.clusters`.
+
+        :param clusters: list with clusters to check, if it is not supplied - all clusters must be checked
+
+        :return: boolean. True - if check was successful,
+                          False - otherwise
+        """
+        try:
+            # AWS does not support filtering dirung list, so get all clusters for account
+            response = self.account.client("redshift").describe_clusters()
+        except ClientError as err:
+            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                logging.error(f"Access denied in {self.account} "
+                              f"(redshift:{err.operation_name})")
+            else:
+                logging.exception(f"Failed to list cluster in {self.account}")
+            return False
+
+        if "Clusters" in response:
+            for cluster_details in response["Clusters"]:
+                logging_enabled = True
+                tags = {}
+                cluster_id = cluster_details["ClusterIdentifier"]
+
+                if clusters is not None and cluster_id not in clusters:
+                    continue
+
+                logging_details = self.account.client("redshift").describe_logging_status(ClusterIdentifier=cluster_id)
+                if "LoggingEnabled" in logging_details:
+                    logging_enabled = logging_details["LoggingEnabled"]
+
+                if "Tags" in cluster_details:
+                    tags = cluster_details["Tags"]
+
+                cluster = RedshiftCluster(account=self.account,
+                                          name=cluster_id,
+                                          tags=tags,
+                                          is_logging=logging_enabled)
                 self.clusters.append(cluster)
 
         return True
