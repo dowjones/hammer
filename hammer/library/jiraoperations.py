@@ -69,6 +69,8 @@ class JiraReporting(object):
             # return current assignee
             ticket_assignee_id = self.jira.ticket_assignee(ticket_id)
 
+        self.jira.add_watcher(ticket_id, ticket_assignee_id)
+
         return NewIssue(ticket_id=ticket_id,
                         ticket_assignee_id=ticket_assignee_id)
 
@@ -301,6 +303,17 @@ class JiraOperations(object):
                 logging.exception(f"Failed to add comment to {ticket_id}")
                 return False
         return True
+
+    def add_watcher(self, ticket_id, user):
+        """
+        Adding jira ticket watcher.
+        
+        :param ticket_id: jira ticket id 
+        :param user: watcher user id
+        :return: nothing
+        """
+
+        self.session.add_watcher(ticket_id, user)
 
     def close_issue(self, ticket_id):
         """
