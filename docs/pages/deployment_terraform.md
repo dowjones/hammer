@@ -227,7 +227,7 @@ After successful Terraform deployment a few variables, you may be interested in,
 
 Sample output:
 ``` 
-ApiUrl = https://qosfsduzasrh.execute-api.<region>.amazonaws.com/LATEST/scan
+ApiUrl = https://qosfsduzasrh.execute-api.<region>.amazonaws.com/LATEST/
 ReportingRemediationPrivateIP = 172.16.x.x
 ReportingRemediationPublicIP = w.x.y.z
 ```

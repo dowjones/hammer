@@ -9,7 +9,7 @@ permalink: api.html
 You can use Dow Jones Hammer REST API to perform ad-hoc scans of controlled environments. To use it you need to:
 * deploy [CloudFormation API functionality](deployment_cloudformation.html#316-api-functionality) or ensure that [Terraform API module](deployment_terraform.html#3-edit-terraform-configuration-files) is included in `terraform.tf`
 * note down **ApiUrl** output variable of [Terraform](deployment_terraform.html#5-check-terraform-output-variables) / [CloudFormation API stack](deployment_cloudformation.html#3-deploy-cloudformation-stacks-to-the-master-aws-account)
-* [inject](configuredeploy_overview.html#41-access-credentials-storage) Dow Jones Hammer API token to credentials DynamoDB table
+* [inject](configuredeploy_overview.html#41-access-credentials-storage) Dow Jones Hammer API token and Dow Jones Hammer API URL (optional, if you are going to use slack bot for scanning) to credentials DynamoDB table
 
 ## 2. Request
 
@@ -22,107 +22,101 @@ Request example:
 ```
 $ curl -H 'Auth: ieng4aechooth4Ahzou2beeg8phohz' \
        -H 'Content-Type: application/json' \
-       https://boafxucxrw.execute-api.eu-west-1.amazonaws.com/LATEST/scan \
+       https://boafxucxrw.execute-api.eu-west-1.amazonaws.com/LATEST/identify \
        -d '
 {
-    "account_id": "1234567890",
-    "region": "us-east-1",
-    "security_feature": "secgrp_unrestricted_access"
+    "account_id": "1234567890"
 }'
        
 ```
 
 JSON payload should include:
 * **account_id**: controlled AWS account ID to check. It must be account ID from the `aws.accounts` [configuration option](editconfig.html#11-master-aws-account-settings)
-* **security_feature**: the name of the security feature to scan. This name should be the same as configuration section name for each supported security feature (f.e. - `secgrp_unrestricted_access`, `user_inactivekeys`, `s3_bucket_policy`, etc) 
-* (optional) **region**: for regional services, such as security groups, EBS/RDS snapshots, etc, you need to provide region to check issues in. If it is omitted, the default region (where Dow Jones Hammer was deployed) will be checked
+* (optional) **security_features**: the list of security feature names to scan. These names should be the same as configuration section names for each supported security feature (f.e. - `secgrp_unrestricted_access`, `user_inactivekeys`, `s3_bucket_policy`, etc).
+If omitted, all supported features will be checked 
+* (optional) **regions**: for regional services, such as security groups, EBS/RDS snapshots, etc, you need to provide list of regions to check issues in. If it is omitted, all regions will be checked
 * (optional) **tags**: dictionary with tags to limit checks by tags attached to resources
-* (optional) **ids**: list with resource ids to limit checks
 
 
-Request example of checking two S3 buckets public ACLs:
+Request example of checking public EBS snapshots and unrestricted security groups only for resources tagged with `prod` for `accounting` and `staffing` business units in us-east-2 and us-east-1 regions:
 ```
-$ curl -H 'Auth: ieng4aechooth4Ahzou2beeg8phohz' \
-       -H 'Content-Type: application/json' \
-       https://boafxucxrw.execute-api.eu-west-1.amazonaws.com/LATEST/scan \
-       -d '
+
+$ curl -X POST -H 'Auth: ieng4aechooth4Ahzou2beeg8phohz' \
+               -H 'Content-Type: application/json' \
+               https://boafxucxrw.execute-api.us-east-1.amazonaws.com/LATEST/identify -d '
 {
     "account_id": "1234567890",
-    "region": "us-east-1",
-    "security_feature": "s3_bucket_acl",
-    "ids": [
-        "BucketName1",
-        "BucketName2"
-    ]
-}'
-```
-
-Request example of checking public EBS snapshots only for resources tagged with `prod` for `accounting` and `staffing` business units:
-```
-$ curl -H 'Auth: ieng4aechooth4Ahzou2beeg8phohz' \
-       -H 'Content-Type: application/json' \
-       https://boafxucxrw.execute-api.eu-west-1.amazonaws.com/LATEST/scan \
-       -d '
-{
-    "account_id": "1234567890",
-    "region": "us-east-1",
-    "security_feature": "s3_bucket_acl",
+    "regions": ["us-east-1", "us-east-2"],
+    "security_features": ["s3_bucket_acl", "secgrp_unrestricted_access"],
     "tags": {
         "bu": ["accounting", "staffing"],
         "env": "prod"
     }
 }'
 ```
+This operation is asynchronous and returns `request_id` which can be used then to retrieve results of scan.
+Response may look like this:
+```
+{
+    "request_id": "d9ad40e4f59b4424b6ba995aa85de40e"
+}
+
+```
+Another request should be issued to retrieve results:
+```
+curl -H "Auth: ieng4aechooth4Ahzou2beeg8phohz" \
+     -H 'Content-Type: application/json' \
+     https://boafxucxrw.execute-api.us-east-1.amazonaws.com/LATEST/identify/d9ad40e4f59b4424b6ba995aa85de40e
+
+```
+This request may return such result:
+```
+{
+    "scan_status": "IN_PROGRESS"
+}
+```
+Which means the scan is still in progress. Eventually the scan will be finished and response with results od scan will be returned.
 
 ## 3. Response
 
-Dow Jones Hammer API returns responses in JSON format. If scan was successful it returns scan result in the key with the security feature name (as it was in `security_feature` request parameter).
+Dow Jones Hammer API returns responses in JSON format. If scan was successful it returns scan result in the key `scan_results` and `scan_status` that is equal to `COMPLETE`.
 
-Insecure services response example:
+This is how response may look like:
 ```
 {
-    "secgrp_unrestricted_access": [
-        {
-            "id": "sg-123456",
-            "name": "ssh-test1",
-            "status": "open_partly",
-            "permissions": [
-                {
-                    "ports": "22",
-                    "protocol": "tcp",
-                    "cidr": "1.1.1.1/32"
-                }
-            ]
+    "scan_status": "COMPLETE",
+    "scan_results": {
+        "global": {
+            "s3_bucket_policy": [],
+            "s3_bucket_acl": [],
+            "user_inactivekeys": [],
+            "user_keysrotation": []
         },
-        {
-            "id": "sg-654321",
-            "name": "ssh-test2",
-            "status": "open_completely",
-            "permissions": [
+        "us-east-1": {
+            "secgrp_unrestricted_access": [
                 {
-                    "ports": "22",
-                    "protocol": "tcp",
-                    "cidr": "0.0.0.0/0"
-                }
-            ]
-        }
-    ]
-}
-```
-
-S3 bucket ACL response example:
-```
-{
-    "s3_bucket_acl": [
-        {
-            "name": "test-bucket",
-            "public_acls": {
-                "AllUsers": [
-                    "READ",
-                    "READ_ACP"
-                ]
-            }
-        }
-    ]
+                    "id": "sg-002f6eaff01234567",
+                    "issue_details": {
+                        "name": "rds-launch-wizard-2",
+                        "perms": [
+                            {
+                                "to_port": 3306,
+                                "protocol": "tcp",
+                                "cidr": "4.5.6.107/32",
+                                "from_port": 3306,
+                                "status": "open_partly"
+                            }
+                        ],
+                        "region": "us-east-1",
+                        "tags": {},
+                        "status": "open_partly"
+                    }
+                },
+            ],
+            "ebs_public_snapshot": [],
+            "rds_public_snapshot": [],
+            "sqs_public_access": []
+        },
+    }
 }
 ```

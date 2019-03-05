@@ -115,6 +115,7 @@ To configure:
 
 you should inject corresponding access credentials to the credentials and values DynamoDB table, defined in `credentials` section of `config.json`.
 Default table name is `hammer-credentials`.
+Additionally, you can also specify API URL which will be used by slack bot for `scan account` operation
 
 To inject the access credentials, run the script `ddb_inject_credentials.py` from the `hammer/tools/` folder:
 ```bash
@@ -123,6 +124,7 @@ hammer/tools $ export AWS_DEFAULT_REGION="<hammer-master-region>"
 hammer/tools $ python3.6 ddb_inject_credentials.py \
                             --table "<table name from config.json>" \
                             --hammer-api-token "<Hammer API token>" \
+                            --hammer-api-url "<Hammer API URL>" \
                             --slack-api-token "<slack API token>" \
                             --jira-access-token-secret "<JIRA secret for access token>" \
                             --jira-access-token "<JIRA access token>" \
