@@ -4,7 +4,7 @@ import requests
 import time
 
 
-from slackbot.bot import respond_to
+from slackbot.bot import listen_to, respond_to
 from slackbot.settings import config
 
 
@@ -167,15 +167,22 @@ def format_scan_account_result(scan_result):
                 issues_id = [issue['id'] for issue in scan_result[region][sec_feature]]
                 issues = ','.join(issues_id)
                 result += '[' + issues + ']\n'
+    if not result:
+        return 'No vulnerabilities found. Congrats!'
     return result
 
 
-@respond_to('^scan account (?P<account_num>.*)$', re.IGNORECASE)
-def scan_account(message, account_num):
+def scan_account(message, account_num, regions, security_features, tags):
     api_token = config.api.token
     api_url = config.api.url + '/identify'
     headers = {'Auth': api_token}
-    resp = requests.post(api_url, json={'account_id': account_num}, headers=headers)
+    request_body = {
+        'account_id': account_num,
+        'regions': regions,
+        'security_features': security_features,
+        'tags': tags
+    }
+    resp = requests.post(api_url, json=request_body, headers=headers)
     if resp.status_code != 200:
         message.reply(f'Failed to start scan for account {account_num}, {resp.text}')
         return
@@ -186,8 +193,143 @@ def scan_account(message, account_num):
     while time.time() - time_start < 300:
         resp = requests.get(api_url + '/' + request_id, headers=headers)
         if resp.json()['scan_status'] == 'COMPLETE':
-            return message.reply(format_scan_account_result(resp.json()['scan_results']))
+            message.reply(format_scan_account_result(resp.json()['scan_results']))
+            return
         if resp.json()['scan_status'] == 'FAILED':
             return message.reply(f'Scan of account {account_num} is failed. Please try again later.')
         time.sleep(5)
     return message.reply('Sorry, but current scan takes too long to finish.')
+
+
+QUESTION_1 = '''
+Please specify regions which you want to scan. Use comma as a separator between region values.
+Specify `all` if you want to scan all regions. Allowed values: \n ```%s```'''
+
+QUESTION_2 = '''
+Please specify security features you want to check. Use comma as a separator between values.
+Specify `all` if you want to check every supported resource. Allowed values: \n ```%s```
+'''
+
+QUESTION_3 = '''
+Please specify tags. The tags should be valid json. Specify `{}` if you want to scan all resources.
+Example: `{"bu": ["mybu1", "mybu2"], "owner": ["owner1", "owner2"]}`.
+'''
+
+
+def parse_regions(response):
+    regions = []
+    supported_regions = config.aws.regions
+    allowed_values = '\n'.join(supported_regions)
+    requested_regions = response.split(',')
+    if 'all' in requested_regions and len(requested_regions) == 1:
+        return regions
+    for region in requested_regions:
+        if region.strip() not in supported_regions:
+            raise Exception(f'Wrong region {region}. Allowed values: \n ```{allowed_values}```')
+        else:
+            regions.append(region.strip())
+    return regions
+
+
+def parse_security_features(response):
+    security_features = []
+    supported_features = [module.section for module in config.modules]
+    allowed_values = '\n'.join(supported_features)
+    requested_security_features = response.split(',')
+    if 'all' in requested_security_features and len(requested_security_features) == 1:
+        return []
+    for sec_feature in requested_security_features:
+        if sec_feature.strip() not in supported_features:
+            raise Exception(f"Unsupported security feature {sec_feature}. Allowed values: \n ```{allowed_values}```")
+        else:
+            security_features.append(sec_feature.strip())
+    return security_features
+
+
+def parse_tags(response):
+    try:
+        return json.loads(response)
+    except Exception:
+        raise Exception('Can not parse tags. Please specify tags in the following format: '
+                        '`{"tag_name": ["value1", "value2"]}`')
+
+
+def parse_answer(message, user_response, thread_ts):
+    current_question = get_current_question(thread_ts)
+    DIALOGS[thread_ts]['answers'].append(QUESTIONS[current_question]['parse_func'](user_response))
+    if len(DIALOGS[thread_ts]['answers']) == len(QUESTIONS):
+        scan_account(message, DIALOGS[thread_ts]['account'], *DIALOGS[thread_ts]['answers'])
+        return
+    ask_question(message, current_question + 1)
+
+
+def ask_regions(message):
+    supported_regions = config.aws.regions
+    allowed_values = '\n'.join(supported_regions)
+    message.reply(QUESTION_1 % allowed_values, in_thread=True)
+
+
+def ask_security_features(message):
+    supported_features = [module.section for module in config.modules]
+    allowed_values = '\n'.join(supported_features)
+    message.reply(QUESTION_2 % allowed_values, in_thread=True)
+
+
+def ask_tags(message):
+    message.reply(QUESTION_3, in_thread=True)
+
+
+def ask_question(message, question_number):
+    QUESTIONS[question_number]['question_func'](message)
+
+
+QUESTIONS = {
+    0: {'parse_func': parse_regions, 'question_func': ask_regions},
+    1: {'parse_func': parse_security_features, 'question_func': ask_security_features},
+    2: {'parse_func': parse_tags, 'question_func': ask_tags}
+}
+
+DIALOGS = dict()
+USERS = dict()
+
+
+def get_current_question(thread):
+    return len(DIALOGS[thread]['answers'])
+
+
+@respond_to('^scan account (?P<account_num>.*)$', re.IGNORECASE)
+def start_scan_conversation(message, account_num):
+    try:
+        thread_ts = message.body['thread_ts']
+    except KeyError:
+        thread_ts = None
+    if not thread_ts:
+        # need to start mew conversation with a user
+        DIALOGS[message.body['ts']] = {'account': account_num, 'answers': []}
+        user = message.user['id']
+        if user in USERS:
+            # remove previous conversation. you can communicate only in one thread with bot at a time
+            del DIALOGS[USERS[user]]
+        USERS[user] = message.body['ts']
+        return ask_question(message, 0)
+    if thread_ts not in DIALOGS:
+        # somebody tries to start scanning in already existing slack thread that is not related to hammer scan
+        # just ignore it
+        return
+    message.reply('Can not start new scan in this thread. Please start new thread or finish this thread first.')
+
+
+@listen_to('^(?P<user_response>.*)$', re.IGNORECASE)
+def handle_scan_thread_answers(message, user_response):
+    try:
+        thread_ts = message.body['thread_ts']
+    except KeyError:
+        return
+    if thread_ts not in DIALOGS:
+        return
+    try:
+        parse_answer(message, user_response, thread_ts)
+    except KeyError:
+        pass
+    except Exception as e:
+        message.reply(str(e))
