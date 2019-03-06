@@ -68,7 +68,7 @@ module "reporting-remediation" {
 module "api" {
     source = "modules/api"
     s3bucket = "${var.s3bucket}"
-    apiIAMRole = "${var.ApiIAMRole}"
+    apiIAMRole = "${var.apiIAMRole}"
     resources-prefix = "${var.resources-prefix}"
     tags = "${var.tags}"
 }
