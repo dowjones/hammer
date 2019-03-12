@@ -21,6 +21,7 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
+from library.aws.ecs import ECSClusterOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -214,6 +215,23 @@ class CreateSecurityGroupsTickets(object):
 
         return elb_instance_details, in_use
 
+    @staticmethod
+    def build_ecs_clusters_table(ecs_clusters):
+        cluster_details = ""
+        in_use = False
+
+        if len(ecs_clusters) > 0:
+            in_use = True
+            cluster_details += (
+                f"\n*ECS Clustes:*\n"
+                f"||ECS Cluster ID||ECS Instance ARN||\n")
+            for cluster in ecs_clusters:
+                cluster_details += (
+                    f"|{cluster.cluster_arn}|{cluster.cluster_instance_arn}|\n"
+                )
+
+        return cluster_details, in_use
+
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
         table_name = self.config.sg.ddb_table_name
@@ -307,7 +325,7 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_ecs = None
                     sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
@@ -316,6 +334,7 @@ class CreateSecurityGroupsTickets(object):
 
                     iam_client = account.client("iam") if account.session is not None else None
 
+                    ecs_client = account.client("ecs") if account.session is not None else None
                     rds_instance_details = elb_instance_details = None
 
                     if ec2_client is not None:
@@ -338,7 +357,16 @@ class CreateSecurityGroupsTickets(object):
                         except Exception:
                             logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
+                    if ecs_client is not None:
+                        try:
+                            ecs_instances = ECSClusterOperations.get_ecs_instance_security_groups(ec2_client, ecs_client, group_id)
+                            sg_ecs_details, sg_in_use_ecs = self.build_ecs_clusters_table(ecs_instances)
+
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build ECS Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_ecs
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -431,6 +459,8 @@ class CreateSecurityGroupsTickets(object):
                     issue_description += f"{elb_instance_details if elb_instance_details else ''}"
 
                     issue_description += f"{instance_profile_details if instance_profile_details else ''}"
+
+                    issue_description += f"{sg_ecs_details if sg_ecs_details else ''}" 
 
                     issue_description += (
                         f"*Recommendation*: "
