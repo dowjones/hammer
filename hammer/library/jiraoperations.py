@@ -274,7 +274,7 @@ class JiraOperations(object):
 
                 :return: boolean, if label update was successful
                 """
-        if not (ticket_id or label):
+        if not (ticket_id and label):
             return False
 
         try:
