@@ -46,8 +46,7 @@
                                     "ec2:DescribeSecurityGroups",
                                     "ec2:DescribeInstances",
                                     "ec2:DescribeRouteTables",
-                                    "ec2:DescribeSubnets",
-                                    "ec2:DescribeImages",
+                                    "ec2:DescribeSubnets"
                                 ],
                                 "Resource": "*"
                             },
