@@ -53,7 +53,6 @@ def automation_cronjob(config):
         ("EBS Unencrypted Volumes",   config.ebsVolume,           "create_ebs_volume_issue_tickets",      None),
         ("EBS Public Snapshots",      config.ebsSnapshot,         "create_ebs_public_snapshot_issue_tickets", "clean_public_ebs_snapshots"),
         ("RDS Public Snapshots",      config.rdsSnapshot,         "create_rds_public_snapshot_issue_tickets", "clean_public_rds_snapshots"),
-        ("EC2 Public Images",         config.publicAMIs,          "create_public_ami_issue_tickets",      "clean_ami_public_access")
         ("SQS Public Access",         config.sqspolicy,           "create_sqs_policy_issue_tickets",          "clean_sqs_policy_permissions"),
         ("S3 Unencrypted Buckets",    config.s3Encrypt,           "create_s3_unencrypted_bucket_issue_tickets", "clean_s3bucket_unencrypted"),
         ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
