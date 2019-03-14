@@ -223,6 +223,11 @@ class RdsEncryptionIssue(Issue):
         super().__init__(*args)
 
 
+class ECSLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
 class Operations(object):
     @staticmethod
     def find(ddb_table, issue):

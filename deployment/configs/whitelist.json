@@ -43,5 +43,8 @@
     "s3_encryption": {
 	},
     "rds_encryption": {
-	}
+	},
+    "ecs_logging":{
+    
+    }
 }

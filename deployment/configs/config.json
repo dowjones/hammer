@@ -140,4 +140,11 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "reporting": true
     }
+    "ecs_logging": {
+        "enabled": true,
+        "ddb.table_name": "djif-hammer-ecs-logging",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    }
 }
