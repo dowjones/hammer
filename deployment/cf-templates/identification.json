@@ -3001,7 +3001,7 @@
             "DependsOn": "LambdaEvaluateECSLogging",
             "Properties": {
                 "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECsLogging", "value"] } ]
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSLogging", "value"] } ]
                                              ]},
                 "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSLogging", "value"] } ]
