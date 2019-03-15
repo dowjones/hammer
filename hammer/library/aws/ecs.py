@@ -11,7 +11,7 @@ from library.utility import jsonDumps
 from library.utility import timeit
 from library.aws.security_groups import SecurityGroup
 from collections import namedtuple
-
+from library.aws.utility import convert_tags
 
 # structure which describes EC2 instance
 ECSCluster_Details = namedtuple('ECSCluster_Details', [
@@ -69,17 +69,19 @@ class ECSTaskDefinitions(object):
     Basic class for ECS task definitions.
     
     """
-    def __init__(self, account, name, arn, is_logging=None):
+    def __init__(self, account, name, arn, tags, is_logging=None):
         """
         :param account: `Account` instance where ECS task definition is present
         
         :param name: name of the task definition
         :param arn: arn of the task definition
+        :param arn: tags of task definition.
         :param is_logging: logging enabled or not.
         """
         self.account = account
         self.name = name
         self.arn = arn
+        self.tags = convert_tags(tags)
         self.is_logging = is_logging
 
 
@@ -128,6 +130,7 @@ class ECSLoggingChecker(object):
             return False
 
         if "families" in response:
+            tags = {}
             for task_definition_name in response["families"]:
                 if task_definitions is not None and task_definition_name not in task_definitions:
                     continue
@@ -144,11 +147,13 @@ class ECSLoggingChecker(object):
                         else:
                             logging_enabled = True
                             break
-
+                if "Tags" in task_definition:
+                    tags = task_definition["Tags"]
                 task_definition_details = ECSTaskDefinitions(account=self.account,
-                                         name=task_definition_name,
-                                         arn=task_definition_arn,
-                                         is_logging=logging_enabled)
+                                                             name=task_definition_name,
+                                                             arn=task_definition_arn,
+                                                             tags=tags,
+                                                             is_logging=logging_enabled)
                 self.task_definitions.append(task_definition_details)
 
         return True
