@@ -52,5 +52,8 @@
 	},
     "redshift_logging":{
     
+    },
+    "ecs_logging":{
+    
     }
 }

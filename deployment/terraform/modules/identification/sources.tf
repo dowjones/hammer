@@ -104,3 +104,9 @@ resource "aws_s3_bucket_object" "redshift-audit-logging-issues-identification" {
     key    = "lambda/${format("redshift-audit-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"))}")}"
     source = "${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"
 }
+
+resource "aws_s3_bucket_object" "ecs-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-logging-issues-identification.zip"
+}

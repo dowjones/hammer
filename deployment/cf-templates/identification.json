@@ -1,4 +1,3 @@
-
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Hammer identification stack",
@@ -30,7 +29,8 @@
                         "SourceIdentificationRDSSnapshots",
                         "SourceIdentificationRedshiftClusterEncryption",
                         "SourceIdentificationRedshiftPublicAccess",
-                        "SourceIdentificationRedshiftLogging"
+                        "SourceIdentificationRedshiftLogging",
+                        "SourceIdentificationECSLogging"
                     ]
                 },
                 {
@@ -101,6 +101,9 @@
                 },
                 "SourceIdentificationRedshiftLogging":{
                     "default": "Relative path to disabled logging Redshift Cluster sources"
+                },
+                "SourceIdentificationECSLogging":{
+                    "default": "Relative path to disabled logging ECS sources"
                 }
             }
         }
@@ -201,8 +204,11 @@
         "SourceIdentificationRedshiftLogging": {
             "Type": "String",
             "Default": "redshift-audit-logging-issues-identification.zip"
+        },
+        "SourceIdentificationECSLogging": {
+            "Type": "String",
+            "Default": "ecs-logging-issues-identification.zip"
         }
-
     },
     "Conditions": {
         "LambdaSubnetsEmpty": {
@@ -264,6 +270,9 @@
             },
             "IdentificationMetricRedshiftLoggingError": {
                 "value": "RedshiftLoggingError"
+            },
+            "IdentificationMetricECSLoggingError": {
+                "value": "ECSLoggingError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -354,6 +363,12 @@
             },
             "SNSTopicNameRedshiftLogging": {
                 "value": "describe-redshift-logging-lambda"
+            },
+            "SNSDisplayNameECSLogging": {
+                "value": "describe-ecs-logging-sns"
+            },
+            "SNSTopicNameECSLogging": {
+                "value": "describe-ecs-logging-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -450,6 +465,12 @@
             },
             "IdentifyRedshiftLoggingLambdaFunctionName": {
                 "value": "describe-redshift-logging"
+            },
+            "InitiateECSLoggingLambdaFunctionName": {
+                "value": "initiate-ecs-logging"
+            },
+            "IdentifyECSLoggingLambdaFunctionName": {
+                "value": "describe-ecs-logging"
             }
         }
     },
@@ -490,7 +511,6 @@
                 "RetentionInDays": "7"
             }
         },
-
         "LambdaBackupDDB": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaBackupDDB"],
@@ -538,7 +558,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaBackupDDB" }
             }
         },
-
         "LambdaInitiateSGEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LogGroupLambdaInitiateSGEvaluation"],
@@ -591,7 +610,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSGEvaluation" }
             }
         },
-
         "LambdaEvaluateSG": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSG"],
@@ -655,7 +673,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSG" }
             }
         },
-
         "LambdaInitiateCloudTrailsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateCloudTrails", "LogGroupLambdaInitiateCloudTrailsEvaluation"],
@@ -889,7 +906,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3ACL" }
             }
         },
-
         "LambdaInitiateS3PolicyEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Policy", "LogGroupLambdaInitiateS3PolicyEvaluation"],
@@ -942,7 +958,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3PolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateS3Policy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Policy"],
@@ -1006,7 +1021,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Policy" }
             }
         },
-
         "LambdaInitiateIAMUserKeysRotationEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateIAMUserKeysRotation", "LogGroupLambdaInitiateIAMUserKeysRotationEvaluation"],
@@ -1357,7 +1371,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSVolumes" }
             }
         },
-
         "LambdaInitiateEBSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateEBSSnapshots", "LogGroupLambdaInitiateEBSSnapshotsEvaluation"],
@@ -1410,7 +1423,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateEBSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateEBSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateEBSSnapshots"],
@@ -1474,7 +1486,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSSnapshots" }
             }
         },
-
         "LambdaInitiateRDSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSSnapshots", "LogGroupLambdaInitiateRDSSnapshotsEvaluation"],
@@ -1527,7 +1538,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSSnapshots"],
@@ -1591,7 +1601,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSSnapshots" }
             }
         },
-
         "LambdaInitiateSQSPublicPolicyEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateSQSPublicPolicy", "LogGroupLambdaInitiateSQSPublicPolicyEvaluation"],
@@ -1644,7 +1653,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSQSPublicPolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateSQSPublicPolicy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSQSPublicPolicy"],
@@ -1708,7 +1716,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSQSPublicPolicy" }
             }
         },
-
         "LambdaInitiateS3EncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Encryption", "LogGroupLambdaInitiateS3EncryptionEvaluation"],
@@ -1761,7 +1768,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3EncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateS3Encryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Encryption"],
@@ -1809,7 +1815,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Encryption" }
             }
         },
-
         "LambdaInitiateRDSEncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSEncryption", "LogGroupLambdaInitiateRDSEncryptionEvaluation"],
@@ -1862,7 +1867,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSEncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSEncryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSEncryption"],
@@ -1963,7 +1967,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateRedshiftClusterEncryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRedshiftClusterEncryption"],
@@ -2111,7 +2114,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRedshiftPublicAccess" }
             }
         },
-
         "LambdaInitiateRedshiftLoggingEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftLogging", "LogGroupLambdaInitiateRedshiftLoggingEvaluation"],
@@ -2212,6 +2214,105 @@
             }
         },
 
+        "LambdaInitiateECSLoggingEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSLogging", "LogGroupLambdaInitiateECSLoggingEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSLogging" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ECS_LOGGING_ARN": { "Ref": "SNSNotifyLambdaEvaluateECSLogging" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify disabled loging of ECS task definition.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_ecs_logging_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateECSLoggingEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateECSLoggingLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateECSLoggingEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateECSLoggingEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateECSLoggingEvaluation" }
+            }
+        },
+        "LambdaEvaluateECSLogging": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateECSLogging"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSLogging" }
+                },
+                "Description": "Lambda function to describe disabled ECS logging.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_ecs_logging_issues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateECSLogging": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyECSLoggingLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateECSLogging": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateECSLogging"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSLogging" }
+            }
+        },
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
@@ -2425,6 +2526,22 @@
                 ]
             }
         },
+        "EventInitiateEvaluationECSLogging": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateECSLoggingEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate logging issue ECS task definition evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSLogging"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateECSLoggingEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateECSLoggingEvaluation"
+                  }
+                ]
+            }
+        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -2596,6 +2713,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRedshiftLogging", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateECSLoggingEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateECSLoggingEvaluation", "EventInitiateEvaluationECSLogging"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateECSLoggingEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSLogging", "Arn"] }
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -2833,7 +2960,6 @@
                 }]
             }
         },
-
         "SNSNotifyLambdaEvaluateRedshiftPublicAccess": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": "LambdaEvaluateRedshiftPublicAccess",
@@ -2865,6 +2991,24 @@
                 "Subscription": [{
                     "Endpoint": {
                         "Fn::GetAtt": ["LambdaEvaluateRedshiftLogging", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+        "SNSNotifyLambdaEvaluateECSLogging": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateECSLogging",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECsLogging", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSLogging", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateECSLogging", "Arn"]
                     },
                     "Protocol": "lambda"
                 }]
@@ -3021,6 +3165,16 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRedshiftLogging", "Arn"] }
             }
         },
+        "PermissionToInvokeLambdaEvaluateECSLoggingSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSLogging", "LambdaEvaluateECSLogging"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSLogging" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSLogging", "Arn"] }
+            }
+        },
         "SNSIdentificationErrors": {
             "Type": "AWS::SNS::Topic",
             "Properties": {
@@ -3048,7 +3202,6 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }
             }
         },
-
         "AlarmErrorsLambdaBackupDDB": {
             "Type": "AWS::CloudWatch::Alarm",
             "DependsOn": ["SNSIdentificationErrors", "LambdaBackupDDB"],
@@ -3753,6 +3906,52 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateRedshiftLogging" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateECSLoggingEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateECSLoggingEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateECSLoggingEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateECSLoggingEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaECSLoggingEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSLogging"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSLogging" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateECSLogging" }
                     }
                 ],
                 "Period": 3600,

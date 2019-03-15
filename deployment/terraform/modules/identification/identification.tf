@@ -17,7 +17,8 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification",
                   "aws_s3_bucket_object.redshift-unencrypted-cluster-identification",
                   "aws_s3_bucket_object.redshift-cluster-public-access-identification",
-                  "aws_s3_bucket_object.redshift-audit-logging-issues-identification"
+                  "aws_s3_bucket_object.redshift-audit-logging-issues-identification",
+                  "aws_s3_bucket_object.ecs-logging-issues-identification"
                  ]
 
     tags = "${var.tags}"
@@ -46,6 +47,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationRedshiftClusterEncryption = "${aws_s3_bucket_object.redshift-unencrypted-cluster-identification.id}"
         SourceIdentificationRedshiftPublicAccess = "${aws_s3_bucket_object.redshift-cluster-public-access-identification.id}"
         SourceIdentificationRedshiftLogging = "${aws_s3_bucket_object.redshift-audit-logging-issues-identification.id}"
+        SourceIdentificationECSLogging = "${aws_s3_bucket_object.ecs-logging-issues-identification.id}"
     }
 
     template_url = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.identification-cfn.id}"
