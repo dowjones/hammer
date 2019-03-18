@@ -111,13 +111,6 @@ def start_scan(account_id, regions, security_features, tags, ids):
     }
 
 
-def start_remediate(account_id, regions, security_features, tags, ids):
-    return {
-        "statusCode": 200,
-        "body": json.dumps({}, indent=4)
-    }
-
-
 def collect_results(request_info, main_account):
     security_features = request_info['request_params']['security_features']
     regions = request_info['request_params']['regions']
@@ -200,7 +193,5 @@ def lambda_handler(event, context):
             # get request id from url path
             request_id = action.split('/')[1]
             return get_scan_results(request_id)
-    elif action == "remediate":
-        return start_remediate(account_id, regions, security_features, tags, ids)
     else:
         return bad_request(text="wrong action")
