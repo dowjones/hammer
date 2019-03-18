@@ -60,6 +60,7 @@ def lambda_handler(event, context):
                     #logging.debug(f"associated ec2 instances: {ec2_instances}")
                     issue = SecurityGroupIssue(account_id, sg.id)
                     issue.issue_details.name = sg.name
+                    issue.issue_details.vpc_id = sg.vpc_id
                     issue.issue_details.region = sg.account.region
                     issue.issue_details.tags = sg.tags
                     issue.issue_details.status = sg.status.value
@@ -67,7 +68,8 @@ def lambda_handler(event, context):
                         for ip_range in perm.ip_ranges:
                             if not ip_range.restricted:
                                 issue.add_perm(perm.protocol, perm.from_port, perm.to_port, ip_range.cidr, ip_range.status)
-                    if config.sg.in_whitelist(account_id, sg.name) or config.sg.in_whitelist(account_id, sg.id):
+                    if config.sg.in_whitelist(account_id, f"{sg.vpc_id}:{sg.name}") or \
+                       config.sg.in_whitelist(account_id, sg.id):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

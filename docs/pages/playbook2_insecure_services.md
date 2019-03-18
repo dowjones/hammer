@@ -108,14 +108,15 @@ Sample **secgrp_unrestricted_access** section of the **config.json** file:
 You can define exceptions to the general automatic remediation settings for specific security groups. To configure such exceptions, you should edit the  **secgrp_unrestricted_access** section of the **whitelist.json** configuration file as follows:
 
 |Parameter Key | Parameter Value(s) |
-|:----:|:-----:|
-|AWS Account ID|Security Group Names or IDs|
+|:------------:|:------------------:|
+|AWS Account ID|Security Group ID<br>VPC ID and Security Group Name, separated by colon|
 
 Sample **whitelist.json** section:
 
 ```
 "secgrp_unrestricted_access": {
-    "123456789012": ["sg-7c228307", "sg-21f2ad5b"],"067463091988": ["PAN-Dataplane_sg"]
+    "123456789012": ["sg-7c228307", "sg-21f2ad5b", "vpc-654321:default"],
+    "067463091988": ["vpc-123456:PAN-Dataplane_sg"]
 }	
 ```
 
