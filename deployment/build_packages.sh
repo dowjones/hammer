@@ -23,7 +23,7 @@ SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 PACKAGES_DIR="${SCRIPT_PATH}/packages/"
 LIBRARY="${SCRIPT_PATH}/../hammer/library"
 
-LAMBDAS="ami-info logs-forwarder ddb-tables-backup sg-issues-identification s3-acl-issues-identification s3-policy-issues-identification iam-keyrotation-issues-identification iam-user-inactive-keys-identification cloudtrails-issues-identification ebs-unencrypted-volume-identification ebs-public-snapshots-identification rds-public-snapshots-identification sqs-public-policy-identification s3-unencrypted-bucket-issues-identification rds-unencrypted-instance-identification api redshift-unencrypted-cluster-identification redshift-cluster-public-access-identification redshift-audit-logging-issues-identification ecs-logging-issues-identification"
+LAMBDAS="ami-info logs-forwarder ddb-tables-backup sg-issues-identification s3-acl-issues-identification s3-policy-issues-identification iam-keyrotation-issues-identification iam-user-inactive-keys-identification cloudtrails-issues-identification ebs-unencrypted-volume-identification ebs-public-snapshots-identification rds-public-snapshots-identification sqs-public-policy-identification s3-unencrypted-bucket-issues-identification rds-unencrypted-instance-identification api redshift-unencrypted-cluster-identification redshift-cluster-public-access-identification redshift-audit-logging-issues-identification ecs-logging-issues-identification ecs-privileged-access-issues-identification ecs-external-image-source-issues-identification"
 
 pushd "${SCRIPT_PATH}" > /dev/null
 pushd ../hammer/identification/lambdas > /dev/null

@@ -1,5 +1,5 @@
 """
-Class to create ecs task definition logging issue tickets.
+Class to create ecs external image source issue tickets.
 """
 import sys
 import logging
@@ -10,28 +10,28 @@ from library.aws.utility import Account
 from library.config import Config
 from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
-from library.ddb_issues import IssueStatus, ECSLoggingIssue
+from library.ddb_issues import IssueStatus, ECSExternalImageSourceIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
-class CreateECSLoggingIssueTickets(object):
-    """ Class to create ECS task definition logging issue tickets """
+class CreateECSExternalImageSourceIssueTickets(object):
+    """ Class to create ECS external image source issue tickets """
     def __init__(self, config):
         self.config = config
 
-    def create_tickets_ecs_logging(self):
+    def create_tickets_ecs_external_images(self):
         """ Class method to create jira tickets """
-        table_name = self.config.ecs_logging.ddb_table_name
+        table_name = self.config.ecs_external_image_source.ddb_table_name
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.ecs_logging.accounts.items():
+        for account_id, account_name in self.config.ecs_external_image_source.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
-            issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSLoggingIssue)
+            issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSExternalImageSourceIssue)
             for issue in issues:
                 task_definition_arn = issue.issue_id
                 region = issue.issue_details.region
@@ -43,9 +43,9 @@ class CreateECSLoggingIssueTickets(object):
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} ECS logging enabled '{task_definition_arn}' issue")
+                        logging.debug(f"Closing {issue.status.value} ECS external image source '{task_definition_arn}' issue")
 
-                        comment = (f"Closing {issue.status.value} ECS logging enabled '{task_definition_arn}' issue "
+                        comment = (f"Closing {issue.status.value} ECS external image source '{task_definition_arn}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
@@ -69,7 +69,7 @@ class CreateECSLoggingIssueTickets(object):
                     elif issue.timestamps.updated > issue.timestamps.reported:
                         logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {task_definition_arn}")
                         slack.report_issue(
-                            msg=f"ECS logging '{task_definition_arn}' issue is changed "
+                            msg=f"ECS external image source '{task_definition_arn}' issue is changed "
                                 f"in '{account_name} / {account_id}' account, '{region}' region"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
@@ -81,24 +81,24 @@ class CreateECSLoggingIssueTickets(object):
                         logging.debug(f"No changes for '{task_definition_arn}'")
                 # issue has not been reported yet
                 else:
-                    logging.debug(f"Reporting ECS logging '{task_definition_arn}' issue")
+                    logging.debug(f"Reporting ECS external image source issue for '{task_definition_arn}'")
 
                     owner = tags.get("owner", None)
                     bu = tags.get("bu", None)
                     product = tags.get("product", None)
 
-                    issue_summary = (f"ECS logging is not enabled for '{task_definition_arn}'"
+                    issue_summary = (f"ECS external image source '{task_definition_arn}'"
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
-                        f"The ECS logging is not enabled.\n\n"
+                        f"The ECS image source taken from external.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_arn}\n")
 
-                    auto_remediation_date = (self.config.now + self.config.ecs_logging.issue_retention_date).date()
+                    auto_remediation_date = (self.config.now + self.config.ecs_external_image_source.issue_retention_date).date()
                     issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
@@ -106,12 +106,12 @@ class CreateECSLoggingIssueTickets(object):
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Enable logging for ECS task definition.")
+                        f"For both security and reliability, it would be better to use ECS container registry and maintain all required container images within ECS.")
 
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["ecs-logging"],
+                            priority="Major", labels=["ecs-external-image"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        obj = CreateECSLoggingIssueTickets(config)
-        obj.create_tickets_ecs_logging()
+        obj = CreateECSExternalImageSourceIssueTickets(config)
+        obj.create_tickets_ecs_external_images()
     except Exception:
-        logging.exception("Failed to create ecs logging tickets")
+        logging.exception("Failed to create ECS external image issue tickets")

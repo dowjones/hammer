@@ -69,7 +69,7 @@ class ECSTaskDefinitions(object):
     Basic class for ECS task definitions.
     
     """
-    def __init__(self, account, name, arn, tags, is_logging=None):
+    def __init__(self, account, name, arn, tags, is_logging=None, is_privileged=None, external_image=None):
         """
         :param account: `Account` instance where ECS task definition is present
         
@@ -83,9 +83,11 @@ class ECSTaskDefinitions(object):
         self.arn = arn
         self.tags = convert_tags(tags)
         self.is_logging = is_logging
+        self.is_privileged = is_privileged
+        self.external_image = external_image
 
 
-class ECSLoggingChecker(object):
+class ECSChecker(object):
     """
     Basic class for checking ecs task definition's logging enabled or not in account/region.
     Encapsulates check settings and discovered task definitions.
@@ -136,6 +138,8 @@ class ECSLoggingChecker(object):
                     continue
 
                 logging_enabled = False
+                external_image = False
+                is_privileged = False
                 task_definition = self.account.client("ecs").describe_task_definition(
                     taskDefinition=task_definition_name
                 )['taskDefinition']
@@ -146,14 +150,28 @@ class ECSLoggingChecker(object):
                             logging_enabled = False
                         else:
                             logging_enabled = True
-                            break
+
+                        if container_definition['privileged']:
+                            is_privileged = True
+                        else:
+                            is_privileged = False
+
+                        image = container_definition['image']
+                        if image.split("/")[0].split(".")[-2:] != ['amazonaws', 'com']:
+                            external_image = True
+                        else:
+                            external_image = False
+
                 if "Tags" in task_definition:
                     tags = task_definition["Tags"]
                 task_definition_details = ECSTaskDefinitions(account=self.account,
                                                              name=task_definition_name,
                                                              arn=task_definition_arn,
                                                              tags=tags,
-                                                             is_logging=logging_enabled)
+                                                             is_logging=logging_enabled,
+                                                             is_privileged=is_privileged,
+                                                             external_image=external_image
+                                                             )
                 self.task_definitions.append(task_definition_details)
 
         return True

@@ -70,6 +70,12 @@ class Config(object):
         # ECS logging issue config
         self.ecs_logging = ModuleConfig(self._config, "ecs_logging")
 
+        # ECS access issue config
+        self.ecs_privileged_access = ModuleConfig(self._config, "ecs_privileged_access")
+
+        # ECS image source issue config
+        self.ecs_external_image_source = ModuleConfig(self._config, "ecs_external_image_source")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

@@ -30,7 +30,9 @@
                         "SourceIdentificationRedshiftClusterEncryption",
                         "SourceIdentificationRedshiftPublicAccess",
                         "SourceIdentificationRedshiftLogging",
-                        "SourceIdentificationECSLogging"
+                        "SourceIdentificationECSLogging",
+                        "SourceIdentificationECSPrivilegedAccess",
+                        "SourceIdentificationECSExternalImageSource"
                     ]
                 },
                 {
@@ -104,6 +106,12 @@
                 },
                 "SourceIdentificationECSLogging":{
                     "default": "Relative path to disabled logging ECS sources"
+                },
+                "SourceIdentificationECSPrivilegedAccess":{
+                    "default": "Relative path to privileged access issue ECS sources"
+                },
+                "SourceIdentificationECSExternalImageSource":{
+                    "default": "Relative path to external image issue ECS sources"
                 }
             }
         }
@@ -208,6 +216,14 @@
         "SourceIdentificationECSLogging": {
             "Type": "String",
             "Default": "ecs-logging-issues-identification.zip"
+        },
+        "SourceIdentificationECSPrivilegedAccess": {
+            "Type": "String",
+            "Default": "ecs-privileged-access-issues-identification.zip"
+        },
+        "SourceIdentificationECSExternalImageSource": {
+            "Type": "String",
+            "Default": "ecs-image-source-issues-identification.zip"
         }
     },
     "Conditions": {
@@ -273,6 +289,12 @@
             },
             "IdentificationMetricECSLoggingError": {
                 "value": "ECSLoggingError"
+            },
+            "IdentificationMetricECSPrivilegedAccessError": {
+                "value": "ECSPrivilegedAccessError"
+            },
+            "IdentificationMetricECSExternalImageSourceError": {
+                "value": "ECSExternalImageSourceError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -369,6 +391,18 @@
             },
             "SNSTopicNameECSLogging": {
                 "value": "describe-ecs-logging-lambda"
+            },
+            "SNSDisplayNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-sns"
+            },
+            "SNSTopicNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-lambda"
+            },
+            "SNSDisplayNameECSExternalImageSource": {
+                "value": "describe-ecs-external-image-source-sns"
+            },
+            "SNSTopicNameECSExternalImageSource": {
+                "value": "describe-ecs-external-image-source-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -471,6 +505,18 @@
             },
             "IdentifyECSLoggingLambdaFunctionName": {
                 "value": "describe-ecs-logging"
+            },
+            "InitiateECSPrivilegedAccessLambdaFunctionName": {
+                "value": "initiate-ecs-privileged-access"
+            },
+            "IdentifyECSPrivilegedAccessLambdaFunctionName": {
+                "value": "describe-ecs-privileged-access"
+            },
+            "InitiateECSExternalImageSourceLambdaFunctionName": {
+                "value": "initiate-ecs-external-image-source"
+            },
+            "IdentifyECSExternalImageSourceLambdaFunctionName": {
+                "value": "describe-ecs-external-image-source"
             }
         }
     },
@@ -2213,7 +2259,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRedshiftLogging" }
             }
         },
-
         "LambdaInitiateECSLoggingEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateECSLogging", "LogGroupLambdaInitiateECSLoggingEvaluation"],
@@ -2311,6 +2356,204 @@
                 "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSLogging" }
+            }
+        },
+        "LambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSPrivilegedAccess", "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSPrivilegedAccess" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ECS_PRIVILEGED_ACCESS_ARN": { "Ref": "SNSNotifyLambdaEvaluateECSPrivilegedAccess" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify privileged access enabled of ECS task definition.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_ecs_privileged_access_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateECSPrivilegedAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation" }
+            }
+        },
+        "LambdaEvaluateECSPrivilegedAccess": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSPrivilegedAccess" }
+                },
+                "Description": "Lambda function to describe priviled access enabled ECS task difinitions.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_ecs_privileged_access_issues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateECSPrivilegedAccess": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyECSPrivilegedAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateECSPrivilegedAccess": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateECSPrivilegedAccess"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSPrivilegedAccess" }
+            }
+        },
+        "LambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSExternalImageSource", "LogGroupLambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSExternalImageSource" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ECS_EXTERNAL_IMAGE_ARN": { "Ref": "SNSNotifyLambdaEvaluateECSExternalImageSource" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify ECS task definition image source.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_ecs_external_image_source_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateECSExternalImageSourceLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateECSExternalImageSourceEvaluation" }
+            }
+        },
+        "LambdaEvaluateECSExternalImageSource": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSExternalImageSource" }
+                },
+                "Description": "Lambda function to describe ECS task definitions image source ",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_ecs_external_image_source_issues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateECSExternalImageSource": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyECSExternalImageSourceLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateECSExternalImageSource": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateECSExternalImageSource"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSExternalImageSource" }
             }
         },
         "EventBackupDDB": {
@@ -2542,6 +2785,38 @@
                 ]
             }
         },
+        "EventInitiateEvaluationECSPrivilegedAccess": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate privileged access issue ECS task definition evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSPrivilegedAccess"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateECSPrivilegedAccessEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateECSPrivilegedAccessEvaluation"
+                  }
+                ]
+            }
+        },
+        "EventInitiateEvaluationECSExternalImageSource": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate ECS task definition image source evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSExternalImageSource"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateECSExternalImageSourceEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateECSExternalImageSourceEvaluation"
+                  }
+                ]
+            }
+        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -2715,6 +2990,7 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRedshiftLogging", "Arn"] }
             }
         },
+
         "PermissionToInvokeLambdaInitiateECSLoggingEvaluationCloudWatchEvents": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaInitiateECSLoggingEvaluation", "EventInitiateEvaluationECSLogging"],
@@ -2723,6 +2999,26 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSLogging", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateECSPrivilegedAccessEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateECSPrivilegedAccessEvaluation", "EventInitiateEvaluationECSPrivilegedAccess"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSPrivilegedAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateECSExternalImageSourceEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateECSExternalImageSourceEvaluation", "EventInitiateEvaluationECSExternalImageSource"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSExternalImageSource", "Arn"] }
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -3014,6 +3310,42 @@
                 }]
             }
         },
+        "SNSNotifyLambdaEvaluateECSPrivilegedAccess": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateECSPrivilegedAccess",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSPrivilegedAccess", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSPrivilegedAccess", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateECSPrivilegedAccess", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+        "SNSNotifyLambdaEvaluateECSExternalImageSource": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateECSExternalImageSource",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSExternalImageSource", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSExternalImageSource", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateECSExternalImageSource", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -3173,6 +3505,26 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSLogging" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSLogging", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateECSPrivilegedAccessSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSPrivilegedAccess", "LambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSPrivilegedAccess" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSPrivilegedAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateECSExternalImageSourceSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSExternalImageSource", "LambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSExternalImageSource" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSExternalImageSource", "Arn"] }
             }
         },
         "SNSIdentificationErrors": {
@@ -3952,6 +4304,98 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateECSLogging" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSPrivilegedAccess" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateECSPrivilegedAccess" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaECSExternalImageSourceEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSExternalImageSource" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateECSExternalImageSource" }
                     }
                 ],
                 "Period": 3600,
