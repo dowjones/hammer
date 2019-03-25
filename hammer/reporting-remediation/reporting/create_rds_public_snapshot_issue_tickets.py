@@ -47,6 +47,12 @@ class CreateRDSPublicSnapshotTickets(object):
 
                         comment = (f"Closing {issue.status.value} RDS public snapshot '{snapshot_id}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                labels=IssueStatus.Whitelisted
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

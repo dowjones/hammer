@@ -50,6 +50,12 @@ class CreateS3BucketPolicyIssueTickets:
 
                         comment = (f"Closing {issue.status.value} S3 bucket '{bucket_name}' public policy "
                                    f"in '{account_name} / {account_id}' account ")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                labels=IssueStatus.Whitelisted
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
