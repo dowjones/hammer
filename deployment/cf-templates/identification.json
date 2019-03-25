@@ -27,7 +27,11 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
+<<<<<<< HEAD
                         "SourceIdentificationECSLogging"
+=======
+                        "SourceIdentificationAMIPublicAccess"
+>>>>>>> refs/remotes/origin/dev
                     ]
                 },
                 {
@@ -90,8 +94,13 @@
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
                 },
+<<<<<<< HEAD
                 "SourceIdentificationECSLogging":{
                     "default": "Relative path to disabled logging ECS sources"
+=======
+                "SourceIdentificationAMIPublicAccess":{
+                    "default": "Relative path to Public AMI sources"
+>>>>>>> refs/remotes/origin/dev
                 }
             }
         }
@@ -169,6 +178,10 @@
             "Type": "String",
             "Default": "rds-public-snapshots-identification.zip"
         },
+        "SourceIdentificationAMIPublicAccess": {
+          "Type": "String",
+          "Default": "ami-public-access-issues-identification.zip"
+        },
         "SourceIdentificationSQSPublicPolicy": {
             "Type": "String",
             "Default": "sqs-public-policy-identification.zip"
@@ -228,6 +241,9 @@
             },
             "IdentificationMetricRDSSnapshotsError": {
                 "value": "RDSSnapshotsError"
+            },
+            "IdentificationMetricAMIPublicAccessError": {
+              "value": "AMIPublicAccessError"
             },
             "IdentificationMetricSQSPublicPolicyError": {
                 "value": "SQSPublicPolicyError"
@@ -294,6 +310,12 @@
             },
             "SNSTopicNameRDSSnapshots": {
                 "value": "describe-rds-public-snapshots-lambda"
+            },
+            "SNSDisplayNameAMIPublicAccess": {
+                "value": "describe-ami-public-access-sns"
+            },
+            "SNSTopicNameAMIPublicAccess": {
+              "value": "describe-ami-public-access-lambda"
             },
             "SNSDisplayNameSQSPublicPolicy": {
                 "value": "describe-sqs-public-policy-sns"
@@ -378,6 +400,12 @@
             },
             "IdentifyRDSSnapshotsLambdaFunctionName": {
                 "value": "describe-rds-public-snapshots"
+            },
+            "InitiateAMIPublicAccessLambdaFunctionName": {
+                "value": "initiate-ami-public-access"
+            },
+            "IdentifyAMIPublicAccessLambdaFunctionName": {
+                "value": "describe-ami-public-access"
             },
             "InitiateSQSPublicPolicyLambdaFunctionName": {
                 "value": "initiate-sqs-public-policy"
@@ -1845,7 +1873,60 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSEncryption" }
             }
         },
+        "LambdaInitiateAMIPublicAccessEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateAMIPublicAccess", "LogGroupLambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationAMIPublicAccess" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_PUBLIC_AMI_ARN": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify public AMI access issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateAMIPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_public_ami_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateAMIPublicAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateAMIPublicAccessEvaluation" }
+            }
+        },
 
+<<<<<<< HEAD
 
 
 
@@ -2448,6 +2529,21 @@
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyECSLoggingLambdaFunctionName", "value"] } ]
                                               ]},
                 "Handler": "describe_ecs_logging_issues.lambda_handler",
+=======
+        "LambdaEvaluateAMIPublicAccess": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationAMIPublicAccess" }
+                },
+                "Description": "Lambda function to describe public AMI issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyAMIPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_public_ami_issues.lambda_handler",
+>>>>>>> refs/remotes/origin/dev
                 "MemorySize": 256,
                 "Timeout": "300",
                 "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
@@ -2459,18 +2555,27 @@
                 "Runtime": "python3.6"
             }
         },
+<<<<<<< HEAD
         "LogGroupLambdaEvaluateECSLogging": {
+=======
+        "LogGroupLambdaEvaluateAMIPublicAccess": {
+>>>>>>> refs/remotes/origin/dev
             "Type" : "AWS::Logs::LogGroup",
             "Properties" : {
                 "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
                                                     { "Ref": "ResourcesPrefix" },
                                                     { "Fn::FindInMap": ["NamingStandards",
+<<<<<<< HEAD
                                                                         "IdentifyECSLoggingLambdaFunctionName",
+=======
+                                                                        "IdentifyAMIPublicAccessLambdaFunctionName",
+>>>>>>> refs/remotes/origin/dev
                                                                         "value"]
                                                     } ] ] },
                 "RetentionInDays": "7"
             }
         },
+<<<<<<< HEAD
         "SubscriptionFilterLambdaEvaluateECSLogging": {
             "Type" : "AWS::Logs::SubscriptionFilter",
             "DependsOn": ["LambdaLogsForwarder",
@@ -2480,6 +2585,17 @@
                 "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSLogging" }
+=======
+        "SubscriptionFilterLambdaEvaluateAMIPublicAccess": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateAMIPublicAccess"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateAMIPublicAccess" }
+>>>>>>> refs/remotes/origin/dev
             }
         },
         "EventBackupDDB": {
@@ -2646,6 +2762,7 @@
                 ]
             }
         },
+<<<<<<< HEAD
 
         "EventInitiateEvaluationECSLogging": {
             "Type": "AWS::Events::Rule",
@@ -2659,6 +2776,20 @@
                   {
                     "Arn": { "Fn::GetAtt": ["LambdaInitiateECSLoggingEvaluation", "Arn"] },
                     "Id": "LambdaInitiateECSLoggingEvaluation"
+=======
+        "EventInitiateEvaluationAMIPublicAccess": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate public AMI access evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateAMIPublicAccessEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateAMIPublicAccessEvaluation"
+>>>>>>> refs/remotes/origin/dev
                   }
                 ]
             }
@@ -2805,6 +2936,7 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSEncryption", "Arn"] }
             }
         },
+<<<<<<< HEAD
 
         "PermissionToInvokeLambdaInitiateECSLoggingEvaluationCloudWatchEvents": {
             "Type": "AWS::Lambda::Permission",
@@ -2814,6 +2946,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSLogging", "Arn"] }
+=======
+        "PermissionToInvokeLambdaInitiateAMIPublicAccessEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateAMIPublicAccessEvaluation", "EventInitiateEvaluationAMIPublicAccess"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationAMIPublicAccess", "Arn"] }
+>>>>>>> refs/remotes/origin/dev
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -3032,6 +3174,7 @@
                 }]
             }
         },
+<<<<<<< HEAD
         "SNSNotifyLambdaEvaluateECSLogging": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": "LambdaEvaluateECSLogging",
@@ -3045,6 +3188,21 @@
                 "Subscription": [{
                     "Endpoint": {
                         "Fn::GetAtt": ["LambdaEvaluateECSLogging", "Arn"]
+=======
+        "SNSNotifyLambdaEvaluateAMIPublicAccess": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateAMIPublicAccess",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameAMIPublicAccess", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"]
+>>>>>>> refs/remotes/origin/dev
                     },
                     "Protocol": "lambda"
                 }]
@@ -3170,6 +3328,7 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSEncryption", "Arn"] }
             }
         },
+<<<<<<< HEAD
         "PermissionToInvokeLambdaEvaluateECSLoggingSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateECSLogging", "LambdaEvaluateECSLogging"],
@@ -3178,6 +3337,16 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSLogging" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSLogging", "Arn"] }
+=======
+        "PermissionToInvokeLambdaEvaluateAMIPublicAccessSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateAMIPublicAccess", "LambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"] }
+>>>>>>> refs/remotes/origin/dev
             }
         },
         "SNSIdentificationErrors": {
@@ -3782,6 +3951,7 @@
                 "TreatMissingData": "notBreaching"
             }
         },
+<<<<<<< HEAD
         "AlarmErrorsLambdaECSLoggingEvaluation": {
             "Type": "AWS::CloudWatch::Alarm",
             "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSLogging"],
@@ -3789,13 +3959,49 @@
                 "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSLogging" }, "LambdaError" ] ]},
+=======
+        "AlarmErrorsLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" }, "LambdaError" ] ]},
+>>>>>>> refs/remotes/origin/dev
                 "EvaluationPeriods": 1,
                 "Namespace": "AWS/Lambda",
                 "MetricName": "Errors",
                 "Dimensions": [
                     {
                         "Name": "FunctionName",
+<<<<<<< HEAD
                         "Value": { "Ref": "LambdaEvaluateECSLogging" }
+=======
+                        "Value": { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaAMIPublicAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateAMIPublicAccess" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateAMIPublicAccess" }
+>>>>>>> refs/remotes/origin/dev
                     }
                 ],
                 "Period": 3600,
@@ -3806,6 +4012,7 @@
             }
         }
     },
+
     "Outputs": {
         "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }}
     }

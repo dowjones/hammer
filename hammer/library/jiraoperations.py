@@ -69,6 +69,8 @@ class JiraReporting(object):
             # return current assignee
             ticket_assignee_id = self.jira.ticket_assignee(ticket_id)
 
+        self.jira.add_watcher(ticket_id, ticket_assignee_id)
+
         return NewIssue(ticket_id=ticket_id,
                         ticket_assignee_id=ticket_assignee_id)
 
@@ -109,6 +111,8 @@ class JiraReporting(object):
     def ticket_url(self, ticket_id):
         return self.jira.ticket_url(ticket_id)
 
+    def add_label(self, ticket_id, label):
+        self.jira.add_label(ticket_id, label)
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
@@ -266,6 +270,27 @@ class JiraOperations(object):
         logging.debug(f"Assigned {ticket_id} to {assinee_name}")
         return True
 
+    def add_label(self, ticket_id, label):
+        """
+                add label to `ticket_id`.
+
+                :return: boolean, if label update was successful
+                """
+        if not (ticket_id and label):
+            return False
+
+        try:
+            issue = self.session.issue(ticket_id)
+            issue.fields.labels.append(label)
+            issue.update(fields={"labels": issue.fields.labels})
+
+        except Exception:
+            logging.exception(f"Failed to add {label} to {ticket_id}")
+            return False
+
+        logging.debug(f"Added label {label} to {ticket_id}")
+        return True
+
     def update_ticket(self, ticket_id, updated_issue_data):
         """
         Update JIRA ticket fields as in self.create_ticket(), but for existing ticket
@@ -301,6 +326,17 @@ class JiraOperations(object):
                 logging.exception(f"Failed to add comment to {ticket_id}")
                 return False
         return True
+
+    def add_watcher(self, ticket_id, user):
+        """
+        Adding jira ticket watcher.
+        
+        :param ticket_id: jira ticket id 
+        :param user: watcher user id
+        :return: nothing
+        """
+
+        self.session.add_watcher(ticket_id, user)
 
     def close_issue(self, ticket_id):
         """
