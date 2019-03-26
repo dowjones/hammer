@@ -243,6 +243,12 @@ class CreateSecurityGroupsTickets(object):
 
                         comment = (f"Closing {issue.status.value} security group '{group_name} / {group_id}' issue "
                                    f"in '{account_name} / {account_id}' account, '{group_region}' region")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                labels=IssueStatus.Whitelisted
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

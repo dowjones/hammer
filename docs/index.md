@@ -13,6 +13,7 @@ As soon as you have deployed Dow Jones Hammer, it detects [typical AWS services 
 
 Optionally, you can:
 * enable CSV reporting with detected vulnerabilities to designated S3 bucket;
+* use Dow Jones Hammer API to perform ad-hoc scans of controlled environments;
 * integrate Dow Jones Hammer with JIRA and/or Slack. After detecting an issue, Dow Jones Hammer can raise a JIRA ticket for a specific person and/or send a Slack message to a specific Slack channel or directly to a Slack user;
 * configure Dow Jones Hammer so that it can automatically remediate certain issues it had detected, if these issues have persisted for a given timeframe.
 

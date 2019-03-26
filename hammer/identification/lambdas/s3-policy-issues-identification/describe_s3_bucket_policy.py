@@ -4,7 +4,7 @@ import logging
 from library.logger import set_logging
 from library.config import Config
 from library.aws.s3 import S3BucketsPolicyChecker
-from library.aws.utility import Account
+from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, S3PolicyIssue
 from library.ddb_issues import Operations as IssueOperations
 
@@ -17,6 +17,8 @@ def lambda_handler(event, context):
         payload = json.loads(event["Records"][0]["Sns"]["Message"])
         account_id = payload['account_id']
         account_name = payload['account_name']
+        # if request_id is present in payload then this lambda was called from the API
+        request_id = payload.get('request_id', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -67,6 +69,9 @@ def lambda_handler(event, context):
         # all other unresolved issues in DDB are for removed/remediated buckets
         for issue in open_issues.values():
             IssueOperations.set_status_resolved(ddb_table, issue)
+        if request_id:
+            api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+            DDB.track_progress(api_table, request_id)
     except Exception:
         logging.exception(f"Failed to check s3 policies for '{account_id} ({account_name})'")
         return
