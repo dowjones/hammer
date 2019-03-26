@@ -15,7 +15,8 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.ami-public-access-issues-identification",
                   "aws_s3_bucket_object.sqs-public-policy-identification",
                   "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification",
-                  "aws_s3_bucket_object.rds-unencrypted-instance-identification"
+                  "aws_s3_bucket_object.rds-unencrypted-instance-identification",
+                  "aws_s3_bucket_object.ecs-privileged-access-issues-identification"
                  ]
 
     tags = "${var.tags}"

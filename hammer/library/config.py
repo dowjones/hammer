@@ -66,6 +66,9 @@ class Config(object):
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
 
+        # ECS access issue config
+        self.ecs_privileged_access = ModuleConfig(self._config, "ecs_privileged_access")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

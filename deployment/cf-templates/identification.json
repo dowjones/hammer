@@ -27,7 +27,8 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
-                        "SourceIdentificationAMIPublicAccess"
+                        "SourceIdentificationAMIPublicAccess",
+                        "SourceIdentificationECSPrivilegedAccess"
                     ]
                 },
                 {
@@ -92,6 +93,9 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
+                },
+                "SourceIdentificationECSPrivilegedAccess":{
+                    "default": "Relative path to privileged access issue ECS sources"
                 }
             }
         }
@@ -184,6 +188,10 @@
         "SourceIdentificationRDSEncryption": {
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
+        },
+        "SourceIdentificationECSPrivilegedAccess": {
+            "Type": "String",
+            "Default": "ecs-privileged-access-issues-identification.zip"
         }
     },
     "Conditions": {
@@ -240,6 +248,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricECSPrivilegedAccessError": {
+                "value": "ECSPrivilegedAccessError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -318,6 +329,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-sns"
+            },
+            "SNSTopicNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -402,6 +419,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateECSPrivilegedAccessLambdaFunctionName": {
+                "value": "initiate-ecs-privileged-access"
+            },
+            "IdentifyECSPrivilegedAccessLambdaFunctionName": {
+                "value": "describe-ecs-privileged-access"
             }
         }
     },
@@ -442,7 +465,6 @@
                 "RetentionInDays": "7"
             }
         },
-
         "LambdaBackupDDB": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaBackupDDB"],
@@ -490,7 +512,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaBackupDDB" }
             }
         },
-
         "LambdaInitiateSGEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LogGroupLambdaInitiateSGEvaluation"],
@@ -543,7 +564,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSGEvaluation" }
             }
         },
-
         "LambdaEvaluateSG": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSG"],
@@ -607,7 +627,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSG" }
             }
         },
-
         "LambdaInitiateCloudTrailsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateCloudTrails", "LogGroupLambdaInitiateCloudTrailsEvaluation"],
@@ -841,7 +860,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3ACL" }
             }
         },
-
         "LambdaInitiateS3PolicyEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Policy", "LogGroupLambdaInitiateS3PolicyEvaluation"],
@@ -894,7 +912,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3PolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateS3Policy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Policy"],
@@ -958,7 +975,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Policy" }
             }
         },
-
         "LambdaInitiateIAMUserKeysRotationEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateIAMUserKeysRotation", "LogGroupLambdaInitiateIAMUserKeysRotationEvaluation"],
@@ -1309,7 +1325,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSVolumes" }
             }
         },
-
         "LambdaInitiateEBSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateEBSSnapshots", "LogGroupLambdaInitiateEBSSnapshotsEvaluation"],
@@ -1362,7 +1377,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateEBSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateEBSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateEBSSnapshots"],
@@ -1426,7 +1440,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSSnapshots" }
             }
         },
-
         "LambdaInitiateRDSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSSnapshots", "LogGroupLambdaInitiateRDSSnapshotsEvaluation"],
@@ -1479,7 +1492,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSSnapshots"],
@@ -1595,7 +1607,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSQSPublicPolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateSQSPublicPolicy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSQSPublicPolicy"],
@@ -1659,7 +1670,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSQSPublicPolicy" }
             }
         },
-
         "LambdaInitiateS3EncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Encryption", "LogGroupLambdaInitiateS3EncryptionEvaluation"],
@@ -1759,7 +1769,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Encryption" }
             }
         },
-
         "LambdaInitiateRDSEncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSEncryption", "LogGroupLambdaInitiateRDSEncryptionEvaluation"],
@@ -1812,7 +1821,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSEncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSEncryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSEncryption"],
@@ -1912,7 +1920,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateAMIPublicAccessEvaluation" }
             }
         },
-
         "LambdaEvaluateAMIPublicAccess": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateAMIPublicAccess"],
@@ -1958,6 +1965,105 @@
                 "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateAMIPublicAccess" }
+            }
+        },
+        "LambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSPrivilegedAccess", "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSPrivilegedAccess" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ECS_PRIVILEGED_ACCESS_ARN": { "Ref": "SNSNotifyLambdaEvaluateECSPrivilegedAccess" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify privileged access enabled of ECS task definition.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_ecs_privileged_access_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateECSPrivilegedAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateECSPrivilegedAccessEvaluation" }
+            }
+        },
+        "LambdaEvaluateECSPrivilegedAccess": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSPrivilegedAccess" }
+                },
+                "Description": "Lambda function to describe priviled access enabled ECS task difinitions.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_ecs_privileged_access_issues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateECSPrivilegedAccess": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyECSPrivilegedAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateECSPrivilegedAccess": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateECSPrivilegedAccess"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSPrivilegedAccess" }
             }
         },
         "EventBackupDDB": {
@@ -2140,6 +2246,22 @@
                 ]
             }
         },
+        "EventInitiateEvaluationECSPrivilegedAccess": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate privileged access issue ECS task definition evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSPrivilegedAccess"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateECSPrivilegedAccessEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateECSPrivilegedAccessEvaluation"
+                  }
+                ]
+            }
+        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -2290,6 +2412,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationAMIPublicAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateECSPrivilegedAccessEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateECSPrivilegedAccessEvaluation", "EventInitiateEvaluationECSPrivilegedAccess"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSPrivilegedAccess", "Arn"] }
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -2521,6 +2653,25 @@
                 "Subscription": [{
                     "Endpoint": {
                         "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"]
+
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+        "SNSNotifyLambdaEvaluateECSPrivilegedAccess": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateECSPrivilegedAccess",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSPrivilegedAccess", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSPrivilegedAccess", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateECSPrivilegedAccess", "Arn"]
                     },
                     "Protocol": "lambda"
                 }]
@@ -2654,6 +2805,17 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"] }
+
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateECSPrivilegedAccessSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSPrivilegedAccess", "LambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSPrivilegedAccess" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSPrivilegedAccess", "Arn"] }
             }
         },
         "SNSIdentificationErrors": {
@@ -3303,9 +3465,54 @@
                 "Threshold": 0,
                 "TreatMissingData": "notBreaching"
             }
+        },
+        "AlarmErrorsLambdaInitiateECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateECSPrivilegedAccessEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateECSPrivilegedAccessEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaECSPrivilegedAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSPrivilegedAccess"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSPrivilegedAccess" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateECSPrivilegedAccess" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
         }
     },
-
     "Outputs": {
         "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }}
     }
