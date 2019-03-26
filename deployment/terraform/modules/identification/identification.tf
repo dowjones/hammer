@@ -13,6 +13,7 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.ebs-unencrypted-volume-identification",
                   "aws_s3_bucket_object.ebs-public-snapshots-identification",
                   "aws_s3_bucket_object.kms-keyrotation-issues-identification",
+                  "aws_s3_bucket_object.ami-public-access-issues-identification",
                   "aws_s3_bucket_object.sqs-public-policy-identification",
                   "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification",
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification"
@@ -39,6 +40,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationEBSSnapshots = "${aws_s3_bucket_object.ebs-public-snapshots-identification.id}"
         SourceIdentificationRDSSnapshots = "${aws_s3_bucket_object.rds-public-snapshots-identification.id}"
         SourceIdentificationKMSKeyRotation = "${aws_s3_bucket_object.kms-keyrotation-issues-identification.id}"
+        SourceIdentificationAMIPublicAccess = "${aws_s3_bucket_object.ami-public-access-issues-identification.id}"
         SourceIdentificationSQSPublicPolicy = "${aws_s3_bucket_object.sqs-public-policy-identification.id}"
         SourceIdentificationS3Encryption = "${aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification.id}"
         SourceIdentificationRDSEncryption = "${aws_s3_bucket_object.rds-unencrypted-instance-identification.id}"
