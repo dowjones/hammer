@@ -330,6 +330,7 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-public-snapshots" ] ]}
             }
         },
+
         "DynamoDBSQSPublicPolicy": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -481,6 +482,38 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
+            }
+        },
+        "DynamoDBECSExternalImageSource": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ecs-external-image-source" ] ]}
             }
         }
     }

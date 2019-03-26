@@ -119,3 +119,8 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+    
+    - title: ECS External Image Source
+      url: /playbook20_ecs_external_image_source.html
+      output: web, pdf
+     

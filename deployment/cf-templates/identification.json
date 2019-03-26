@@ -27,7 +27,8 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
-                        "SourceIdentificationAMIPublicAccess"
+                        "SourceIdentificationAMIPublicAccess",
+                        "SourceIdentificationECSExternalImageSource"
                     ]
                 },
                 {
@@ -92,6 +93,9 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
+                },
+                "SourceIdentificationECSExternalImageSource":{
+                    "default": "Relative path to external image issue ECS sources"
                 }
             }
         }
@@ -184,6 +188,10 @@
         "SourceIdentificationRDSEncryption": {
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
+        },
+        "SourceIdentificationECSExternalImageSource": {
+            "Type": "String",
+            "Default": "ecs-image-source-issues-identification.zip"
         }
     },
     "Conditions": {
@@ -240,6 +248,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricECSExternalImageSourceError": {
+                "value": "ECSExternalImageSourceError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -318,6 +329,11 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameECSExternalImageSource": {
+                "value": "describe-ecs-external-image-source-sns"},
+            "SNSTopicNameECSExternalImageSource": {
+                "value": "describe-ecs-external-image-source-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -402,6 +418,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateECSExternalImageSourceLambdaFunctionName": {
+                "value": "initiate-ecs-external-image-source"
+            },
+            "IdentifyECSExternalImageSourceLambdaFunctionName": {
+                "value": "describe-ecs-external-image-source"
             }
         }
     },
@@ -442,7 +464,6 @@
                 "RetentionInDays": "7"
             }
         },
-
         "LambdaBackupDDB": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaBackupDDB"],
@@ -490,7 +511,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaBackupDDB" }
             }
         },
-
         "LambdaInitiateSGEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LogGroupLambdaInitiateSGEvaluation"],
@@ -543,7 +563,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSGEvaluation" }
             }
         },
-
         "LambdaEvaluateSG": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSG"],
@@ -607,7 +626,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSG" }
             }
         },
-
         "LambdaInitiateCloudTrailsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateCloudTrails", "LogGroupLambdaInitiateCloudTrailsEvaluation"],
@@ -841,7 +859,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3ACL" }
             }
         },
-
         "LambdaInitiateS3PolicyEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Policy", "LogGroupLambdaInitiateS3PolicyEvaluation"],
@@ -894,7 +911,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3PolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateS3Policy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Policy"],
@@ -958,7 +974,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Policy" }
             }
         },
-
         "LambdaInitiateIAMUserKeysRotationEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateIAMUserKeysRotation", "LogGroupLambdaInitiateIAMUserKeysRotationEvaluation"],
@@ -1309,7 +1324,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSVolumes" }
             }
         },
-
         "LambdaInitiateEBSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateEBSSnapshots", "LogGroupLambdaInitiateEBSSnapshotsEvaluation"],
@@ -1362,7 +1376,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateEBSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateEBSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateEBSSnapshots"],
@@ -1426,7 +1439,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateEBSSnapshots" }
             }
         },
-
         "LambdaInitiateRDSSnapshotsEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSSnapshots", "LogGroupLambdaInitiateRDSSnapshotsEvaluation"],
@@ -1479,7 +1491,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSSnapshotsEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSSnapshots": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSSnapshots"],
@@ -1595,7 +1606,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateSQSPublicPolicyEvaluation" }
             }
         },
-
         "LambdaEvaluateSQSPublicPolicy": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateSQSPublicPolicy"],
@@ -1659,7 +1669,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateSQSPublicPolicy" }
             }
         },
-
         "LambdaInitiateS3EncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateS3Encryption", "LogGroupLambdaInitiateS3EncryptionEvaluation"],
@@ -1759,7 +1768,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateS3Encryption" }
             }
         },
-
         "LambdaInitiateRDSEncryptionEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateRDSEncryption", "LogGroupLambdaInitiateRDSEncryptionEvaluation"],
@@ -1812,7 +1820,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRDSEncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateRDSEncryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateRDSEncryption"],
@@ -1912,7 +1919,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateAMIPublicAccessEvaluation" }
             }
         },
-
         "LambdaEvaluateAMIPublicAccess": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateAMIPublicAccess"],
@@ -1958,6 +1964,105 @@
                 "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
                 "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateAMIPublicAccess" }
+            }
+        },
+        "LambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSExternalImageSource", "LogGroupLambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSExternalImageSource" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ECS_EXTERNAL_IMAGE_ARN": { "Ref": "SNSNotifyLambdaEvaluateECSExternalImageSource" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify ECS task definition image source.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_ecs_external_image_source_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateECSExternalImageSourceLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateECSExternalImageSourceEvaluation" }
+            }
+        },
+        "LambdaEvaluateECSExternalImageSource": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationECSExternalImageSource" }
+                },
+                "Description": "Lambda function to describe ECS task definitions image source ",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_ecs_external_image_source_issues.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateECSExternalImageSource": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyECSExternalImageSourceLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateECSExternalImageSource": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateECSExternalImageSource"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateECSExternalImageSource" }
             }
         },
         "EventBackupDDB": {
@@ -2140,6 +2245,22 @@
                 ]
             }
         },
+        "EventInitiateEvaluationECSExternalImageSource": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate ECS task definition image source evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSExternalImageSource"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateECSExternalImageSourceEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateECSExternalImageSourceEvaluation"
+                  }
+                ]
+            }
+        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -2290,6 +2411,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationAMIPublicAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateECSExternalImageSourceEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateECSExternalImageSourceEvaluation", "EventInitiateEvaluationECSExternalImageSource"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationECSExternalImageSource", "Arn"] }
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -2526,6 +2657,24 @@
                 }]
             }
         },
+        "SNSNotifyLambdaEvaluateECSExternalImageSource": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateECSExternalImageSource",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSExternalImageSource", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSExternalImageSource", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateECSExternalImageSource", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -2654,6 +2803,17 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"] }
+
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateECSExternalImageSourceSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateECSExternalImageSource", "LambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateECSExternalImageSource" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateECSExternalImageSource", "Arn"] }
             }
         },
         "SNSIdentificationErrors": {
@@ -3303,9 +3463,54 @@
                 "Threshold": 0,
                 "TreatMissingData": "notBreaching"
             }
+        },
+        "AlarmErrorsLambdaInitiateECSExternalImageSourceEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateECSExternalImageSourceEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateECSExternalImageSourceEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaECSExternalImageSourceEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateECSExternalImageSource"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateECSExternalImageSource" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateECSExternalImageSource" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
         }
     },
-
     "Outputs": {
         "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }}
     }
