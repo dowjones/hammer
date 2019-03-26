@@ -330,6 +330,7 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-public-snapshots" ] ]}
             }
         },
+
         "DynamoDBSQSPublicPolicy": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -428,11 +429,7 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
         },
-<<<<<<< HEAD
-        "DynamoDBECSLogging": {
-=======
         "DynamoDBAMIPublicAccess": {
->>>>>>> refs/remotes/origin/dev
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
             "DependsOn": ["DynamoDBCredentials"],
@@ -461,9 +458,6 @@
                     "ReadCapacityUnits": "10",
                     "WriteCapacityUnits": "2"
                 },
-<<<<<<< HEAD
-                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ecs-logging" ] ]}
-=======
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ec2-public-ami" ] ]}
             }
         },
@@ -488,7 +482,38 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
->>>>>>> refs/remotes/origin/dev
+            }
+        },
+        "DynamoDBECSLogging": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ecs-logging" ] ]}
             }
         }
     }

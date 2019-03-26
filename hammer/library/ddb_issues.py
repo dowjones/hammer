@@ -233,11 +233,11 @@ class RdsEncryptionIssue(Issue):
         super().__init__(*args)
 
 
-<<<<<<< HEAD
-class ECSLoggingIssue(Issue):
-=======
 class PublicAMIIssue(Issue):
->>>>>>> refs/remotes/origin/dev
+   def __init__(self, *args):
+        super().__init__(*args)
+
+class ECSLoggingIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
 
