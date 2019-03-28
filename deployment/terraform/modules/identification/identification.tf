@@ -43,6 +43,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationSQSPublicPolicy = "${aws_s3_bucket_object.sqs-public-policy-identification.id}"
         SourceIdentificationS3Encryption = "${aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification.id}"
         SourceIdentificationRDSEncryption = "${aws_s3_bucket_object.rds-unencrypted-instance-identification.id}"
+        SourceIdentificationECSPrivilegedAccess = "${aws_s3_bucket_object.ecs-privileged-access-issues-identification.id}"
     }
 
     template_url = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.identification-cfn.id}"
