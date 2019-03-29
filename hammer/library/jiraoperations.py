@@ -23,7 +23,7 @@ class JiraReporting(object):
 
     def add_issue(self,
                   issue_summary, issue_description,
-                  priority, labels,
+                  risk, labels,
                   account_id,
                   owner=None,
                   bu=None, product=None,
@@ -42,8 +42,9 @@ class JiraReporting(object):
             "summary": issue_summary,
             "description": issue_description,
             "issuetype": {"name": self.config.jira.issue_type},
-            "priority": {"name": priority},
-            "labels": labels
+            "labels": labels,
+            # Risk Rating field
+            "customfield_16602": {"value": risk}
         }
         ticket_id = self.jira.create_ticket(issue_data)
 

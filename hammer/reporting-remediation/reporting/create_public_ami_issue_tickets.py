@@ -95,11 +95,13 @@ class CreatePublicAMIIssueTickets:
                     issue_summary = (f"AMI '{ami_id}' with public access "
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"AMI allows public access.\n\n"
                         f"*Threat*: "
                         f" .\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {ami_region}\n"
@@ -120,7 +122,7 @@ class CreatePublicAMIIssueTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["public-ami"],
+                            risk=issue_risk, labels=["public-ami"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
