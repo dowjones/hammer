@@ -132,9 +132,14 @@ class ECSChecker(object):
                 logging_enabled = False
                 external_image = False
                 is_privileged = False
-                task_definition = self.account.client("ecs").describe_task_definition(
-                    taskDefinition=task_definition_name
-                )['taskDefinition']
+                try:
+                    task_definition = self.account.client("ecs").describe_task_definition(
+                        taskDefinition=task_definition_name
+                    )['taskDefinition']
+                except ClientError as err:
+                    logging.exception(f"Failed to describe task definitions in {self.account} ")
+                    continue
+
                 task_definition_arn = task_definition["taskDefinitionArn"]
                 if "containerDefinitions" in task_definition:
                     for container_definition in task_definition['containerDefinitions']:
@@ -143,7 +148,7 @@ class ECSChecker(object):
                         else:
                             logging_enabled = True
 
-                        if container_definition['privileged']:
+                        if "privileged" in str(container_definition) and container_definition['privileged']:
                             is_privileged = True
                         else:
                             is_privileged = False
