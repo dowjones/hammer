@@ -362,7 +362,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "sqs-public-access" ] ]}
             }
         },
-
         "DynamoDBS3Unencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -395,7 +394,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "s3-unencrypted" ] ]}
             }
         },
-
         "DynamoDBRDSUnencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
