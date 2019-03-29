@@ -52,7 +52,7 @@
         "ddb.table_name": "hammer-s3-public-bucket-acl",
         "topic_name": "hammer-describe-s3-acl-lambda",
         "reporting": false,
-        "remediation": false,
+        "remediation": true,
         "remediation_retention_period": 0
     },
     "secgrp_unrestricted_access": {
@@ -101,7 +101,7 @@
         "ddb.table_name": "hammer-s3-public-bucket-policy",
         "topic_name": "hammer-describe-s3-policy-lambda",
         "reporting": false,
-        "remediation": false,
+        "remediation": true,
         "remediation_retention_period": 7
     },
     "cloudtrails": {
@@ -145,7 +145,7 @@
         "ddb.table_name": "hammer-sqs-public-access",
         "topic_name": "hammer-describe-sqs-public-policy-lambda",
         "reporting": true,
-        "remediation": false,
+        "remediation": true,
         "remediation_retention_period": 0
     },
     "s3_encryption": {
@@ -153,7 +153,7 @@
         "ddb.table_name": "hammer-s3-unencrypted",
         "topic_name": "hammer-describe-s3-encryption-lambda",
         "reporting": true,
-        "remediation": false,
+        "remediation": true,
         "remediation_retention_period": 0
     },
     "rds_encryption": {
