@@ -1,15 +1,7 @@
-import json
 import logging
-import mimetypes
-import pathlib
 
-from datetime import datetime, timezone
-from io import BytesIO
-from copy import deepcopy
 from botocore.exceptions import ClientError
-from library.utility import jsonDumps
 from library.utility import timeit
-from library.aws.security_groups import SecurityGroup
 from collections import namedtuple
 from library.aws.utility import convert_tags
 
@@ -19,7 +11,7 @@ ECSCluster_Details = namedtuple('ECSCluster_Details', [
     'cluster_arn',
     # subnet_group_id
     'cluster_instance_arn'
-    ])
+])
 
 
 class ECSClusterOperations(object):
@@ -27,7 +19,7 @@ class ECSClusterOperations(object):
     @timeit
     def get_ecs_instance_security_groups(cls, ec2_client, ecs_client, group_id):
         """ Retrieve ecs clusters meta data with security group attached
-                          
+
             :param ec2_client: boto3 ec2 client
             :param ecs_client: boto3 ECS client
             :param group_id: security group id
@@ -53,7 +45,8 @@ class ECSClusterOperations(object):
                 )
 
                 ec2_instance_id = container_instance[0]["ec2InstanceId"]
-                ec2_instance = ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
+                ec2_instance = \
+                ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
 
                 if group_id in str(ec2_instance["SecurityGroups"]):
                     ecs_instances.append(ECSCluster_Details(
@@ -67,12 +60,13 @@ class ECSClusterOperations(object):
 class ECSTaskDefinitions(object):
     """
     Basic class for ECS task definitions.
-    
+
     """
+
     def __init__(self, account, name, arn, tags, is_logging=None, is_privileged=None, external_image=None):
         """
         :param account: `Account` instance where ECS task definition is present
-        
+
         :param name: name of the task definition
         :param arn: arn of the task definition
         :param arn: tags of task definition.
@@ -140,9 +134,14 @@ class ECSChecker(object):
                 logging_enabled = False
                 external_image = False
                 is_privileged = False
-                task_definition = self.account.client("ecs").describe_task_definition(
-                    taskDefinition=task_definition_name
-                )['taskDefinition']
+                try:
+                    task_definition = self.account.client("ecs").describe_task_definition(
+                        taskDefinition=task_definition_name
+                    )['taskDefinition']
+                except ClientError as err:
+                    logging.exception(f"Failed to describe task definitions in {self.account} ")
+                    continue
+
                 task_definition_arn = task_definition["taskDefinitionArn"]
                 if "containerDefinitions" in task_definition:
                     for container_definition in task_definition['containerDefinitions']:
@@ -151,7 +150,7 @@ class ECSChecker(object):
                         else:
                             logging_enabled = True
 
-                        if container_definition['privileged']:
+                        if "privileged" in str(container_definition) and container_definition['privileged']:
                             is_privileged = True
                         else:
                             is_privileged = False

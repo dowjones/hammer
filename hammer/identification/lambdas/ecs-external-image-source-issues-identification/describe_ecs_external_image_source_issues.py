@@ -52,7 +52,7 @@ def lambda_handler(event, context):
             for task_definition in checker.task_definitions:
                 logging.debug(f"Checking {task_definition.name}")
                 if task_definition.external_image:
-                    issue = ECSLoggingIssue(account_id, task_definition.name)
+                    issue = ECSExternalImageSourceIssue(account_id, task_definition.name)
                     issue.issue_details.arn = task_definition.arn
                     issue.issue_details.tags = task_definition.tags
                     issue.issue_details.region = task_definition.account.region
