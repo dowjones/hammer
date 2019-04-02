@@ -81,7 +81,7 @@ class EBSUnencryptedVolumesChecker(object):
                 return volume
         return None
 
-    def check(self, ids=None):
+    def check(self, ids=None, tags=None):
         """
         Walk through not encrypted EBS volumes in the account/region and put them to `self.volumes`.
 
@@ -100,6 +100,11 @@ class EBSUnencryptedVolumesChecker(object):
                 'Name': 'encrypted',
                 'Values': ["false"]
             }]
+            if tags:
+                for key, value in tags.items():
+                    args['Filters'].append(
+                        {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
+                    )
 
         try:
             volume_details = self.account.client("ec2").describe_volumes(**args)["Volumes"]
@@ -178,7 +183,7 @@ class EBSPublicSnapshotsChecker(object):
                 return snapshot
         return None
 
-    def check(self, ids=None):
+    def check(self, ids=None, tags=None):
         """
         Walk through public EBS snapshots in the account/region and put them to `self.snapshots`.
 
@@ -202,6 +207,12 @@ class EBSPublicSnapshotsChecker(object):
             # if ids is set - check given ids regardless of encrypted status
             args['SnapshotIds'] = ids
             del args['RestorableByUserIds']
+        if tags:
+            args['Filters'] = []
+            for key, value in tags.items():
+                args['Filters'].append(
+                    {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
+                )
 
         try:
             snapshot_details = self.account.client("ec2").describe_snapshots(**args)["Snapshots"]

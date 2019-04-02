@@ -362,7 +362,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "sqs-public-access" ] ]}
             }
         },
-
         "DynamoDBS3Unencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -395,7 +394,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "s3-unencrypted" ] ]}
             }
         },
-
         "DynamoDBRDSUnencrypted": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -428,7 +426,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
         },
-
         "DynamoDBAMIPublicAccess": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -459,6 +456,29 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ec2-public-ami" ] ]}
+            }
+        },
+        "DynamoDBApiRequests": {
+            "Type": "AWS::DynamoDB::Table",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "request_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "request_id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
             }
         }
     }
