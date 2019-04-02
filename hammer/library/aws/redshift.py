@@ -50,24 +50,6 @@ class RedshiftClusterOperations(object):
 
         return redshift_clusters
 
-    """@staticmethod
-    def set_cluster_encryption(redshift_client, cluster_id, kms_master_key_id):
-        
-        Sets the cluster encryption using Server side encryption.
-
-        :param redshift_client: Redshift boto3 client
-        :param cluster_id: Redshift cluster name which to encrypt
-        :param kms_master_key_id: Redshift cluster encryption key. default value is none.
-
-        :return: nothing
-        
-
-        redshift_client.modify_cluster(
-            ClusterIdentifier=cluster_id,
-            Encrypted=True
-        )
-    """
-
     @staticmethod
     def set_cluster_access(redshift_client, cluster_id, public_access):
         """
@@ -84,24 +66,6 @@ class RedshiftClusterOperations(object):
             ClusterIdentifier=cluster_id,
             PubliclyAccessible=public_access
         )
-
-    """@staticmethod
-    def enable_logging(redshift_client, cluster_id, s3_bucket):
-        
-        Enable cluster audit logging.
-
-        :param redshift_client: Redshift boto3 client
-        :param cluster_id: Redshift cluster name which to make as private
-        :param s3_bucket: S3 bucket to store audit logs.
-
-        :return: nothing
-        
-
-        redshift_client.enable_logging(
-            ClusterIdentifier=cluster_id,
-            BucketName=s3_bucket
-        )
-    """
 
 
 class RedshiftCluster(object):
@@ -124,18 +88,6 @@ class RedshiftCluster(object):
         self.is_public = is_public
         self.is_logging = is_logging
 
-    """def encrypt_cluster(self, kms_key_id=None):
-        
-        Encrypt bucket with SSL encryption.
-        :return: nothing        
-        
-        try:
-            RedshiftClusterOperations.set_cluster_encryption(self.account.client("redshift"), self.name, kms_key_id)
-        except Exception:
-            logging.exception(f"Failed to encrypt {self.name} cluster ")
-            return False
-
-        return True"""
 
     def modify_cluster(self, public_access):
         """
@@ -149,23 +101,6 @@ class RedshiftCluster(object):
             return False
 
         return True
-
-    """
-    def enable_cluster_logging(self, s3_bucket):
-        
-        Enable audit logging for cluster.
-        
-        @:param s3_bucket: s3 bucket to store audit logs.
-        :return: nothing        
-        
-        try:
-            RedshiftClusterOperations.enable_logging(self.account.client("redshift"), self.name, s3_bucket)
-        except Exception:
-            logging.exception(f"Failed to enable logging for {self.name} cluster ")
-            return False
-
-        return True
-    """
 
 
 class RedshiftClusterChecker(object):
