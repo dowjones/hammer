@@ -428,6 +428,7 @@
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
+<<<<<<< HEAD
         },
         "DynamoDBAMIPublicAccess": {
             "Type": "AWS::DynamoDB::Table",
@@ -483,6 +484,8 @@
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
             }
+=======
+>>>>>>> b32b3445a668655458a93e795d9ac095203a6f4b
         }
     }
 }

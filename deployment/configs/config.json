@@ -52,7 +52,7 @@
         "ddb.table_name": "hammer-s3-public-bucket-acl",
         "topic_name": "hammer-describe-s3-acl-lambda",
         "reporting": false,
-        "remediation": true,
+        "remediation": false,
         "remediation_retention_period": 0,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
@@ -109,7 +109,7 @@
         "ddb.table_name": "hammer-s3-public-bucket-policy",
         "topic_name": "hammer-describe-s3-policy-lambda",
         "reporting": false,
-        "remediation": true,
+        "remediation": false,
         "remediation_retention_period": 7,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
@@ -117,7 +117,6 @@
     "cloudtrails": {
         "enabled": true,
         "ddb.table_name": "hammer-cloudtrails",
-        "topic_name": "hammer-describe-cloudtrails-lambda",
         "reporting": false,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
@@ -156,7 +155,7 @@
         "ddb.table_name": "hammer-sqs-public-access",
         "topic_name": "hammer-describe-sqs-public-policy-lambda",
         "reporting": true,
-        "remediation": true,
+        "remediation": false,
         "remediation_retention_period": 0,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
@@ -166,7 +165,7 @@
         "ddb.table_name": "hammer-s3-unencrypted",
         "topic_name": "hammer-describe-s3-encryption-lambda",
         "reporting": true,
-        "remediation": true,
+        "remediation": false,
         "remediation_retention_period": 0,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
@@ -174,7 +173,6 @@
     "rds_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
-        "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true,
         "jira": {"enabled": true},
         "slack": {"enabled": true}
