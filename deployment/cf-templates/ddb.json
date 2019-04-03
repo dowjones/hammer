@@ -428,7 +428,6 @@
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
-<<<<<<< HEAD
         },
         "DynamoDBAMIPublicAccess": {
             "Type": "AWS::DynamoDB::Table",
@@ -484,8 +483,6 @@
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
             }
-=======
->>>>>>> Revert "Bleeding edge"
         }
     }
 }
