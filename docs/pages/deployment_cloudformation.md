@@ -31,6 +31,8 @@ Number of stacks to deploy depends on the desired functionality:
 * Identification only;
 * Identification, Reporting and Remediation.
 
+Additionally you can deploy API stack to use Dow Jones Hammer capabilities via REST API.
+
 Choose json templates according to desired functionality from the table below and deploy them **in the same order** as they appear in the table:
 
 1. Log in to the AWS Management Console and select **CloudFormation** in the **Services** menu.
@@ -46,10 +48,13 @@ Choose json templates according to desired functionality from the table below an
 | IAM identification role             | `deployment/cf-templates/identification-role.json`        | **+**          | **+**                    |
 | DynamoDB tables                     | `deployment/cf-templates/ddb.json`                        | **+**          | **+**                    |
 | Identification functionality        | `deployment/cf-templates/identification.json`             | **+**          | **+**                    |
+| API functionality                   | `deployment/cf-templates/api.json`                        | **+**          | **+**                    |
 | IAM reporting/remediation role      | `deployment/cf-templates/reporting-remediation-role.json` |                | **+**                    |
 | Reporting/remediation functionality | `deployment/cf-templates/reporting-remediation.json`      |                | **+**                    |
 
 **Note**: you should deploy `DynamoDB tables`, `Identification functionality` and `Reporting/remediation functionality` CloudFormation stacks to the same AWS region as you configured in [aws.region](/editconfig.html#11-master-aws-account-settings) parameter of **config.json** file.
+
+**Note**: note down **ApiUrl** value from the [API functionality](#316-api-functionality) stack [outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) to access Dow Jones Hammer REST API.
 
 **Note:** in case you intend to use Dow Jones Hammer reporting/remediation functionality:
 1. Note down the value for the **LambdaLogsForwarderArn** from the [Identification functionality](#313-identification-functionality) stack [outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) and provide it as an input parameter for the [Reporting/remediation functionality](#315-reportingremediation-functionality) stack.
@@ -116,8 +121,16 @@ You will need to set the following parameters:
 * **Subnet**: the ID of the Subnet for deployment of the reporting/remediation EC2.
 * **ReportingRemediationIAMRole**: the name of the reporting/remediation IAM role for the Dow Jones Hammer reporting/remediation functionality in master account. Use the same value as for **ReportingRemediationIAMRole** parameter in [IAM Reporting/Remediation Role](#314-iam-reportingremediation-role) step.
 * **LambdaLogForwarderArn**: the ARN of the Lambda log forwarding function created during `Identification Functionality` deployment. Use the [output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) **LambdaLogsForwarderArn** value from [Identification Functionality](#313-identification-functionality) step.
-* **HammerEngineBucket**: the name of the S3 bucket you [created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) to deploy Dow Jones Hammer.
-* **HammerEnginePath**: the relative path to the EC2 package with Dow Jones Hammer reporting and remediation sources. The default value is **reporting-remediation.zip**.
+* **SourceS3Bucket**: the name of the S3 bucket you [created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) to deploy Dow Jones Hammer.
+* **SourceAMIInfo**: the relative path to the Lambda package with AMI autodetect code. The default value is **ami-info.zip**.
+* **SourceReportingRemediation**: the relative path to the EC2 package with Dow Jones Hammer reporting and remediation sources. The default value is **reporting-remediation.zip**.
+
+#### 3.1.6. API functionality
+
+* **ResourcesPrefix**: the prefix for all Dow Jones Hammer resources. The default value is **hammer-**.
+* **SourceS3Bucket**: the name of [pre-created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) S3 deployment bucket.
+* **SourceApi**: the relative path to the Lambda package that implements REST API. The default value is **api.zip**.
+* **IdentificationIAMRole**: the name of identification IAM role for the Dow Jones Hammer identification functionality in master account. Use the same value as for **IdentificationIAMRole** parameter in [IAM Identification Role](#311-iam-identification-role) step. The default value is **cloudsec-master-id**.
 
 ## 4. Deploy CloudFormation Stacks to the Slave AWS Accounts
 

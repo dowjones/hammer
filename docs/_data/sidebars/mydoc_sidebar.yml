@@ -52,6 +52,10 @@ entries:
       url: /deployment_terraform.html
       output: web, pdf
 
+    - title: API Usage
+      url: /api.html
+      output: web, pdf
+
     - title: Remediation Backup and Rollback
       url: /remediation_backup_rollback.html
       output: web, pdf

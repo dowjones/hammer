@@ -69,13 +69,16 @@ resource "aws_s3_bucket_object" "rds-public-snapshots-identification" {
     key    = "lambda/${format("rds-public-snapshots-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-public-snapshots-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-public-snapshots-identification.zip"
 }
-
+resource "aws_s3_bucket_object" "ami-public-access-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ami-public-access-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ami-public-access-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ami-public-access-issues-identification.zip"
+}
 resource "aws_s3_bucket_object" "sqs-public-policy-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("sqs-public-policy-identification-%s.zip", "${md5(file("${path.module}/../../../packages/sqs-public-policy-identification.zip"))}")}"
     source = "${path.module}/../../../packages/sqs-public-policy-identification.zip"
 }
-
 resource "aws_s3_bucket_object" "s3-unencrypted-bucket-issues-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("s3-unencrypted-bucket-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/s3-unencrypted-bucket-issues-identification.zip"))}")}"
@@ -87,8 +90,12 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     key    = "lambda/${format("rds-unencrypted-instance-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
+<<<<<<< HEAD
 resource "aws_s3_bucket_object" "redshift-cluster-public-access-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("redshift-cluster-public-access-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"))}")}"
     source = "${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"
 }
+=======
+
+>>>>>>> refs/remotes/origin/dev
