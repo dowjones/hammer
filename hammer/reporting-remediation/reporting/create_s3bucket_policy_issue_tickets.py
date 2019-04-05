@@ -178,6 +178,10 @@ if __name__ == '__main__':
     module_name = sys.modules[__name__].__loader__.name
     set_logging(level=logging.DEBUG, logfile=f"/var/log/hammer/{module_name}.log")
     config = Config()
+    if config.jira.enabled:
+        config.jira.enabled = config.s3_bucket_policy.jira.enabled
+    if config.slack.enabled:
+        config.slack.enabled = config.s3_bucket_policy.slack.enabled
     add_cw_logging(config.local.log_group,
                    log_stream=module_name,
                    level=logging.DEBUG,
