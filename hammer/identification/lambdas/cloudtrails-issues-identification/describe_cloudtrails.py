@@ -8,7 +8,7 @@ from library.aws.cloudtrail import CloudTrailChecker
 from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, CloudTrailIssue
 from library.ddb_issues import Operations as IssueOperations
-from library.aws.utility import Sns
+from library.aws.utility import DDB, Sns
 
 
 def lambda_handler(event, context):
@@ -21,6 +21,8 @@ def lambda_handler(event, context):
         account_name = payload['account_name']
         # get the last region from the list to process
         region = payload['regions'].pop()
+        # if request_id is present in payload then this lambda was called from the API
+        request_id = payload.get('request_id', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -63,6 +65,10 @@ def lambda_handler(event, context):
             # issue exists in ddb and was fixed
             elif region in open_issues:
                 IssueOperations.set_status_resolved(ddb_table, open_issues[region])
+        # track the progress of API request to scan specific account/region/feature
+        if request_id:
+            api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+            DDB.track_progress(api_table, request_id)
     except Exception:
         logging.exception(f"Failed to check CloudTrail in '{region}' for '{account_id} ({account_name})'")
 

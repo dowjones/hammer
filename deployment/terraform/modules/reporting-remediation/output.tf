@@ -1,7 +1,7 @@
-output "ReportRemediationEC2PublicIP" {
+output "ReportingRemediationPublicIP" {
   value = "${lookup(aws_cloudformation_stack.reporting-remediation.outputs, "ReportingRemediationPublicIP", "unknown")}"
 }
 
-output "ReportRemediationEC2PrivateIP" {
+output "ReportingRemediationPrivateIP" {
     value = "${lookup(aws_cloudformation_stack.reporting-remediation.outputs, "ReportingRemediationPrivateIP", "unknown")}"
 }

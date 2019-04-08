@@ -61,6 +61,12 @@ class CreateCloudTrailLoggingTickets:
 
                         comment = (f"Closing {issue.status.value} issue with '{region}' CloudTrail logging in "
                                    f"'{account_name} / {account_id}'")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                label=IssueStatus.Whitelisted.value
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
@@ -124,19 +130,19 @@ class CreateCloudTrailLoggingTickets:
                         issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
                                               f"and provide a strong business reasoning. ")
 
-                    try:
-                        response = jira.add_issue(
-                            issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["cloud-trail-disabled"],
-                            account_id=account_id,
-                        )
-                    except Exception:
-                        logging.exception("Failed to create jira ticket")
-                        continue
-
-                    if response is not None:
-                        issue.jira_details.ticket = response.ticket_id
-                        issue.jira_details.ticket_assignee_id = response.ticket_assignee_id
+                    # try:
+                    #     response = jira.add_issue(
+                    #         issue_summary=issue_summary, issue_description=issue_description,
+                    #         priority="Major", labels=["cloud-trail-disabled"],
+                    #         account_id=account_id,
+                    #     )
+                    # except Exception:
+                    #     logging.exception("Failed to create jira ticket")
+                    #     continue
+                    #
+                    # if response is not None:
+                    #     issue.jira_details.ticket = response.ticket_id
+                    #     issue.jira_details.ticket_assignee_id = response.ticket_assignee_id
 
                     slack.report_issue(
                         msg=f"Discovered {issue_summary}"
