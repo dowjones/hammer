@@ -41,6 +41,12 @@ class CleanAMIPublicAccess:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {ami_id} (in whitelist)")
+
+                    # Adding label with "whitelisted" to jira ticket.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        label=IssueStatus.Whitelisted.value
+                    )
                     continue
 
                 if issue.timestamps.reported is None:
