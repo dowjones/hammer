@@ -63,13 +63,10 @@ class Config(object):
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
-<<<<<<< HEAD
         self.redshift_logging = ModuleConfig(self._config, "redshift_logging")
-=======
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
 
->>>>>>> refs/remotes/origin/dev
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

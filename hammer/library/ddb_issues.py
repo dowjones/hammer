@@ -233,11 +233,12 @@ class RdsEncryptionIssue(Issue):
         super().__init__(*args)
 
 
-<<<<<<< HEAD
 class RedshiftLoggingIssue(Issue):
-=======
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class PublicAMIIssue(Issue):
->>>>>>> refs/remotes/origin/dev
    def __init__(self, *args):
         super().__init__(*args)
 
