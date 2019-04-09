@@ -91,3 +91,8 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
 
+resource "aws_s3_bucket_object" "redshift-unencrypted-cluster-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-unencrypted-cluster-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"
+}

@@ -27,6 +27,7 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
+                        "SourceIdentificationRedshiftClusterEncryption",
                         "SourceIdentificationAMIPublicAccess"
                     ]
                 },
@@ -89,6 +90,9 @@
                 },
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
+                },
+                "SourceIdentificationRedshiftClusterEncryption":{
+                    "default": "Relative path to unencrypted Redshift Cluster sources"
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
@@ -184,6 +188,10 @@
         "SourceIdentificationRDSEncryption": {
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
+        },
+        "SourceIdentificationRedshiftClusterEncryption": {
+            "Type": "String",
+            "Default": "redshift-unencrypted-cluster-identification.zip"
         }
     },
     "Conditions": {
@@ -240,6 +248,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricRedshiftClusterEncryptionError": {
+                "value": "RedshiftClusterEncryptionError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -318,6 +329,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameRedshiftClusterEncryption": {
+                "value": "describe-redshift-cluster-encryption-sns"
+            },
+            "SNSTopicNameRedshiftClusterEncryption": {
+                "value": "describe-redshift-cluster-encryption-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -402,6 +419,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateRedshiftClusterEncryptionLambdaFunctionName": {
+                "value": "initiate-redshift-cluster-encryption"
+            },
+            "IdentifyRedshiftClusterEncryptionLambdaFunctionName": {
+                "value": "describe-redshift-cluster-encryption"
             }
         }
     },
@@ -1960,6 +1983,105 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateAMIPublicAccess" }
             }
         },
+        "LambdaInitiateRedshiftClusterEncryptionEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftClusterEncryption", "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationRedshiftClusterEncryption" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_REDSHIFT_ENCRYPT_ARN": { "Ref": "SNSNotifyLambdaEvaluateRedshiftClusterEncryption" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify unencrypted Redshift clusters.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateRedshiftClusterEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_redshift_encryption.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateRedshiftClusterEncryptionLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateRedshiftClusterEncryptionEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateRedshiftClusterEncryptionEvaluation" }
+            }
+        },
+        "LambdaEvaluateRedshiftClusterEncryption": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateRedshiftClusterEncryption"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationRedshiftClusterEncryption" }
+                },
+                "Description": "Lambda function to describe unencrypted Redshift clusters.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftClusterEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_redshift_encryption.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluateRedshiftClusterEncryption": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "IdentifyRedshiftClusterEncryptionLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaEvaluateRedshiftClusterEncryption": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateRedshiftClusterEncryption"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRedshiftClusterEncryption" }
+            }
+        },
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
@@ -2140,6 +2262,22 @@
                 ]
             }
         },
+        "EventInitiateEvaluationRedshiftClusterEncryption": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateRedshiftClusterEncryptionEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate unencrypted Redshift cluster evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRedshiftClusterEncryption"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateRedshiftClusterEncryptionEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateRedshiftClusterEncryptionEvaluation"
+                  }
+                ]
+            }
+        },
         "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["LambdaLogsForwarder"],
@@ -2290,6 +2428,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationAMIPublicAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaInitiateRedshiftClusterEncryptionEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateRedshiftClusterEncryptionEvaluation", "EventInitiateEvaluationRedshiftClusterEncryption"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateRedshiftClusterEncryptionEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRedshiftClusterEncryption", "Arn"] }
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -2526,6 +2674,24 @@
                 }]
             }
         },
+        "SNSNotifyLambdaEvaluateRedshiftClusterEncryption": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateRedshiftClusterEncryption",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftClusterEncryption", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftClusterEncryption", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateRedshiftClusterEncryption", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
         "PermissionToInvokeLambdaEvaluateSgSNS": {
             "Type": "AWS::Lambda::Permission",
             "DependsOn": ["SNSNotifyLambdaEvaluateSG", "LambdaEvaluateSG"],
@@ -2654,6 +2820,16 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"] }
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateRedshiftClusterEncryptionSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateRedshiftClusterEncryption", "LambdaEvaluateRedshiftClusterEncryption"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateRedshiftClusterEncryption" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRedshiftClusterEncryption", "Arn"] }
             }
         },
         "SNSIdentificationErrors": {
@@ -3295,6 +3471,52 @@
                     {
                         "Name": "FunctionName",
                         "Value": { "Ref": "LambdaEvaluateAMIPublicAccess" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaInitiateRedshiftClusterEncryptionEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateRedshiftClusterEncryptionEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateRedshiftClusterEncryptionEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateRedshiftClusterEncryptionEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaRedshiftClusterEncryptionEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateRedshiftClusterEncryption"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateRedshiftClusterEncryption" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluateRedshiftClusterEncryption" }
                     }
                 ],
                 "Period": 3600,
