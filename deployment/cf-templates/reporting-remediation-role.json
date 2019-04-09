@@ -40,6 +40,13 @@
                                 "Service": "ec2.amazonaws.com"
                             },
                             "Action": "sts:AssumeRole"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
                         }
                     ]
                 },
@@ -111,6 +118,8 @@
                                         "ec2:DescribeSubnets",
                                         "ec2:AuthorizeSecurityGroupIngress",
                                         "ec2:RevokeSecurityGroupIngress",
+                                        "ec2:DescribeImages",
+                                        "ec2:ModifyImageAttribute",
                                         "elasticloadbalancing:DescribeLoadBalancers",
                                         "iam:ListInstanceProfiles",
                                         "iam:GetInstanceProfile",
@@ -132,6 +141,7 @@
                                         "s3:GetBucketTagging",
                                         "s3:PutBucketAcl",
                                         "s3:PutBucketPolicy",
+                                        "s3:GetEncryptionConfiguration",
                                         "s3:PutEncryptionConfiguration"
                                     ],
                                     "Resource": "*"

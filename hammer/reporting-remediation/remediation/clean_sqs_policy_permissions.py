@@ -10,7 +10,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import SQSPolicyIssue
+from library.ddb_issues import IssueStatus, SQSPolicyIssue
 from library.aws.sqs import SQSPolicyChecker
 from library.aws.utility import Account
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -44,6 +44,12 @@ class CleanSQSPolicyPermissions:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {queue_name} (in whitelist)")
+
+                    # Adding label with "whitelisted" to jira ticket.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        label=IssueStatus.Whitelisted.value
+                    )
                     continue
 
                 if issue.timestamps.reported is None:

@@ -52,6 +52,12 @@ class CreateSQSPolicyIssueTickets:
 
                         comment = (f"Closing {issue.status.value} SQS queue '{queue_name}' public policy "
                                    f"in '{account_name} / {account_id}' account, '{queue_region}' region")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                label=IssueStatus.Whitelisted.value
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

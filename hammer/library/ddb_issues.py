@@ -130,6 +130,16 @@ class Issue(object):
         issue.jira_details = Details(item['jira_details'])
         return issue
 
+    def contains_tags(self, tags):
+        if not tags:
+            return True
+        for k in tags:
+            if k not in self.issue_details.tags:
+                return False
+            if self.issue_details.tags[k] not in tags[k]:
+                return False
+        return True
+
 
 class SecurityGroupIssue(Issue):
     def __init__(self, *args):
@@ -223,7 +233,11 @@ class RdsEncryptionIssue(Issue):
         super().__init__(*args)
 
 
+<<<<<<< HEAD
 class RedshiftLoggingIssue(Issue):
+=======
+class PublicAMIIssue(Issue):
+>>>>>>> refs/remotes/origin/dev
    def __init__(self, *args):
         super().__init__(*args)
 

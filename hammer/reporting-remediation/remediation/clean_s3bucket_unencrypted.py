@@ -11,7 +11,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import S3EncryptionIssue
+from library.ddb_issues import IssueStatus, S3EncryptionIssue
 from library.aws.s3 import S3EncryptionChecker
 from library.aws.utility import Account
 from library.utility import confirm
@@ -44,6 +44,12 @@ class CleanS3BucketUnencrypted:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")
+
+                    # Adding label with "whitelisted" to jira ticket.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        label=IssueStatus.Whitelisted.value
+                    )
                     continue
                 if not in_fixlist:
                     logging.debug(f"Skipping {bucket_name} (not in fixlist)")

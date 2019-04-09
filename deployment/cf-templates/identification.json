@@ -27,7 +27,11 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
+<<<<<<< HEAD
                         "SourceIdentificationRedshiftLogging"
+=======
+                        "SourceIdentificationAMIPublicAccess"
+>>>>>>> refs/remotes/origin/dev
                     ]
                 },
                 {
@@ -90,8 +94,13 @@
                 "SourceIdentificationRDSSnapshots": {
                     "default": "Relative path to public RDS snapshots lambda sources"
                 },
+<<<<<<< HEAD
                 "SourceIdentificationRedshiftLogging":{
                     "default": "Relative path to disabled logging Redshift Cluster sources"
+=======
+                "SourceIdentificationAMIPublicAccess":{
+                    "default": "Relative path to Public AMI sources"
+>>>>>>> refs/remotes/origin/dev
                 }
             }
         }
@@ -169,6 +178,10 @@
             "Type": "String",
             "Default": "rds-public-snapshots-identification.zip"
         },
+        "SourceIdentificationAMIPublicAccess": {
+          "Type": "String",
+          "Default": "ami-public-access-issues-identification.zip"
+        },
         "SourceIdentificationSQSPublicPolicy": {
             "Type": "String",
             "Default": "sqs-public-policy-identification.zip"
@@ -228,6 +241,9 @@
             },
             "IdentificationMetricRDSSnapshotsError": {
                 "value": "RDSSnapshotsError"
+            },
+            "IdentificationMetricAMIPublicAccessError": {
+              "value": "AMIPublicAccessError"
             },
             "IdentificationMetricSQSPublicPolicyError": {
                 "value": "SQSPublicPolicyError"
@@ -294,6 +310,12 @@
             },
             "SNSTopicNameRDSSnapshots": {
                 "value": "describe-rds-public-snapshots-lambda"
+            },
+            "SNSDisplayNameAMIPublicAccess": {
+                "value": "describe-ami-public-access-sns"
+            },
+            "SNSTopicNameAMIPublicAccess": {
+              "value": "describe-ami-public-access-lambda"
             },
             "SNSDisplayNameSQSPublicPolicy": {
                 "value": "describe-sqs-public-policy-sns"
@@ -378,6 +400,12 @@
             },
             "IdentifyRDSSnapshotsLambdaFunctionName": {
                 "value": "describe-rds-public-snapshots"
+            },
+            "InitiateAMIPublicAccessLambdaFunctionName": {
+                "value": "initiate-ami-public-access"
+            },
+            "IdentifyAMIPublicAccessLambdaFunctionName": {
+                "value": "describe-ami-public-access"
             },
             "InitiateSQSPublicPolicyLambdaFunctionName": {
                 "value": "initiate-sqs-public-policy"
@@ -1543,7 +1571,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSSnapshots" }
             }
         },
-
         "LambdaInitiateSQSPublicPolicyEvaluation": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["SNSNotifyLambdaEvaluateSQSPublicPolicy", "LogGroupLambdaInitiateSQSPublicPolicyEvaluation"],
@@ -1713,7 +1740,6 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaInitiateS3EncryptionEvaluation" }
             }
         },
-
         "LambdaEvaluateS3Encryption": {
             "Type": "AWS::Lambda::Function",
             "DependsOn": ["LogGroupLambdaEvaluateS3Encryption"],
@@ -1862,7 +1888,60 @@
                 "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateRDSEncryption" }
             }
         },
+        "LambdaInitiateAMIPublicAccessEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluateAMIPublicAccess", "LogGroupLambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationAMIPublicAccess" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_PUBLIC_AMI_ARN": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" }
+                    }
+                },
+                "Description": "Lambda function for initiate to identify public AMI access issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateAMIPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "initiate_to_desc_public_ami_issues.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "InitiateAMIPublicAccessLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateAMIPublicAccessEvaluation" }
+            }
+        },
 
+<<<<<<< HEAD
 
 
 
@@ -2366,6 +2445,21 @@
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftLoggingLambdaFunctionName", "value"] } ]
                                               ]},
                 "Handler": "describe_redshift_logging_issues.lambda_handler",
+=======
+        "LambdaEvaluateAMIPublicAccess": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceIdentificationAMIPublicAccess" }
+                },
+                "Description": "Lambda function to describe public AMI issues.",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyAMIPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "describe_public_ami_issues.lambda_handler",
+>>>>>>> refs/remotes/origin/dev
                 "MemorySize": 256,
                 "Timeout": "300",
                 "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
@@ -2377,18 +2471,27 @@
                 "Runtime": "python3.6"
             }
         },
+<<<<<<< HEAD
         "LogGroupLambdaEvaluateRedshiftLogging": {
+=======
+        "LogGroupLambdaEvaluateAMIPublicAccess": {
+>>>>>>> refs/remotes/origin/dev
             "Type" : "AWS::Logs::LogGroup",
             "Properties" : {
                 "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
                                                     { "Ref": "ResourcesPrefix" },
                                                     { "Fn::FindInMap": ["NamingStandards",
+<<<<<<< HEAD
                                                                         "IdentifyRedshiftLoggingLambdaFunctionName",
+=======
+                                                                        "IdentifyAMIPublicAccessLambdaFunctionName",
+>>>>>>> refs/remotes/origin/dev
                                                                         "value"]
                                                     } ] ] },
                 "RetentionInDays": "7"
             }
         },
+<<<<<<< HEAD
         "SubscriptionFilterLambdaEvaluateRedshiftLogging": {
             "Type" : "AWS::Logs::SubscriptionFilter",
             "DependsOn": ["LambdaLogsForwarder",
@@ -2401,6 +2504,19 @@
             }
         },
 
+=======
+        "SubscriptionFilterLambdaEvaluateAMIPublicAccess": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LambdaLogsForwarder",
+                          "PermissionToInvokeLambdaLogsForwarderCloudWatchLogs",
+                          "LogGroupLambdaEvaluateAMIPublicAccess"],
+            "Properties" : {
+                "DestinationArn" : { "Fn::GetAtt" : [ "LambdaLogsForwarder", "Arn" ] },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluateAMIPublicAccess" }
+            }
+        },
+>>>>>>> refs/remotes/origin/dev
         "EventBackupDDB": {
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaBackupDDB"],
@@ -2565,6 +2681,7 @@
                 ]
             }
         },
+<<<<<<< HEAD
 
         "EventInitiateEvaluationRedshiftLogging": {
             "Type": "AWS::Events::Rule",
@@ -2578,6 +2695,20 @@
                   {
                     "Arn": { "Fn::GetAtt": ["LambdaInitiateRedshiftLoggingEvaluation", "Arn"] },
                     "Id": "LambdaInitiateRedshiftLoggingEvaluation"
+=======
+        "EventInitiateEvaluationAMIPublicAccess": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "Description": "Hammer ScheduledRule to initiate public AMI access evaluations",
+                "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateAMIPublicAccessEvaluation", "Arn"] },
+                    "Id": "LambdaInitiateAMIPublicAccessEvaluation"
+>>>>>>> refs/remotes/origin/dev
                   }
                 ]
             }
@@ -2724,6 +2855,7 @@
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRDSEncryption", "Arn"] }
             }
         },
+<<<<<<< HEAD
 
         "PermissionToInvokeLambdaInitiateRedshiftLoggingEvaluationCloudWatchEvents": {
             "Type": "AWS::Lambda::Permission",
@@ -2733,6 +2865,16 @@
                 "Action": "lambda:InvokeFunction",
                 "Principal": "events.amazonaws.com",
                 "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationRedshiftLogging", "Arn"] }
+=======
+        "PermissionToInvokeLambdaInitiateAMIPublicAccessEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateAMIPublicAccessEvaluation", "EventInitiateEvaluationAMIPublicAccess"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluationAMIPublicAccess", "Arn"] }
+>>>>>>> refs/remotes/origin/dev
             }
         },
         "SNSNotifyLambdaEvaluateSG": {
@@ -2951,6 +3093,7 @@
                 }]
             }
         },
+<<<<<<< HEAD
         "SNSNotifyLambdaEvaluateRedshiftLogging": {
             "Type": "AWS::SNS::Topic",
             "DependsOn": "LambdaEvaluateRedshiftLogging",
@@ -2964,6 +3107,21 @@
                 "Subscription": [{
                     "Endpoint": {
                         "Fn::GetAtt": ["LambdaEvaluateRedshiftLogging", "Arn"]
+=======
+        "SNSNotifyLambdaEvaluateAMIPublicAccess": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": "LambdaEvaluateAMIPublicAccess",
+            "Properties": {
+                "DisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameAMIPublicAccess", "value"] } ]
+                                             ]},
+                "TopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
+                                           ]},
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"]
+>>>>>>> refs/remotes/origin/dev
                     },
                     "Protocol": "lambda"
                 }]
@@ -3089,6 +3247,7 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRDSEncryption", "Arn"] }
             }
         },
+<<<<<<< HEAD
 
         "PermissionToInvokeLambdaEvaluateRedshiftLoggingSNS": {
             "Type": "AWS::Lambda::Permission",
@@ -3098,6 +3257,16 @@
                 "Principal": "sns.amazonaws.com",
                 "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateRedshiftLogging" },
                 "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateRedshiftLogging", "Arn"] }
+=======
+        "PermissionToInvokeLambdaEvaluateAMIPublicAccessSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluateAMIPublicAccess", "LambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluateAMIPublicAccess" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluateAMIPublicAccess", "Arn"] }
+>>>>>>> refs/remotes/origin/dev
             }
         },
         "SNSIdentificationErrors": {
@@ -3127,7 +3296,6 @@
                 "FunctionName": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }
             }
         },
-
         "AlarmErrorsLambdaBackupDDB": {
             "Type": "AWS::CloudWatch::Alarm",
             "DependsOn": ["SNSIdentificationErrors", "LambdaBackupDDB"],
@@ -3703,6 +3871,7 @@
                 "TreatMissingData": "notBreaching"
             }
         },
+<<<<<<< HEAD
         "AlarmErrorsLambdaInitiateRedshiftLoggingEvaluation": {
             "Type": "AWS::CloudWatch::Alarm",
             "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateRedshiftLoggingEvaluation"],
@@ -3710,13 +3879,26 @@
                 "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateRedshiftLoggingEvaluation" }, "LambdaError" ] ]},
+=======
+        "AlarmErrorsLambdaInitiateAMIPublicAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaInitiateAMIPublicAccessEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" }, "LambdaError" ] ]},
+>>>>>>> refs/remotes/origin/dev
                 "EvaluationPeriods": 1,
                 "Namespace": "AWS/Lambda",
                 "MetricName": "Errors",
                 "Dimensions": [
                     {
                         "Name": "FunctionName",
+<<<<<<< HEAD
                         "Value": { "Ref": "LambdaInitiateRedshiftLoggingEvaluation" }
+=======
+                        "Value": { "Ref": "LambdaInitiateAMIPublicAccessEvaluation" }
+>>>>>>> refs/remotes/origin/dev
                     }
                 ],
                 "Period": 3600,
@@ -3726,6 +3908,7 @@
                 "TreatMissingData": "notBreaching"
             }
         },
+<<<<<<< HEAD
         "AlarmErrorsLambdaRedshiftLoggingEvaluation": {
             "Type": "AWS::CloudWatch::Alarm",
             "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateRedshiftLogging"],
@@ -3733,13 +3916,26 @@
                 "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
                 "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateRedshiftLogging" }, "LambdaError" ] ]},
+=======
+        "AlarmErrorsLambdaAMIPublicAccessEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["SNSIdentificationErrors", "LambdaEvaluateAMIPublicAccess"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluateAMIPublicAccess" }, "LambdaError" ] ]},
+>>>>>>> refs/remotes/origin/dev
                 "EvaluationPeriods": 1,
                 "Namespace": "AWS/Lambda",
                 "MetricName": "Errors",
                 "Dimensions": [
                     {
                         "Name": "FunctionName",
+<<<<<<< HEAD
                         "Value": { "Ref": "LambdaEvaluateRedshiftLogging" }
+=======
+                        "Value": { "Ref": "LambdaEvaluateAMIPublicAccess" }
+>>>>>>> refs/remotes/origin/dev
                     }
                 ],
                 "Period": 3600,
@@ -3750,6 +3946,7 @@
             }
         }
     },
+
     "Outputs": {
         "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }}
     }
