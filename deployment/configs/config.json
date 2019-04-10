@@ -51,11 +51,11 @@
         "enabled": true,
         "ddb.table_name": "hammer-s3-public-bucket-acl",
         "topic_name": "hammer-describe-s3-acl-lambda",
-        "reporting": false,
-        "remediation": false,
+        "reporting": true,
+        "remediation": true,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "secgrp_unrestricted_access": {
         "enabled": true,
@@ -78,8 +78,8 @@
         "remediation": false,
         "remediation_accounts": ["210987654321", "654321210987"],
         "remediation_retention_period": 21,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "user_inactivekeys": {
         "enabled": true,
@@ -90,8 +90,8 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "user_keysrotation": {
         "enabled": true,
@@ -101,8 +101,8 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "s3_bucket_policy": {
         "enabled": true,
@@ -111,16 +111,16 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 7,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "cloudtrails": {
         "enabled": true,
         "ddb.table_name": "hammer-cloudtrails",
         "topic_name": "hammer-describe-cloudtrails-lambda",
         "reporting": false,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "ebs_unencrypted_volume": {
         "enabled": true,
@@ -128,8 +128,8 @@
         "topic_name": "hammer-describe-ebs-unencrypted-volumes-lambda",
         "accounts": ["123456789012", "210987654321"],
         "reporting": false,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "ebs_public_snapshot": {
         "enabled": true,
@@ -138,8 +138,8 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "rds_public_snapshot": {
         "enabled": true,
@@ -148,8 +148,17 @@
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
+    },
+    "ec2_public_ami": {
+        "enabled": true,
+        "ddb.table_name": "hammer-ec2-public-ami",
+        "reporting": false,
+        "remediation": false,
+        "remediation_retention_period": 21,
+        "jira": true,
+        "slack": true
     },
     "sqs_public_access": {
         "enabled": true,
@@ -158,8 +167,8 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "s3_encryption": {
         "enabled": true,
@@ -168,15 +177,15 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 0,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     },
     "rds_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true,
-        "jira": {"enabled": true},
-        "slack": {"enabled": true}
+        "jira": true,
+        "slack": true
     }
 }

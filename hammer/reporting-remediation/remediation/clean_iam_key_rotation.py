@@ -30,8 +30,8 @@ class CleanIAMUserStaleKeys:
 
         retention_period = self.config.iamUserKeysRotation.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='iamUserKeysRotation')
+        slack = SlackNotification(self.config, module='iamUserKeysRotation')
 
         for account_id, account_name in self.config.iamUserKeysRotation.remediation_accounts.items():
             logging.debug("* Account Name:" + account_name + " :::Account ID:::" + account_id)
@@ -113,10 +113,6 @@ if __name__ == "__main__":
     module_name = sys.modules[__name__].__loader__.name
     set_logging(level=logging.DEBUG, logfile=f"/var/log/hammer/{module_name}.log")
     config = Config()
-    if config.jira.enabled:
-        config.jira.enabled = config.user_keysrotation.jira.enabled
-    if config.slack.enabled:
-        config.slack.enabled = config.user_keysrotation.slack.enabled
     add_cw_logging(config.local.log_group,
                    log_stream=module_name,
                    level=logging.DEBUG,

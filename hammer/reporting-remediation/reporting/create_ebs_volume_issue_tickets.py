@@ -74,8 +74,8 @@ class CreateEBSUnencryptedVolumeTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='ebsVolume')
+        slack = SlackNotification(self.config, module='ebsVolume')
 
         for account_id, account_name in self.config.ebsVolume.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -215,10 +215,6 @@ if __name__ == '__main__':
     module_name = sys.modules[__name__].__loader__.name
     set_logging(level=logging.DEBUG, logfile=f"/var/log/hammer/{module_name}.log")
     config = Config()
-    if config.jira.enabled:
-        config.jira.enabled = config.ebs_unencrypted_volume.jira.enabled
-    if config.slack.enabled:
-        config.slack.enabled = config.ebs_unencrypted_volume.slack.enabled
     add_cw_logging(config.local.log_group,
                    log_stream=module_name,
                    level=logging.DEBUG,
