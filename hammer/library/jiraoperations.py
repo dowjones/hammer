@@ -17,10 +17,18 @@ NewIssue = namedtuple('NewIssue', [
 
 class JiraReporting(object):
     """ Base class for JIRA reporting """
-    def __init__(self, config):
+    def __init__(self, config, module=''):
         self.config = config
-        self.jira = JiraOperations(self.config)
+        self.jira = JiraOperations(self.config, module=module)
+        self.module_jira_enabled = getattr(config, module).jira if hasattr(config, module) else True
 
+    def jira_enabled(func):
+        def decorated(self, *args, **kwargs):
+            if self.config.jira.enabled and self.module_jira_enabled:
+                return func(self, *args, **kwargs)
+        return decorated
+
+    @jira_enabled
     def add_issue(self,
                   issue_summary, issue_description,
                   priority, labels,
@@ -28,9 +36,6 @@ class JiraReporting(object):
                   owner=None,
                   bu=None, product=None,
                   ):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return None
 
         project = self.config.owners.ticket_project(
             bu=bu, product=product,
@@ -74,36 +79,24 @@ class JiraReporting(object):
         return NewIssue(ticket_id=ticket_id,
                         ticket_assignee_id=ticket_assignee_id)
 
+    @jira_enabled
     def close_issue(self, ticket_id, comment):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         self.jira.add_comment(ticket_id, comment)
         self.jira.close_issue(ticket_id)
         logging.debug(f"Closed issue ({self.jira.ticket_url(ticket_id)})")
 
+    @jira_enabled
     def update_issue(self, ticket_id, comment):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         # TODO: reopen ticket if closed
         self.jira.add_comment(ticket_id, comment)
         logging.debug(f"Updated issue {self.jira.ticket_url(ticket_id)}")
 
+    @jira_enabled
     def add_attachment(self, ticket_id, filename, text):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         return self.jira.add_attachment(ticket_id, filename, text)
 
+    @jira_enabled
     def remediate_issue(self, ticket_id, comment, reassign):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         if reassign:
             self.jira.assign_user(ticket_id, self.jira.current_user)
         self.jira.add_comment(ticket_id, comment)
@@ -116,7 +109,7 @@ class JiraReporting(object):
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
-    def __init__(self, config):
+    def __init__(self, config, module=''):
         # do not print excess warnings
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         # JIRA configuration from config.json/DDB
@@ -125,8 +118,9 @@ class JiraOperations(object):
         self.server = self.config.jira.server
         # JIRA established session
         self.session = None
+        self.module_jira_enabled = getattr(config, module).jira if hasattr(config, module) else True
 
-        if self.config.jira.enabled:
+        if self.config.jira.enabled and self.module_jira_enabled:
             self.login_oauth()
         else:
             logging.debug("JIRA integration is disabled")

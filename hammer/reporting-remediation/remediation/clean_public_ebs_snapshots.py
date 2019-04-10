@@ -30,8 +30,8 @@ class CleanPublicEBSSnapshots(object):
 
         retention_period = self.config.ebsSnapshot.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='ebsSnapshot')
+        slack = SlackNotification(self.config, module='ebsSnapshot')
 
         for account_id, account_name in self.config.ebsSnapshot.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -117,10 +117,6 @@ if __name__ == '__main__':
     module_name = sys.modules[__name__].__loader__.name
     set_logging(level=logging.DEBUG, logfile=f"/var/log/hammer/{module_name}.log")
     config = Config()
-    if config.jira.enabled:
-        config.jira.enabled = config.ebs_public_snapshot.jira.enabled
-    if config.slack.enabled:
-        config.slack.enabled = config.ebs_public_snapshot.slack.enabled
     add_cw_logging(config.local.log_group,
                    log_stream=module_name,
                    level=logging.DEBUG,

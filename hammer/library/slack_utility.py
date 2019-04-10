@@ -9,10 +9,11 @@ from library.config import Config
 
 
 class SlackNotification(object):
-    def __init__(self, config=None):
+    def __init__(self, config=None, module=''):
         self.config = Config() if config is None else config
         self.sc = SlackClient(self.config.slack.api_token)
         self.slackUser = "hammer"
+        self.module_slack_enabled = getattr(config, module).slack if hasattr(config, module) else True
 
     @property
     @lru_cache(maxsize=1)
@@ -47,7 +48,7 @@ class SlackNotification(object):
         return self.users.get(user.lower(), None)
 
     def post_message(self, msg, owner=None):
-        if not self.config.slack.enabled:
+        if not self.config.slack.enabled or not self.module_slack_enabled:
             return
 
         # if owner is not set - try to find channel to send msg to based on msg body
