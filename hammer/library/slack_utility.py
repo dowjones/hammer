@@ -13,7 +13,7 @@ class SlackNotification(object):
         self.config = Config() if config is None else config
         self.sc = SlackClient(self.config.slack.api_token)
         self.slackUser = "hammer"
-        self.module_slack_enabled = getattr(config, module).slack if hasattr(config, module) else True
+        self.module_slack_enabled = getattr(config, module).slack if hasattr(hasattr(config, module), 'slack') else True
 
     @property
     @lru_cache(maxsize=1)
