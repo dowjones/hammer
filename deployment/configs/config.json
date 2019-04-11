@@ -119,8 +119,8 @@
         "ddb.table_name": "hammer-cloudtrails",
         "topic_name": "hammer-describe-cloudtrails-lambda",
         "reporting": false,
-        "jira": true,
-        "slack": true
+        "jira": false,
+        "slack": false
     },
     "ebs_unencrypted_volume": {
         "enabled": true,
@@ -128,8 +128,8 @@
         "topic_name": "hammer-describe-ebs-unencrypted-volumes-lambda",
         "accounts": ["123456789012", "210987654321"],
         "reporting": false,
-        "jira": true,
-        "slack": true
+        "jira": false,
+        "slack": false
     },
     "ebs_public_snapshot": {
         "enabled": true,
