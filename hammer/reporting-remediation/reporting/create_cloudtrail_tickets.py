@@ -133,7 +133,7 @@ class CreateCloudTrailLoggingTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["cloud-trail-disabled"],
+                            priority="Major",
                             account_id=account_id,
                         )
                     except Exception:

@@ -14,6 +14,36 @@ NewIssue = namedtuple('NewIssue', [
     'ticket_assignee_id'
     ])
 
+class JiraLabels(object):
+    """ Base class for JIRA tickets labeling """
+    DEFAULT_LABELS = {
+        'cloudtrails': 'cloudtrail-issue',
+        'ebsSnapshot': 'ebs-public-snapshot',
+        'ebsVolume': 'ebs-unencrypted-volume',
+        'iamUserInactiveKeys': 'iam-key-inactive',
+        'iamUserKeysRotation': 'iam-key-rotation',
+        'publicAMIs': 'public-ami',
+        'rdsSnapshot': 'rds-public-snapshot',
+        'rdsEncrypt': 'rds-unencrypted',
+        's3Encrypt': 's3-unencrypted',
+        's3acl': 's3-public-acl',
+        's3policy': 's3-public-policy',
+        'sg': 'insecure-services',
+        'sqspolicy': 'sqs-public-policy'
+    }
+    def __init__(self, config, module=''):
+        self.config = config
+        self.module = module
+        self.module_jira = getattr(config, module) if hasattr(config, module) else False
+        self.module_jira_labels = self.module_jira.labels if hasattr(self.module_jira, 'labels') else False
+        
+    @property
+    def module_labels(self):
+        if self.module_jira_labels:
+            return self.module_jira_labels
+        else:
+            return self.DEFAULT_LABELS.get(self.module, '')
+
 
 class JiraReporting(object):
     """ Base class for JIRA reporting """
@@ -21,6 +51,8 @@ class JiraReporting(object):
         self.config = config
         self.jira = JiraOperations(self.config, module=module)
         self.module_jira_enabled = getattr(config, module).jira if hasattr(hasattr(config, module), 'jira') else True
+        self.jira_labels = JiraLabels(config, module)
+        self.module_jira_labels = self.jira_labels.module_labels
 
     def _jira_enabled(func):
         def decorated(self, *args, **kwargs):
@@ -31,7 +63,7 @@ class JiraReporting(object):
     @_jira_enabled
     def add_issue(self,
                   issue_summary, issue_description,
-                  priority, labels,
+                  priority,
                   account_id,
                   owner=None,
                   bu=None, product=None,
@@ -48,7 +80,7 @@ class JiraReporting(object):
             "description": issue_description,
             "issuetype": {"name": self.config.jira.issue_type},
             "priority": {"name": priority},
-            "labels": labels
+            "labels": self.module_jira_labels
         }
         ticket_id = self.jira.create_ticket(issue_data)
 
