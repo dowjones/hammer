@@ -113,7 +113,6 @@ class CleanIAMUserStaleKeys:
                     except Exception:
                         logging.exception(f"Error occurred while disabling '{key_id} / {username}' "
                                           f"in '{account_name} / {account_id}'")
-
                 else:
                     logging.debug(f"Skipping '{key_id} / {username}' "
                                   f"({retention_period - no_of_days_issue_created} days before remediation)")

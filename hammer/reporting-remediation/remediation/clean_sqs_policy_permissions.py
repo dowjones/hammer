@@ -3,7 +3,7 @@ Class to remediate SQS policy permissions.
 """
 import sys
 import logging
-
+import dateutil.parser
 
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
@@ -63,7 +63,11 @@ class CleanSQSPolicyPermissions:
                 product = issue.jira_details.product
 
                 issue_remediation_days = retention_period - no_of_days_issue_created
-                if issue_remediation_days in remediation_warning_days:
+                issue.timestamps.slack_notified_date = \
+                    dateutil.parser.parse(issue.timestamps.slack_notified_date
+                                          if issue.timestamps.slack_notified_date else issue.timestamps.reported)
+                if issue_remediation_days in remediation_warning_days \
+                        and (self.config.now - issue.timestamps.slack_notified_date).days > 0:
                     slack.report_issue(
                         msg=f"SQS Queue '{queue_name}' policy issue is going to be remediated in "
                             f"{issue_remediation_days} days",
@@ -71,6 +75,7 @@ class CleanSQSPolicyPermissions:
                         account_id=account_id,
                         bu=bu, product=product,
                     )
+                    IssueOperations.set_status_notified(ddb_table, issue)
                 elif no_of_days_issue_created >= retention_period:
                     try:
                         account = Account(id=account_id,
