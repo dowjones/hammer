@@ -416,3 +416,16 @@ class Operations(object):
         """
         issue.timestamps.updated = issue.timestamps.reported
         cls.put(ddb_table, issue)
+
+    @classmethod
+    def set_status_notified(cls, ddb_table, issue):
+        """
+        Put issue with resolved status and updated resolved timestamp
+
+        :param ddb_table: boto3 DDB table resource
+        :param issue: Issue instance
+
+        :return: nothing
+        """
+        issue.timestamps.slack_notified_date = datetime.now(timezone.utc).isoformat()
+        cls.put(ddb_table, issue)
