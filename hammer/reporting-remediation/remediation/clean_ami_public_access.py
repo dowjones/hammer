@@ -10,7 +10,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import PublicAMIIssue
+from library.ddb_issues import PublicAMIIssue, IssueStatus
 from library.aws.ec2 import PublicAMIChecker
 from library.aws.utility import Account
 from library.utility import SingletonInstance, SingletonInstanceException
