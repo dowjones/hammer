@@ -112,7 +112,7 @@
         },
         "IdentificationCheckRateExpression": {
           "Type": "String",
-          "Default": "* * * ? *",
+          "Default": "*/6 * * ? *",
           "Description": "should not include minutes part"
         },
         "LambdaSubnets": {
