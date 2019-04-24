@@ -76,6 +76,7 @@ class CreateEBSUnencryptedVolumeTickets(object):
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
+        retention_period = self.config.ebsVolume.remediation_retention_period
 
         for account_id, account_name in self.config.ebsVolume.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -203,6 +204,20 @@ class CreateEBSUnencryptedVolumeTickets(object):
                     )
 
                     IssueOperations.set_status_reported(ddb_table, issue)
+                    comment = f"EBS unencrypted volume '{issue.issue_id}' issue is going to be remediated in " \
+                              f"{retention_period} days"
+                    slack.report_issue(
+                        msg=comment,
+                        owner=owner,
+                        account_id=account_id,
+                        bu=bu, product=product,
+                    )
+                    # Updating ticket with remediation details.
+                    jira.update_issue(
+                        ticket_id=issue.jira_details.ticket,
+                        comment=comment
+                    )
+                    IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':

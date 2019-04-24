@@ -63,17 +63,21 @@ class CleanSQSPolicyPermissions:
                 product = issue.jira_details.product
 
                 issue_remediation_days = retention_period - no_of_days_issue_created
-                issue.timestamps.slack_notified_date = \
-                    dateutil.parser.parse(issue.timestamps.slack_notified_date
-                                          if issue.timestamps.slack_notified_date else issue.timestamps.reported)
+                issue.timestamps.slack_notified_date = dateutil.parser.parse(issue.timestamps.slack_notified_date)
                 if issue_remediation_days in remediation_warning_days \
                         and (self.config.now - issue.timestamps.slack_notified_date).days > 0:
+                    comment = f"SQS Queue '{queue_name}' policy issue is going to be remediated in " \
+                              f"{issue_remediation_days} days"
                     slack.report_issue(
-                        msg=f"SQS Queue '{queue_name}' policy issue is going to be remediated in "
-                            f"{issue_remediation_days} days",
+                        msg=comment,
                         owner=owner,
                         account_id=account_id,
                         bu=bu, product=product,
+                    )
+                    # Updating ticket with remediation details.
+                    jira.update_issue(
+                        ticket_id=issue.jira_details.ticket,
+                        comment=comment
                     )
                     IssueOperations.set_status_notified(ddb_table, issue)
                 elif no_of_days_issue_created >= retention_period:

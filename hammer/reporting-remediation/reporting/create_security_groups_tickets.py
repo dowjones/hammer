@@ -222,6 +222,7 @@ class CreateSecurityGroupsTickets(object):
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
+        retention_period = self.config.sg.retention_period
 
         for account_id, account_name in self.config.sg.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -477,6 +478,19 @@ class CreateSecurityGroupsTickets(object):
                     )
 
                     IssueOperations.set_status_reported(ddb_table, issue)
+
+                    comment = f"SecurityGroup '{group_name}' public access issue is going to be remediated in " \
+                              f"{retention_period} days"
+                    slack.report_issue(
+                        msg=comment,
+                        account_id=account_id
+                    )
+                    # Updating ticket with remediation details.
+                    jira.update_issue(
+                        ticket_id=issue.jira_details.ticket,
+                        comment=comment
+                    )
+                    IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':

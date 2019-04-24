@@ -63,7 +63,7 @@ class CleanIAMUserStaleKeys:
 
                 issue.timestamps.slack_notified_date = dateutil.parser.parse(issue.timestamps.slack_notified_date)
                 if issue_remediation_days in remediation_warning_days \
-                        and ((self.config.now - issue.timestamps.slack_notified_date).days > 0) :
+                        and ((self.config.now - issue.timestamps.slack_notified_date).days > 0):
 
                     comment=f"Stale access key '{key_id}' issue is going to be remediated in " \
                             f"{issue_remediation_days} days"

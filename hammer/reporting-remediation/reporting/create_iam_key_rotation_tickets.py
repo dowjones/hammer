@@ -117,7 +117,6 @@ class CreateTicketIamKeyRotation:
                         ticket_id=issue.jira_details.ticket,
                         comment=comment
                     )
-
                     IssueOperations.set_status_notified(ddb_table, issue)
 
 
