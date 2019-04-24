@@ -1986,7 +1986,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate S3 and IAM evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationS3IAM"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "10 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "5 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2018,7 +2018,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate CloudTrails evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationCloudTrails"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "15 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "10 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2034,7 +2034,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate EBS volumes evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationEBSVolumes"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "20 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "15 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2050,7 +2050,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate EBS snapshots evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationEBSSnapshots"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "25 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "20 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2066,7 +2066,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate RDS snapshots evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRDSSnapshots"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "30 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "25 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2082,7 +2082,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate Security Groups evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSG"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "30 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2098,7 +2098,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate SQS queue evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSQSPublicPolicy"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
@@ -2130,7 +2130,7 @@
             "Properties": {
                 "Description": "Hammer ScheduledRule to initiate public AMI access evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
-                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "45 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
                 "Targets": [
                   {
