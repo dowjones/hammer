@@ -504,7 +504,7 @@
                         "SNS_SG_ARN": { "Ref": "SNSNotifyLambdaEvaluateSG" }
                     }
                 },
-                "Description": "Lambda function for initiate to identify bad security groups",
+                "Description": "Lambda function for initiate to identify bad security groups.",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "InitiateSecurityGroupLambdaFunctionName", "value"] } ]
                                               ]},
@@ -568,7 +568,7 @@
                         ]
                     }
                 },
-                "Description": "Lambda function to describe security groups unrestricted access.",
+                "Description": "Lambda function to describe security groups unrestricted access. ",
                 "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifySecurityGroupLambdaFunctionName", "value"] } ]
                                               ]},
@@ -1984,7 +1984,7 @@
                           "LambdaInitiateS3ACLEvaluation",
                           "LambdaInitiateS3PolicyEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate S3 and IAM evaluations",
+                "Description": "Hammer ScheduledRule to initiate S3 and IAM evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationS3IAM"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "10 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2016,7 +2016,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateCloudTrailsEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate CloudTrails evaluations",
+                "Description": "Hammer ScheduledRule to initiate CloudTrails evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationCloudTrails"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "15 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2032,7 +2032,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateEBSVolumesEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate EBS volumes evaluations",
+                "Description": "Hammer ScheduledRule to initiate EBS volumes evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationEBSVolumes"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "20 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2048,7 +2048,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateEBSSnapshotsEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate EBS snapshots evaluations",
+                "Description": "Hammer ScheduledRule to initiate EBS snapshots evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationEBSSnapshots"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "25 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2064,7 +2064,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateRDSSnapshotsEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate RDS snapshots evaluations",
+                "Description": "Hammer ScheduledRule to initiate RDS snapshots evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRDSSnapshots"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "30 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2080,7 +2080,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateSGEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate Security Groups evaluations",
+                "Description": "Hammer ScheduledRule to initiate Security Groups evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSG"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "35 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2096,7 +2096,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateSQSPublicPolicyEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate SQS queue evaluations",
+                "Description": "Hammer ScheduledRule to initiate SQS queue evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationSQSPublicPolicy"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2112,7 +2112,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateRDSEncryptionEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate rds instance encryption evaluations",
+                "Description": "Hammer ScheduledRule to initiate rds instance encryption evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRDSEncryption"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
@@ -2128,7 +2128,7 @@
             "Type": "AWS::Events::Rule",
             "DependsOn": ["LambdaInitiateAMIPublicAccessEvaluation"],
             "Properties": {
-                "Description": "Hammer ScheduledRule to initiate public AMI access evaluations",
+                "Description": "Hammer ScheduledRule to initiate public AMI access evaluations.",
                 "Name": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
                 "ScheduleExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                 "State": "ENABLED",
