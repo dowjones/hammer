@@ -133,6 +133,13 @@
         "remediation": false,
         "remediation_retention_period": 0
     },
+    "kms_keys_rotation": {
+        "enabled": true,
+        "ddb.table_name": "hammer-kms-key-rotation",
+        "reporting": false,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
     "ec2_public_ami": {
         "enabled": true,
         "ddb.table_name": "hammer-ec2-public-ami",

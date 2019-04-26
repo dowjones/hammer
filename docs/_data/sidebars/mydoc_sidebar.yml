@@ -119,3 +119,7 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+
+    - title: KMS key rotation
+      url: /playbook14_kms_key_rotation.html
+      output: web, pdf
