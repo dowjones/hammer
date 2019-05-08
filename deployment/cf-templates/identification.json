@@ -1085,7 +1085,7 @@
                                               ]},
                     "InitiateLambdaHandler": "initiate_to_desc_public_ami_issues.lambda_handler",
                     "EvaluateLambdaHandler": "describe_public_ami_issues.lambda_handler",
-                    "EvaluateLambdaMemorySize": 128,
+                    "EvaluateLambdaMemorySize": 256,
                     "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
                     "EventRuleDescription": "Hammer ScheduledRule to initiate public AMI access evaluations",
                     "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationAMIPublicAccess"] ] },
