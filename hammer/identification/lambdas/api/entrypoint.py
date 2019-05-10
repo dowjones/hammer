@@ -183,6 +183,13 @@ def lambda_handler(event, context):
     tags = payload.get("tags", None)
     ids = payload.get("ids", None)
 
+    config = Config()
+    auth_token = event['headers']['auth']
+    accounts = config.api.tokens[auth_token]['accounts']
+    if accounts:
+        if account_id not in accounts:
+            return bad_request(text='You do not have access to specified account.')
+
     action = event.get("path", "")[1:]
     method = event.get("httpMethod")
     # do not forget to allow path in authorizer.py while extending this list

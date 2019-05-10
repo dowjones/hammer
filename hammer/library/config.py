@@ -288,8 +288,8 @@ class ApiConfig(object):
         self._config = config
 
     @property
-    def token(self):
-        return self._config.get("credentials", {}).get("token", None)
+    def tokens(self):
+        return self._config.get("credentials", {}).get("tokens", None)
 
     @property
     def url(self):

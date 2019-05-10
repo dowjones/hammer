@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     #logging.debug("Client token: " + event['authorizationToken'])
     logging.debug("Method ARN: " + event['methodArn'])
 
-    if event['authorizationToken'] != config.api.token:
+    if event['authorizationToken'] not in config.api.tokens:
         raise Exception('Unauthorized')
 
     principalId = 'hammer-api-user'
