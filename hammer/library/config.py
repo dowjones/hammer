@@ -473,12 +473,13 @@ class ModuleConfig(BaseConfig):
         :return: dict with AWS accounts to identify/remediate {'account id': 'account name', ...}
         """
         module_accounts = self._config.get(option, None)
-        if module_accounts is None:
+        if module_accounts is None or len(module_accounts) == 0:
             accounts = self._accounts
         else:
             # construct dict similar to main accounts dict
             accounts = {account: self._accounts.get(account, "") for account in module_accounts}
         # exclude 'ignore_accounts' from resulting dict
+
         return {k: v for k, v in accounts.items() if k not in self._config.get("ignore_accounts", [])}
 
     @property
