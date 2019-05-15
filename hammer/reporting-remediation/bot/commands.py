@@ -4,6 +4,7 @@ import requests
 import time
 
 
+from analytics.security_issues_csv_report import CSVReport
 from slackbot.bot import listen_to, respond_to
 from slackbot.settings import config
 
@@ -333,3 +334,11 @@ def handle_scan_thread_answers(message, user_response):
         pass
     except Exception as e:
         message.reply(str(e))
+
+
+@respond_to('^csv_report$', re.IGNORECASE)
+def get_csv_report(message):
+    """ shows global modules status """
+    response = "\n"
+    csv_report = CSVReport()
+    csv_report.generate(message)
