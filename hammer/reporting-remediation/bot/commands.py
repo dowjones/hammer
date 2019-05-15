@@ -341,4 +341,5 @@ def get_csv_report(message):
     """ shows global modules status """
     response = "\n"
     csv_report = CSVReport()
+    message.reply("Security issues report generation is in process. Will send reports once ready...")
     csv_report.generate(message)
