@@ -1,0 +1,232 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer API stack",
+    "Parameters": {
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "hammer-"
+        },
+        "SourceS3Bucket": {
+            "Type": "String",
+            "Description": "S3 bucket with Hammer API sources",
+            "Default": ""
+        },
+        "SourceApi": {
+            "Type": "String",
+            "Default": "api.zip"
+        },
+        "ApiIAMRole": {
+            "Type": "String",
+            "Default": "cloudsec-master-ec2"
+        }
+    },
+    "Mappings": {
+        "NamingStandards": {
+            "StageName": { "value": "LATEST" }
+        }
+    },
+    "Resources": {
+        "LambdaAuthorizer": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {"Ref": "SourceS3Bucket"},
+                    "S3Key": {"Ref": "SourceApi"}
+                },
+                "Description": "Hammer API authorization lambda",
+                "FunctionName": {"Fn::Join": ["", [ {"Ref": "ResourcesPrefix"}, "api-authorizer" ] ] },
+                "Handler": "authorizer.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             {"Ref": "AWS::AccountId"},
+                                             ":role/",
+                                             {"Ref": "ResourcesPrefix"},
+                                             {"Ref": "ApiIAMRole"}
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LambdaApi": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {"Ref": "SourceS3Bucket"},
+                    "S3Key": {"Ref": "SourceApi"}
+                },
+                "Description": "Hammer API lambda",
+                "FunctionName": {"Fn::Join": ["", [ {"Ref": "ResourcesPrefix"}, "api" ] ] },
+                "Handler": "entrypoint.lambda_handler",
+                "MemorySize": 512,
+                "Timeout": "300",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             {"Ref": "AWS::AccountId"},
+                                             ":role/",
+                                             {"Ref": "ResourcesPrefix"},
+                                             {"Ref": "ApiIAMRole"}
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "ApiGateway": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "Hammer API",
+                "Description": "API used for Hammer requests",
+                "FailOnWarnings": true
+            }
+        },
+        "LambdaPermissionApi": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaApi", "ApiGateway"],
+            "Properties": {
+                "Action": "lambda:invokeFunction",
+                "FunctionName": {"Fn::GetAtt": [ "LambdaApi", "Arn" ] },
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {"Fn::Join": ["", [ "arn:aws:execute-api:",
+                                                  {"Ref": "AWS::Region"},
+                                                  ":",
+                                                  {"Ref": "AWS::AccountId"},
+                                                  ":",
+                                                  {"Ref": "ApiGateway"},
+                                                  "/*"
+                                                ] ]}
+            }
+        },
+        "ApiGatewayAuthorizer": {
+            "Type": "AWS::ApiGateway::Authorizer",
+            "DependsOn": ["ApiGateway"],
+            "Properties": {
+                "Name": {"Fn::Join" : ["", [ {"Ref": "ResourcesPrefix"},
+                                             "api-authorizer"
+                                           ] ]},
+                "AuthorizerUri": {"Fn::Join": ["",
+                    ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaAuthorizer", "Arn"]}, "/invocations"]
+                ]},
+                "AuthorizerResultTtlInSeconds": "0",
+                "IdentitySource": "method.request.header.Auth",
+                "RestApiId": {"Ref": "ApiGateway"},
+                "Type": "TOKEN"
+            }
+        },
+        "ApiLambdaPermissionAuthorizer": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaAuthorizer", "ApiGateway"],
+            "Properties": {
+                "Action": "lambda:invokeFunction",
+                "FunctionName": {"Fn::GetAtt": [ "LambdaAuthorizer", "Arn" ] },
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {"Fn::Join": ["", [ "arn:aws:execute-api:",
+                                                  {"Ref": "AWS::Region"},
+                                                  ":",
+                                                  {"Ref": "AWS::AccountId"},
+                                                  ":",
+                                                  {"Ref": "ApiGateway"},
+                                                  "/*"
+                                                ] ]}
+            }
+        },
+        "ApiGatewayCloudWatchLogsRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": {"Fn::Join" : ["", [ {"Ref": "ResourcesPrefix"},
+                                                 "api"
+                                               ] ]},
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["apigateway.amazonaws.com"] },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Policies": [{
+                    "PolicyName": "ApiGatewayLogsPolicy",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": [
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:DescribeLogGroups",
+                                "logs:DescribeLogStreams",
+                                "logs:PutLogEvents",
+                                "logs:GetLogEvents",
+                                "logs:FilterLogEvents"
+                            ],
+                            "Resource": "*"
+                        }]
+                    }
+                }]
+            }
+        },
+        "ApiGatewayAccount": {
+            "Type": "AWS::ApiGateway::Account",
+            "DependsOn": ["ApiGatewayCloudWatchLogsRole"],
+            "Properties": {
+                "CloudWatchRoleArn": {"Fn::GetAtt": [ "ApiGatewayCloudWatchLogsRole", "Arn" ] }
+            }
+        },
+        "ApiGatewayStage": {
+            "DependsOn": ["ApiGatewayDeployment2018090700", "ApiGateway"],
+            "Type": "AWS::ApiGateway::Stage",
+            "Properties": {
+                "DeploymentId": {"Ref": "ApiGatewayDeployment2018090700"},
+                "MethodSettings": [{
+                    "DataTraceEnabled": true,
+                    "HttpMethod": "*",
+                    "LoggingLevel": "INFO",
+                    "ResourcePath": "/*"
+                }],
+                "RestApiId": {"Ref": "ApiGateway"},
+                "StageName": {"Fn::FindInMap": ["NamingStandards", "StageName", "value"] }
+            }
+        },
+        "ApiGatewayDeployment2018090700": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "DependsOn": ["ApiGateway", "ApiRequestPOST"],
+            "Properties": {
+                "RestApiId": {"Ref": "ApiGateway"}
+            }
+        },
+        "ApiGatewayResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "DependsOn": ["ApiGateway"],
+            "Properties": {
+                "RestApiId": {"Ref": "ApiGateway"},
+                "ParentId": {"Fn::GetAtt": ["ApiGateway", "RootResourceId"] },
+                "PathPart": "{proxy+}"
+            }
+        },
+        "ApiRequestPOST": {
+            "DependsOn": ["ApiGateway", "ApiGatewayResource", "LambdaApi", "ApiGatewayAuthorizer"],
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": { "Ref": "ApiGatewayAuthorizer" },
+                "HttpMethod": "ANY",
+                "Integration": {
+                    "Type": "AWS_PROXY",
+                    "IntegrationHttpMethod": "POST",
+                    "Uri": {"Fn::Join": ["",
+                        ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["LambdaApi", "Arn"]}, "/invocations"]
+                    ]}
+                },
+                "ResourceId": {"Ref": "ApiGatewayResource"},
+                "RestApiId": {"Ref": "ApiGateway"}
+            }
+        }
+    },
+    "Outputs": {
+        "ApiUrl": {
+            "Description": "The URL of the API gateway",
+            "Value": {"Fn::Join": ["", ["https://", {"Ref": "ApiGateway"}, ".execute-api.", {"Ref": "AWS::Region"}, ".amazonaws.com",
+                                        "/",
+                                        {"Fn::FindInMap": ["NamingStandards", "StageName", "value"] },
+                                        "/"
+                                       ]]}
+        }
+    }
+}
