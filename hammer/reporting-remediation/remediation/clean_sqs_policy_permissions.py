@@ -29,8 +29,8 @@ class CleanSQSPolicyPermissions:
 
         retention_period = self.config.sqspolicy.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='sqspolicy')
+        slack = SlackNotification(self.config, module='sqspolicy')
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

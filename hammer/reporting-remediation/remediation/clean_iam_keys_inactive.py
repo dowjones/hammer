@@ -30,8 +30,8 @@ class CleanIAMUserInactiveKeys:
 
         retention_period = self.config.iamUserInactiveKeys.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='iamUserInactiveKeys')
+        slack = SlackNotification(self.config, module='iamUserInactiveKeys')
 
         for account_id, account_name in self.config.iamUserInactiveKeys.remediation_accounts.items():
             logging.debug("* Account Name:" + account_name + " :::Account ID:::" + account_id)

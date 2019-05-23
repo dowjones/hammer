@@ -26,8 +26,8 @@ class CreateS3UnencryptedBucketsTickets:
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='s3Encrypt')
+        slack = SlackNotification(self.config, module='s3Encrypt')
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -127,7 +127,7 @@ class CreateS3UnencryptedBucketsTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["s3-unencrypted"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

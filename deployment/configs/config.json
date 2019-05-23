@@ -51,9 +51,12 @@
         "enabled": true,
         "ddb.table_name": "hammer-s3-public-bucket-acl",
         "topic_name": "hammer-describe-s3-acl-lambda",
-        "reporting": false,
-        "remediation": false,
-        "remediation_retention_period": 0
+        "reporting": true,
+        "remediation": true,
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["s3-public-acl"],
+        "slack": true
     },
     "secgrp_unrestricted_access": {
         "enabled": true,
@@ -75,7 +78,10 @@
         "reporting": false,
         "remediation": false,
         "remediation_accounts": ["210987654321", "654321210987"],
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "jira": true,
+        "labels": ["insecure-services"],
+        "slack": true
     },
     "user_inactivekeys": {
         "enabled": true,
@@ -85,7 +91,10 @@
         "inactive_criteria_days": 1,
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["iam-key-inactive"],
+        "slack": true
     },
     "user_keysrotation": {
         "enabled": true,
@@ -94,7 +103,10 @@
         "rotation_criteria_days": 10,
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["iam-key-rotation"],
+        "slack": true
     },
     "s3_bucket_policy": {
         "enabled": true,
@@ -102,20 +114,29 @@
         "topic_name": "hammer-describe-s3-policy-lambda",
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 7
+        "remediation_retention_period": 7,
+        "jira": true,
+        "labels": ["s3-public-policy"],
+        "slack": true
     },
     "cloudtrails": {
         "enabled": true,
         "ddb.table_name": "hammer-cloudtrails",
         "topic_name": "hammer-describe-cloudtrails-lambda",
-        "reporting": false
+        "reporting": false,
+        "jira": false,
+        "labels": ["cloudtrail-issue"],
+        "slack": false
     },
     "ebs_unencrypted_volume": {
         "enabled": true,
         "ddb.table_name": "hammer-ebs-volumes-unencrypted",
         "topic_name": "hammer-describe-ebs-unencrypted-volumes-lambda",
         "accounts": ["123456789012", "210987654321"],
-        "reporting": false
+        "reporting": false,
+        "jira": false,
+        "labels": ["ebs-unencrypted-volume"],
+        "slack": false
     },
     "ebs_public_snapshot": {
         "enabled": true,
@@ -123,7 +144,10 @@
         "topic_name": "hammer-describe-ebs-public-snapshots-lambda",
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["ebs-public-snapshot"],
+        "slack": true
     },
     "rds_public_snapshot": {
         "enabled": true,
@@ -131,14 +155,20 @@
         "topic_name": "hammer-describe-rds-public-snapshots-lambda",
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["rds-public-snapshot"],
+        "slack": true
     },
     "ec2_public_ami": {
         "enabled": true,
         "ddb.table_name": "hammer-ec2-public-ami",
         "reporting": false,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "jira": true,
+        "labels": ["public-ami"],
+        "slack": true
     },
     "sqs_public_access": {
         "enabled": true,
@@ -146,7 +176,10 @@
         "topic_name": "hammer-describe-sqs-public-policy-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["sqs-public-policy"],
+        "slack": true
     },
     "s3_encryption": {
         "enabled": true,
@@ -154,12 +187,18 @@
         "topic_name": "hammer-describe-s3-encryption-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 0
+        "remediation_retention_period": 0,
+        "jira": true,
+        "labels": ["s3-unencrypted"],
+        "slack": true
     },
     "rds_encryption": {
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
-        "reporting": true
+        "reporting": true,
+        "jira": true,
+        "labels": ["rds-unencrypted"],
+        "slack": true
     }
 }

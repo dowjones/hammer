@@ -220,8 +220,8 @@ class CreateSecurityGroupsTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='sg')
+        slack = SlackNotification(self.config, module='sg')
 
         for account_id, account_name in self.config.sg.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -455,7 +455,7 @@ class CreateSecurityGroupsTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority=priority, labels=["insecure-services"],
+                            priority=priority,
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
