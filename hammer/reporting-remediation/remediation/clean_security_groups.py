@@ -53,7 +53,7 @@ class CleanSecurityGroups(object):
                     # Adding label with "whitelisted" to jira ticket.
                     jira.add_label(
                         ticket_id=issue.jira_details.ticket,
-                        labels=IssueStatus.Whitelisted
+                        label=IssueStatus.Whitelisted.value
                     )
                     continue
 

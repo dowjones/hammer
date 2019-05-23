@@ -11,7 +11,7 @@ from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.logger import set_logging
 from library import utility
-from responses import bad_request, server_error
+from responses import bad_request
 
 
 def logger(handler):

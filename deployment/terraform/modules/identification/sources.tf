@@ -4,6 +4,12 @@ resource "aws_s3_bucket_object" "identification-cfn" {
     source = "${path.module}/../../../cf-templates/identification.json"
 }
 
+resource "aws_s3_bucket_object" "identification-nested-cfn" {
+    bucket = "${var.s3bucket}"
+    key    = "cfn/${format("identification-nested-%s.json", "${md5(file("${path.module}/../../../cf-templates/identification-nested.json"))}")}"
+    source = "${path.module}/../../../cf-templates/identification-nested.json"
+}
+
 resource "aws_s3_bucket_object" "logs-forwarder" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("logs-forwarder-%s.zip", "${md5(file("${path.module}/../../../packages/logs-forwarder.zip"))}")}"
@@ -90,4 +96,3 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     key    = "lambda/${format("rds-unencrypted-instance-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
-

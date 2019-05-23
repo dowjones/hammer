@@ -47,6 +47,12 @@ class CreatePublicAMIIssueTickets:
 
                         comment = (f"Closing {issue.status.value} AMI '{ami_id}' public access issue "
                                    f"in '{account_name} / {account_id}' account, {ami_region} region")
+                        if issue.status == IssueStatus.Whitelisted:
+                            # Adding label with "whitelisted" to jira ticket.
+                            jira.add_label(
+                                ticket_id=issue.jira_details.ticket,
+                                label=IssueStatus.Whitelisted.value
+                            )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
