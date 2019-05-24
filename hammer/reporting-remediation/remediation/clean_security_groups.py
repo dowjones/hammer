@@ -5,7 +5,7 @@ import sys
 import logging
 import argparse
 
-
+from botocore.exceptions import ClientError
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
 from library.jiraoperations import JiraReporting
@@ -22,6 +22,44 @@ class CleanSecurityGroups(object):
     """ Class to clean unrestricted security groups """
     def __init__(self, config):
         self.config = config
+
+    @staticmethod
+    def build_open_ports_table_jira(account, sg_id):
+        args = {'DryRun': False}
+        if sg_id:
+            args['GroupIds'] = [sg_id]
+        try:
+            secgroups = account.client("ec2").describe_security_groups(**args)["SecurityGroups"]
+        except ClientError as err:
+            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                logging.error(f"Access denied in {self.account} "
+                              f"(ec2:{err.operation_name})")
+            elif err.response['Error']['Code'] == "InvalidGroup.NotFound":
+                logging.error(err.response['Error']['Message'])
+                return False
+            else:
+                logging.exception(f"Failed to describe security groups in {self.account}")
+            return False
+
+        port_details = "||From Port||To Port||Protocol||CIDR||\n"
+
+        for security_group in secgroups:
+            permissions_source = security_group["IpPermissions"]
+            for ingress in permissions_source:
+                protocol = ingress["IpProtocol"]
+                if protocol == "-1" or protocol not in ["tcp", "udp", "icmp", "icmpv6", "58"]:
+                    from_port = None
+                    to_port = None
+                else:
+                    from_port = ingress.get("FromPort", 0)
+                    to_port = ingress.get("ToPort", 65535)
+                ip_ranges = [ip_range["CidrIp"] for ip_range in ingress["IpRanges"]]
+                ip_ranges += [ip_range["CidrIpv6"] for ip_range in ingress.get("Ipv6Ranges", [])]
+
+                for ip_range in ip_ranges:
+                    port_details += f"|{from_port}|{to_port}|{protocol}|{ip_range}|"
+                    port_details += "\n"
+        return port_details
 
     def clean_security_groups(self, batch=False):
         """ Class function to clean security groups which are violating aws best practices """
@@ -114,7 +152,10 @@ class CleanSecurityGroups(object):
                                            f"[{backup_path}|https://s3.console.aws.amazon.com/s3/object/{backup_bucket}/{backup_path}]. "
                                            f"Security group '{group_name} / {group_id}' `{RestrictionStatus.OpenCompletely.value}` issue "
                                            f"in '{account_name} / {account_id}' account, '{group_region}' region "
-                                           f"was remediated by hammer")
+                                           f"was remediated by hammer.")
+
+                                comment += "\n\n After remediation, Security Group has access to following ports: \n"
+                                comment += self.build_open_ports_table_jira(account, group_id)
 
                             if comment is not None:
                                 jira.remediate_issue(
