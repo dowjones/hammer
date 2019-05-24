@@ -17,7 +17,7 @@ risk_priority_mapping = {
     "High": "Critical",
     "Medium": "Major",
     "Low": "Minor",
-    "Information": "Trivial"
+    "Info": "Trivial"
 }
 
 
@@ -48,13 +48,16 @@ class JiraReporting(object):
             "summary": issue_summary,
             "description": issue_description,
             "issuetype": {"name": self.config.jira.issue_type},
-            "labels": labels,
-            "priority": {"name": risk_priority_mapping[risk]},
+            "labels": labels
         }
 
         if self.config.jira.risk_field_id:
             issue_data[self.config.jira.risk_field_id] = {
                 self.config.jira.risk_field_param: risk
+            }
+        else:
+            issue_data["priority"] = {
+                {"name": risk_priority_mapping[risk]}
             }
 
         ticket_id = self.jira.create_ticket(issue_data)
@@ -125,6 +128,7 @@ class JiraReporting(object):
 
     def add_label(self, ticket_id, label):
         self.jira.add_label(ticket_id, label)
+
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
