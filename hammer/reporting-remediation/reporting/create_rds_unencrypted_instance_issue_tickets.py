@@ -91,6 +91,8 @@ class CreateRDSUnencryptedInstanceTickets(object):
                     issue_summary = (f"RDS unencrypted instance '{instance_name}'"
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"The RDS instance is unencrypted.\n\n"
                         f"*Threat*: "
@@ -98,7 +100,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
                         f"intellectual property of the organization needs to be encrypted. Additionally, as part of the "
                         f"initiative of Encryption Everywhere, it is necessary to encrypt the data in order to ensure the "
                         f"confidentiality and integrity of the data.\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
@@ -114,7 +116,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["rds-unencrypted-instances"],
+                            risk=issue_risk, labels=["rds-unencrypted-instances"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

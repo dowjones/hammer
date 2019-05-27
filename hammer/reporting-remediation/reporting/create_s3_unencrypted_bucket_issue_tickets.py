@@ -99,6 +99,8 @@ class CreateS3UnencryptedBucketsTickets:
                     issue_summary = (f"S3 bucket '{bucket_name}' unencrypted "
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"Bucket is unencrypted.\n\n"
                         f"*Threat*: "
@@ -106,7 +108,7 @@ class CreateS3UnencryptedBucketsTickets:
                         f"intellectual property of the organization needs to be encrypted. Additionally, as part of the "
                         f"initiative of Encryption Everywhere, it is necessary to encrypt the data in order to ensure the "
                         f"confidentiality and integrity of the data.\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*S3 Bucket name*: {bucket_name}\n"
@@ -127,7 +129,7 @@ class CreateS3UnencryptedBucketsTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["s3-unencrypted"],
+                            risk=issue_risk, labels=["s3-unencrypted"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

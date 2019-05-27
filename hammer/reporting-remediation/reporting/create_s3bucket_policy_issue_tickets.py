@@ -111,11 +111,13 @@ class CreateS3BucketPolicyIssueTickets:
                     issue_summary = (f"S3 bucket '{bucket_name}' with public policy "
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"Bucket policy allows unrestricted public access.\n\n"
                         f"*Threat*: "
                         f"This creates potential security vulnerabilities by allowing anyone to add, modify, or remove items in a bucket.\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*S3 Bucket name*: {bucket_name}\n"
@@ -142,7 +144,7 @@ class CreateS3BucketPolicyIssueTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["publics3"],
+                            risk=issue_risk, labels=["publics3"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
