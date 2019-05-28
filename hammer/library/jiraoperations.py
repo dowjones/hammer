@@ -17,19 +17,19 @@ NewIssue = namedtuple('NewIssue', [
 class JiraLabels(object):
     """ Base class for JIRA tickets labeling """
     DEFAULT_LABELS = {
-        'cloudtrails': 'cloudtrail-issue',
-        'ebsSnapshot': 'ebs-public-snapshot',
-        'ebsVolume': 'ebs-unencrypted-volume',
-        'iamUserInactiveKeys': 'iam-key-inactive',
-        'iamUserKeysRotation': 'iam-key-rotation',
-        'publicAMIs': 'public-ami',
-        'rdsSnapshot': 'rds-public-snapshot',
-        'rdsEncrypt': 'rds-unencrypted',
-        's3Encrypt': 's3-unencrypted',
-        's3acl': 's3-public-acl',
-        's3policy': 's3-public-policy',
-        'sg': 'insecure-services',
-        'sqspolicy': 'sqs-public-policy'
+        'cloudtrails': ['cloudtrail-issue'],
+        'ebsSnapshot': ['ebs-public-snapshot'],
+        'ebsVolume': ['ebs-unencrypted-volume'],
+        'iamUserInactiveKeys': ['iam-key-inactive'],
+        'iamUserKeysRotation': ['iam-key-rotation'],
+        'publicAMIs': ['public-ami'],
+        'rdsSnapshot': ['rds-public-snapshot'],
+        'rdsEncrypt': ['rds-unencrypted'],
+        's3Encrypt': ['s3-unencrypted'],
+        's3acl': ['s3-public-acl'],
+        's3policy': ['s3-public-policy'],
+        'sg': ['insecure-services'],
+        'sqspolicy': ['sqs-public-policy']
     }
     def __init__(self, config, module=''):
         self.config = config
