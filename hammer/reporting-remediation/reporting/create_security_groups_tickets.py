@@ -21,6 +21,7 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
+from library.aws.elasticsearch import ElasticSearchOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -214,6 +215,24 @@ class CreateSecurityGroupsTickets(object):
 
         return elb_instance_details, in_use
 
+    @staticmethod
+    def build_elasticsearch_domains_table(es_domains):
+        in_use = False
+        elasticsearch_domain_details = ""
+
+        if len(es_domains) > 0:
+            in_use = True
+            elasticsearch_domain_details += (
+                f"\n*ElasticSearch Domain details:*\n"
+                f"||Domain Name||Domain ARN"
+                f"||VPC Id||\n")
+            for domain_details in es_domains:
+                elasticsearch_domain_details += (
+                    f"|{domain_details.domain_name}|{domain_details.domain_arn}|{domain_details.vpc_id}|\n"
+                )
+
+        return elasticsearch_domain_details, in_use
+
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
         table_name = self.config.sg.ddb_table_name
@@ -313,16 +332,17 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_es = None
                     sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
                     elb_client = account.client("elb") if account.session is not None else None
                     elbv2_client = account.client("elbv2") if account.session is not None else None
+                    elasticsearch_client = account.client("es") if account.session is not None else None
 
                     iam_client = account.client("iam") if account.session is not None else None
 
-                    rds_instance_details = elb_instance_details = None
+                    rds_instance_details = elb_instance_details = elasticsearch_domain_details = None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
@@ -344,7 +364,14 @@ class CreateSecurityGroupsTickets(object):
                         except Exception:
                             logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
+                    if elasticsearch_client is not None:
+                        try:
+                            elasticsearch_domains = ElasticSearchOperations.get_elasticsearch_details_of_sg_associated(elasticsearch_client, group_id)
+                            elasticsearch_domain_details, sg_in_use_es = self.build_elasticsearch_domains_table(elasticsearch_domains)
+                        except Exception:
+                            logging.exception(f"Failed to build ElasticSearch details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_es
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -437,6 +464,8 @@ class CreateSecurityGroupsTickets(object):
                     issue_description += f"{elb_instance_details if elb_instance_details else ''}"
 
                     issue_description += f"{instance_profile_details if instance_profile_details else ''}"
+
+                    issue_description += f"{elasticsearch_domain_details if elasticsearch_domain_details else ''}"
 
                     issue_description += (
                         f"*Recommendation*: "
