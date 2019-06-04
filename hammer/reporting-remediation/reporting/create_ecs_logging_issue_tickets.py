@@ -34,6 +34,7 @@ class CreateECSLoggingIssueTickets(object):
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSLoggingIssue)
             for issue in issues:
                 task_definition_name = issue.issue_id
+                container_name = issue.issue_details.container_name
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
@@ -91,13 +92,14 @@ class CreateECSLoggingIssueTickets(object):
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
-                        f"The ECS logging is not enabled.\n\n"
+                        f"The ECS Container's logging is not enabled.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_name}\n"
-                        f"*Task definition logging enabled*: False \n"
+                        f"*ECS Task definition's Container Name*: {container_name}\n",
+                        f"*Container's logging enabled*: False \n"
                     )
 
                     auto_remediation_date = (self.config.now + self.config.ecs_logging.issue_retention_date).date()
@@ -108,14 +110,14 @@ class CreateECSLoggingIssueTickets(object):
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Enable logging for ECS task definition. To enable logging, follow below steps: \n"
+                        f"Enable logging for ECS task definition's container. To enable logging, follow below steps: \n"
                         f"1. Open the Amazon ECS console at https://console.aws.amazon.com/ecs/. \n"
                         f"2. From the navigation bar, "
                         f"choose region that contains your task definition and choose Task Definitions.\n"
                         f"3. On the Task Definitions page, select the box to the left of the task definition to revise "
                         f"and choose Create new revision.\n"
                         f"4. On the Create new revision of Task Definition page, "
-                        f"select the existing container and enable LogConfiguration under section Storage and Logging "
+                        f"select the container and enable 'LogConfiguration' under section 'Storage and Logging' "
                         f"and then choose Update.\n"
                         f"5. Verify the information and choose Create.\n"
                     )

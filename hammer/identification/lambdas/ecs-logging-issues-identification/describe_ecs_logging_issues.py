@@ -55,6 +55,7 @@ def lambda_handler(event, context):
                     issue = ECSLoggingIssue(account_id, task_definition.name)
                     issue.issue_details.region = task_definition.account.region
                     issue.issue_details.task_definition_arn = task_definition.arn
+                    issue.issue_details.container_name = task_definition.container_name
                     issue.issue_details.tags = task_definition.tags
 
                     if config.ecs_logging.in_whitelist(account_id, task_definition.name):
