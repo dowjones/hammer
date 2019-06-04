@@ -55,6 +55,8 @@ def lambda_handler(event, context):
                     issue = ECSExternalImageSourceIssue(account_id, task_definition.name)
                     issue.issue_details.arn = task_definition.arn
                     issue.issue_details.tags = task_definition.tags
+                    issue.issue_details.container_name = task_definition.container_name
+                    issue.issue_details.image_url = task_definition.image_url
                     issue.issue_details.region = task_definition.account.region
                     if config.ecs_external_image_source.in_whitelist(account_id, task_definition.name):
                         issue.status = IssueStatus.Whitelisted
