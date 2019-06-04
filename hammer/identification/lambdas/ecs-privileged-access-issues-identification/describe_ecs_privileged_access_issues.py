@@ -55,6 +55,7 @@ def lambda_handler(event, context):
                     issue = ECSPrivilegedAccessIssue(account_id, task_definition.name)
                     issue.issue_details.arn = task_definition.arn
                     issue.issue_details.tags = task_definition.tags
+                    issue.issue_details.container_name = task_definition.container_name
                     issue.issue_details.region = task_definition.account.region
                     if config.ecs_privileged_access.in_whitelist(account_id, task_definition.name):
                         issue.status = IssueStatus.Whitelisted
