@@ -3,7 +3,7 @@ import logging
 
 from library.logger import set_logging
 from library.config import Config
-from library.aws.ecs import ECSLoggingChecker
+from library.aws.ecs import ECSChecker
 from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, ECSLoggingIssue
 from library.ddb_issues import Operations as IssueOperations
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
         logging.debug(f"ECS task definitions in DDB:\n{open_issues.keys()}")
 
-        checker = ECSLoggingChecker(account=account)
+        checker = ECSChecker(account=account)
         if checker.check():
             for task_definition in checker.task_definitions:
                 logging.debug(f"Checking {task_definition.name}")

@@ -140,38 +140,50 @@ class ECSChecker(object):
                 logging_enabled = False
                 external_image = False
                 is_privileged = False
-                task_definition = self.account.client("ecs").describe_task_definition(
-                    taskDefinition=task_definition_name
-                )['taskDefinition']
-                task_definition_arn = task_definition["taskDefinitionArn"]
-                if "containerDefinitions" in task_definition:
-                    for container_definition in task_definition['containerDefinitions']:
-                        if container_definition.get('logConfiguration') is None:
-                            logging_enabled = False
-                        else:
-                            logging_enabled = True
+                try:
+                    task_definition = self.account.client("ecs").describe_task_definition(
+                        taskDefinition=task_definition_name
+                    )['taskDefinition']
+                    task_definition_arn = task_definition["taskDefinitionArn"]
+                    if "containerDefinitions" in task_definition:
+                        for container_definition in task_definition['containerDefinitions']:
+                            if container_definition.get('logConfiguration') is None:
+                                logging_enabled = False
+                            else:
+                                logging_enabled = True
 
-                        if container_definition['privileged']:
-                            is_privileged = True
-                        else:
-                            is_privileged = False
+                            container_privileged_details = container_definition.get('privileged')
+                            if container_privileged_details is not None:
+                                if container_definition['privileged']:
+                                    is_privileged = True
+                                else:
+                                    is_privileged = False
 
-                        image = container_definition['image']
-                        if image.split("/")[0].split(".")[-2:] != ['amazonaws', 'com']:
-                            external_image = True
-                        else:
-                            external_image = False
+                            image = container_definition.get('image')
+                            if image is not None:
+                                if image.split("/")[0].split(".")[-2:] != ['amazonaws', 'com']:
+                                    external_image = True
+                                else:
+                                    external_image = False
 
-                if "Tags" in task_definition:
-                    tags = task_definition["Tags"]
-                task_definition_details = ECSTaskDefinitions(account=self.account,
-                                                             name=task_definition_name,
-                                                             arn=task_definition_arn,
-                                                             tags=tags,
-                                                             is_logging=logging_enabled,
-                                                             is_privileged=is_privileged,
-                                                             external_image=external_image
-                                                             )
-                self.task_definitions.append(task_definition_details)
+                    if "Tags" in task_definition:
+                        tags = task_definition["Tags"]
+                    task_definition_details = ECSTaskDefinitions(account=self.account,
+                                                                 name=task_definition_name,
+                                                                 arn=task_definition_arn,
+                                                                 tags=tags,
+                                                                 is_logging=logging_enabled,
+                                                                 is_privileged=is_privileged,
+                                                                 external_image=external_image
+                                                                 )
+                    self.task_definitions.append(task_definition_details)
+                except ClientError as err:
+                    if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                        logging.error(f"Access denied in {self.account} "
+                                      f"(ecs:{err.operation_name})")
+                    else:
+                        logging.exception(f"Failed to describe task definitions in {self.account} "
+                                          f"for task {task_definition_name}")
+                    continue
 
         return True
