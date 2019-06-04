@@ -33,7 +33,7 @@ class CreateECSLoggingIssueTickets(object):
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSLoggingIssue)
             for issue in issues:
-                task_definition_arn = issue.issue_id
+                task_definition_name = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
@@ -43,9 +43,9 @@ class CreateECSLoggingIssueTickets(object):
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} ECS logging enabled '{task_definition_arn}' issue")
+                        logging.debug(f"Closing {issue.status.value} ECS logging enabled '{task_definition_name}' issue")
 
-                        comment = (f"Closing {issue.status.value} ECS logging enabled '{task_definition_arn}' issue "
+                        comment = (f"Closing {issue.status.value} ECS logging enabled '{task_definition_name}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
@@ -67,9 +67,9 @@ class CreateECSLoggingIssueTickets(object):
                         IssueOperations.set_status_closed(ddb_table, issue)
                     # issue.status != IssueStatus.Closed (should be IssueStatus.Open)
                     elif issue.timestamps.updated > issue.timestamps.reported:
-                        logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {task_definition_arn}")
+                        logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {task_definition_name}")
                         slack.report_issue(
-                            msg=f"ECS logging '{task_definition_arn}' issue is changed "
+                            msg=f"ECS logging '{task_definition_name}' issue is changed "
                                 f"in '{account_name} / {account_id}' account, '{region}' region"
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             owner=owner,
@@ -78,16 +78,16 @@ class CreateECSLoggingIssueTickets(object):
                         )
                         IssueOperations.set_status_updated(ddb_table, issue)
                     else:
-                        logging.debug(f"No changes for '{task_definition_arn}'")
+                        logging.debug(f"No changes for '{task_definition_name}'")
                 # issue has not been reported yet
                 else:
-                    logging.debug(f"Reporting ECS logging '{task_definition_arn}' issue")
+                    logging.debug(f"Reporting ECS logging '{task_definition_name}' issue")
 
                     owner = tags.get("owner", None)
                     bu = tags.get("bu", None)
                     product = tags.get("product", None)
 
-                    issue_summary = (f"ECS logging is not enabled for '{task_definition_arn}'"
+                    issue_summary = (f"ECS logging is not enabled for '{task_definition_name}'"
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
@@ -96,7 +96,9 @@ class CreateECSLoggingIssueTickets(object):
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
-                        f"*ECS Task Definition*: {task_definition_arn}\n")
+                        f"*ECS Task Definition*: {task_definition_name}\n"
+                        f"*Task definition logging enabled*: False \n"
+                    )
 
                     auto_remediation_date = (self.config.now + self.config.ecs_logging.issue_retention_date).date()
                     issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
@@ -106,7 +108,17 @@ class CreateECSLoggingIssueTickets(object):
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Enable logging for ECS task definition.")
+                        f"Enable logging for ECS task definition. To enable logging, follow below steps: \n"
+                        f"1. Open the Amazon ECS console at https://console.aws.amazon.com/ecs/. \n"
+                        f"2. From the navigation bar, "
+                        f"choose region that contains your task definition and choose Task Definitions.\n"
+                        f"3. On the Task Definitions page, select the box to the left of the task definition to revise "
+                        f"and choose Create new revision.\n"
+                        f"4. On the Create new revision of Task Definition page, "
+                        f"select the existing container and enable LogConfiguration under section Storage and Logging "
+                        f"and then choose Update.\n"
+                        f"5. Verify the information and choose Create.\n"
+                    )
 
                     try:
                         response = jira.add_issue(
