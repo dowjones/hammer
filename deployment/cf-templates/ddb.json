@@ -464,14 +464,22 @@
             "Properties": {
                 "AttributeDefinitions": [
                     {
-                        "AttributeName": "request_id",
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
                         "AttributeType": "S"
                     }
                 ],
                 "KeySchema": [
                     {
-                        "AttributeName": "request_id",
+                        "AttributeName": "account_id",
                         "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
                     }
                 ],
                 "ProvisionedThroughput": {
