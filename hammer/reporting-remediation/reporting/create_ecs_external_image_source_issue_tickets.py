@@ -100,8 +100,8 @@ class CreateECSExternalImageSourceIssueTickets(object):
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_name}\n"
                         f"*ECS Task definition's Container Name*: {container_name}\n"
-                        f"*ECS container image Source*: External"
-                        f"*Container image url*: {image_url} \n"
+                        f"*ECS container image Source*: External \n"
+                        f"*ECS container image url*: {image_url} \n"
                     )
 
                     auto_remediation_date = (self.config.now + self.config.ecs_external_image_source.issue_retention_date).date()
