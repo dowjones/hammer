@@ -1,0 +1,267 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer identification child stack",
+    "Parameters": {
+        "SourceS3Bucket": {
+            "Type": "String",
+            "Default": ""
+        },
+        "IdentificationIAMRole": {
+            "Type": "String",
+            "Default": "cloudsec-master-id"
+        },
+        "IdentificationCheckRateExpression": {
+          "Type": "String"
+        },
+        "LambdaSubnets": {
+            "Type" : "String",
+            "Description" : "Comma-separated list, without spaces. Leave empty to run lambdas in default system-managed VPC (recommended). All specified security groups and subnets must be in the same VPC.",
+            "Default": ""
+        },
+        "LambdaSecurityGroups": {
+            "Type" : "String",
+            "Description" : "Comma-separated list, without spaces. Leave empty to run lambdas with default access rules (recommended). All specified security groups and subnets must be in the same VPC.",
+            "Default": ""
+        },
+        "IdentificationLambdaSource": {
+            "Type": "String",
+            "Default": "sg-issues-identification.zip"
+        },
+        "InitiateLambdaDescription": {
+            "Type": "String",
+            "Default": "Lambda that triggers the process of issues identification"
+        },
+        "EvaluateLambdaDescription": {
+            "Type": "String",
+            "Default": "Lambda that performs issues identification"
+        },
+        "InitiateLambdaName": {
+            "Type": "String"
+        },
+        "EvaluateLambdaName": {
+            "Type": "String"
+        },
+        "InitiateLambdaHandler": {
+            "Type": "String"
+        },
+        "EvaluateLambdaHandler": {
+            "Type": "String"
+        },
+        "EvaluateLambdaMemorySize": {
+            "Type": "String",
+            "Default": "256"
+        },
+        "LambdaLogsForwarderArn": {
+            "Type": "String"
+        },
+        "EventRuleDescription": {
+            "Type": "String",
+            "Default": "Triggers initiate lambda"
+        },
+        "EventRuleName": {
+            "Type": "String"
+        },
+        "SNSDisplayName": {
+            "Type": "String"
+        },
+        "SNSTopicName": {
+            "Type": "String"
+        },
+        "SNSIdentificationErrors": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "LambdaSubnetsEmpty": {
+            "Fn::Equals": [ {"Ref": "LambdaSubnets"}, "" ]
+        },
+        "LambdaSecurityGroupsEmpty": {
+            "Fn::Equals": [ {"Ref": "LambdaSecurityGroups"}, "" ]
+        }
+    },
+    "Resources": {
+        "LambdaInitiateEvaluation": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["SNSNotifyLambdaEvaluate", "LogGroupLambdaInitiateEvaluation"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "IdentificationLambdaSource" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "SNS_ARN": { "Ref": "SNSNotifyLambdaEvaluate" }
+                    }
+                },
+                "Description": { "Ref": "InitiateLambdaDescription" },
+                "FunctionName": { "Ref": "InitiateLambdaName" },
+                "Handler": {"Ref":  "InitiateLambdaHandler"},
+                "MemorySize": 128,
+                "Timeout": "300",
+                "Role": { "Ref": "IdentificationIAMRole" },
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaInitiateEvaluation": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/", { "Ref": "InitiateLambdaName" } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaInitiateEvaluation": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LogGroupLambdaInitiateEvaluation"],
+            "Properties" : {
+                "DestinationArn" : { "Ref" : "LambdaLogsForwarderArn" },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaInitiateEvaluation" }
+            }
+        },
+        "LambdaEvaluate": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaEvaluate"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "IdentificationLambdaSource" }
+                },
+                "VpcConfig": {
+                    "SecurityGroupIds": {
+                        "Fn::If": [
+                           "LambdaSecurityGroupsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSecurityGroups" }] }
+                        ]
+                    },
+                    "SubnetIds": {
+                        "Fn::If": [
+                           "LambdaSubnetsEmpty",
+                            [],
+                            { "Fn::Split" : [",", { "Ref": "LambdaSubnets" }] }
+                        ]
+                    }
+                },
+                "Description": {"Ref":  "EvaluateLambdaDescription"},
+                "FunctionName": { "Ref": "EvaluateLambdaName" },
+                "Handler": {"Ref":  "EvaluateLambdaHandler"},
+                "MemorySize": {"Ref":  "EvaluateLambdaMemorySize"},
+                "Timeout": "300",
+                "Role": { "Ref": "IdentificationIAMRole" },
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaEvaluate": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/", { "Ref": "EvaluateLambdaName"} ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "SubscriptionFilterLambdaLambdaEvaluate": {
+            "Type" : "AWS::Logs::SubscriptionFilter",
+            "DependsOn": ["LogGroupLambdaEvaluate"],
+            "Properties" : {
+                "DestinationArn" : { "Ref" : "LambdaLogsForwarderArn" },
+                "FilterPattern" : "[level != START && level != END && level != DEBUG, ...]",
+                "LogGroupName" : { "Ref": "LogGroupLambdaEvaluate" }
+            }
+        },
+        "EventInitiateEvaluation": {
+            "Type": "AWS::Events::Rule",
+            "DependsOn": ["LambdaInitiateEvaluation"],
+            "Properties": {
+                "Description": {"Ref":  "EventRuleDescription"},
+                "Name": {"Ref":  "EventRuleName"},
+                "ScheduleExpression": { "Ref": "IdentificationCheckRateExpression" },
+                "State": "ENABLED",
+                "Targets": [
+                  {
+                    "Arn": { "Fn::GetAtt": ["LambdaInitiateEvaluation", "Arn"] },
+                    "Id": {"Ref":  "LambdaInitiateEvaluation"}
+                  }
+                ]
+            }
+        },
+        "PermissionToInvokeLambdaInitiateEvaluationCloudWatchEvents": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["LambdaInitiateEvaluation", "EventInitiateEvaluation"],
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaInitiateEvaluation" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["EventInitiateEvaluation", "Arn"] }
+            }
+        },
+        "SNSNotifyLambdaEvaluate": {
+            "Type": "AWS::SNS::Topic",
+            "DependsOn": ["LambdaEvaluate"],
+            "Properties": {
+                "DisplayName": { "Ref": "SNSDisplayName" },
+                "TopicName": { "Ref": "SNSTopicName" },
+                "Subscription": [{
+                    "Endpoint": {
+                        "Fn::GetAtt": ["LambdaEvaluate", "Arn"]
+                    },
+                    "Protocol": "lambda"
+                }]
+            }
+        },
+        "PermissionToInvokeLambdaEvaluateSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "DependsOn": ["SNSNotifyLambdaEvaluate", "LambdaEvaluate"],
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "sns.amazonaws.com",
+                "SourceArn": { "Ref": "SNSNotifyLambdaEvaluate" },
+                "FunctionName": { "Fn::GetAtt": ["LambdaEvaluate", "Arn"] }
+            }
+        },
+        "AlarmErrorsLambdaInitiateEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["LambdaInitiateEvaluation"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaInitiateEvaluation" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaInitiateEvaluation" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmErrorsLambdaEvaluation": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DependsOn": ["LambdaEvaluate"],
+            "Properties": {
+                "AlarmActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "OKActions": [ { "Ref": "SNSIdentificationErrors" } ],
+                "AlarmName": {"Fn::Join": ["/", [ { "Ref": "LambdaEvaluate" }, "LambdaError" ] ]},
+                "EvaluationPeriods": 1,
+                "Namespace": "AWS/Lambda",
+                "MetricName": "Errors",
+                "Dimensions": [
+                    {
+                        "Name": "FunctionName",
+                        "Value": { "Ref": "LambdaEvaluate" }
+                    }
+                ],
+                "Period": 3600,
+                "Statistic": "Maximum",
+                "ComparisonOperator" : "GreaterThanThreshold",
+                "Threshold": 0,
+                "TreatMissingData": "notBreaching"
+            }
+        }
+    }
+}
