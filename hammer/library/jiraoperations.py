@@ -55,10 +55,9 @@ class JiraReporting(object):
             issue_data[self.config.jira.risk_field_id] = {
                 self.config.jira.risk_field_param: risk
             }
+            issue_data["priority"] = {"name": 'Major'}
         else:
-            issue_data["priority"] = {
-                {"name": risk_priority_mapping[risk]}
-            }
+            issue_data["priority"] = {"name": risk_priority_mapping[risk]}
 
         ticket_id = self.jira.create_ticket(issue_data)
 
