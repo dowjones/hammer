@@ -1,10 +1,9 @@
 import logging
 
-
 from botocore.exceptions import ClientError
 from collections import namedtuple
 from library.utility import timeit
-
+from library.aws.utility import convert_tags
 
 # structure which describes Elastic search domains
 ElasticSearchDomain_Details = namedtuple('ElasticSearchDomain', [
@@ -14,7 +13,7 @@ ElasticSearchDomain_Details = namedtuple('ElasticSearchDomain', [
     'domain_arn',
     # vpc_id
     'vpc_id'
-    ])
+])
 
 
 class ESDomainDetails(object):
@@ -23,7 +22,7 @@ class ESDomainDetails(object):
 
     """
 
-    def __init__(self, account, name, id, arn, is_logging=None, encrypted=None):
+    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted=None):
         """
         :param account: `Account` instance where ECS task definition is present
 
@@ -38,6 +37,7 @@ class ESDomainDetails(object):
         self.arn = arn
         self.is_logging = is_logging
         self.encrypted = encrypted
+        self.tags = convert_tags(tags)
 
 
 class ElasticSearchOperations:
@@ -101,9 +101,11 @@ class ESDomainChecker:
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
+        domain_details = []
         try:
             es_client = self.account.client("es")
             if ids is None:
+                ids = []
                 domain_names_list = es_client.list_domain_names()["DomainNames"]
                 for domain_name in domain_names_list:
                     ids.append(domain_name["DomainName"])
@@ -116,7 +118,7 @@ class ESDomainChecker:
                 logging.error(f"Access denied in {self.account} "
                               f"(ec2:{err.operation_name})")
             else:
-                logging.exception(f"Failed to describe snapshots in {self.account}")
+                logging.exception(f"Failed to describe elasticsearch domains in {self.account}")
             return False
 
         domain_encrypted = False
@@ -125,17 +127,25 @@ class ESDomainChecker:
             domain_name = domain_detail["DomainName"]
             domain_id = domain_detail["DomainId"]
             domain_arn = domain_detail["ARN"]
-            if domain_detail["EncryptionAtRestOptions"]["Enabled"] or \
-                    domain_detail["NodeToNodeEncryptionOptions"]["Enabled"]:
+            encryption_at_rest = domain_detail.get("EncryptionAtRestOptions")
+            node_to_node_encryption = domain_detail.get("NodeToNodeEncryptionOptions")
+            if encryption_at_rest and encryption_at_rest["Enabled"]:
+                domain_encrypted = True
+            elif node_to_node_encryption and node_to_node_encryption["Enabled"]:
                 domain_encrypted = True
 
-            if domain_detail["LogPublishingOptions"]["Options"]:
+            logging_details = domain_detail.get("LogPublishingOptions")
+
+            if logging_details and logging_details["Options"]:
                 is_logging = True
+
+            tags = es_client.list_tags(ARN=domain_arn)["TagList"]
 
             domain = ESDomainDetails(self.account,
                                      name=domain_name,
                                      id=domain_id,
                                      arn=domain_arn,
+                                     tags=tags,
                                      is_logging=is_logging,
                                      encrypted=domain_encrypted)
             self.domains.append(domain)

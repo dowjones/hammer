@@ -1,20 +1,17 @@
 """
-Class to create elasticsearch unencryption issue tickets.
+Class to create Elasticsearch unencrypted domain issue tickets.
 """
 import sys
 import logging
 
 
-from collections import Counter
 from library.logger import set_logging, add_cw_logging
 from library.aws.utility import Account
 from library.config import Config
 from library.jiraoperations import JiraReporting, JiraOperations
 from library.slack_utility import SlackNotification
-from library.aws.ec2 import EC2Operations
 from library.ddb_issues import IssueStatus, ESEncryptionIssue
 from library.ddb_issues import Operations as IssueOperations
-from library.utility import empty_converter, list_converter
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -101,14 +98,18 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    issue_description += "*Recommendation*: Encrypt Elasticsearch domain. " \
-                                         "To enable encryption follow below steps: " \
-                                         "1. Choose to create new domain. \n" \
-                                         "2. Enable node-node encryption or encryption at rest options.\n" \
-                                         "3. Fill other details and navigate to review page. \n" \
-                                         "4. On the Review page, review your domain configuration, " \
-                                         "and then choose 'Confirm' to create new domain. \n " \
-                                         "5. After creation of new domain, migrate your data to new domain. \n "
+                    auto_remediation_date = (self.config.now + self.config.esEncrypt.issue_retention_date).date()
+                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+
+                    issue_description += (
+                        f"*Recommendation*: Encrypt Elasticsearch domain. To enable encryption follow below steps: \n"
+                        f"1. Choose to create new domain. \n"
+                        f"2. Enable node-node encryption or encryption at rest options.\n"
+                        f"3. Fill other domain configuration details and navigate to review page. \n"
+                        f"4. On the Review page, review your domain configuration, and then choose 'Confirm' to "
+                        f"create new domain. \n "
+                        f"5. After creation of new domain, migrate your data to new domain. \n "
+                    )
 
                     issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' "
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")

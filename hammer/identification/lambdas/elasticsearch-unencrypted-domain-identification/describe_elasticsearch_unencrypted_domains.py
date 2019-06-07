@@ -57,6 +57,7 @@ def lambda_handler(event, context):
                     issue.issue_details.region = domain.account.region
                     issue.issue_details.id = domain.id
                     issue.issue_details.arn = domain.arn
+                    issue.issue_details.tags = domain.tags
 
                     if config.esEncrypt.in_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Whitelisted
@@ -76,7 +77,8 @@ def lambda_handler(event, context):
             api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
             DDB.track_progress(api_table, request_id)
     except Exception:
-        logging.exception(f"Failed to check Elasticsearch unencrypted domains in '{region}' for '{account_id} ({account_name})'")
+        logging.exception(f"Failed to check Elasticsearch unencrypted domains "
+                          f"in '{region}' for '{account_id} ({account_name})'")
 
     # push SNS messages until the list with regions to check is empty
     if len(payload['regions']) > 0:
