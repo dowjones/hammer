@@ -9,7 +9,7 @@
         "issue_type": "Task",
         "text_field_character_limit": 32767,
         "risk_field_id": "",
-        "risk_field_param": "",
+        "risk_field_param": ""
     },
     "slack": {
         "enabled": true,

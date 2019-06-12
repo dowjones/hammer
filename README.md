@@ -19,6 +19,11 @@ Dow Jones Hammer documentation is available via GitHub Pages at [https://dowjone
 * [EBS Unencrypted Volumes](https://dowjones.github.io/hammer/playbook7_ebs_unencrypted_volumes.html)
 * [EBS Public Snapshots](https://dowjones.github.io/hammer/playbook8_ebs_snapshots_public.html)
 * [RDS Public Snapshots](https://dowjones.github.io/hammer/playbook9_rds_snapshots_public.html)
+* [SQS Public Policy Access](https://dowjones.github.io/hammer/playbook10_sqs_public_policy.html)
+* [S3 Unencrypted Buckets](https://dowjones.github.io/hammer/playbook11_s3_unencryption.html)
+* [RDS Unencrypted Instances](https://dowjones.github.io/hammer/playbook12_rds_unencryption.html)
+* [AMIs Public Access](https://dowjones.github.io/hammer/playbook13_amis_public_access.html)
+
 
 ## Technologies
 * Python 3.6
