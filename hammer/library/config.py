@@ -66,6 +66,9 @@ class Config(object):
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
 
+        # Elasticsearch publicly accessed domain issue config
+        self.esPublicAccess = ModuleConfig(self._config, "es_public_access_domain")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

@@ -96,3 +96,8 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     key    = "lambda/${format("rds-unencrypted-instance-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
+resource "aws_s3_bucket_object" "elasticsearch-public-access-domain-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("elasticsearch-public-access-domain-identification-%s.zip", "${md5(file("${path.module}/../../../packages/elasticsearch-public-access-domain-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/elasticsearch-public-access-domain-identification.zip"
+}
