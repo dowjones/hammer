@@ -1,5 +1,6 @@
 import json
 import logging
+import pathlib
 
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
@@ -66,6 +67,48 @@ class ElasticSearchOperations:
             AccessPolicies=policy_json,
         )
 
+    def retrieve_loggroup_arn(self, cw_client, domain_name):
+        """
+        
+        :param cw_client: cloudwatch logs boto3 client
+        :param domain_name: Elasticsearch domain name
+        :return: 
+        """
+        log_groups = cw_client.describe_log_groups()
+        domain_log_group_name = "/aws/aes/domains/" + domain_name + "/application-logs"
+        log_group_arn = None
+        for log_group in log_groups["logGroups"]:
+            log_group_name = log_group["logGroupName"]
+            if log_group_name == domain_log_group_name:
+                log_group_arn = log_group["arn"]
+
+        if not log_group_arn:
+            cw_client.create_log_group(logGroupName=domain_log_group_name)
+            self.retrieve_loggroup_arn(cw_client, domain_name)
+
+        return log_group_arn
+
+    def set_domain_logging(self, es_client, cw_client, domain_name):
+        """
+        
+        :param es_client: elastic search boto3 client
+        :param cw_client: cloudwatch logs boto3 client
+        :param domain_name: elastic search domain name
+        :return: 
+        """
+        log_group_arn = self.retrieve_loggroup_arn(cw_client, domain_name)
+        es_client.update_elasticsearch_domain_config(
+            DomainName=domain_name,
+            LogPublishingOptions={
+                'ES_APPLICATION_LOGS':
+                    {
+                        'CloudWatchLogsLogGroupArn': log_group_arn,
+                        'Enabled': True
+                    }
+
+            }
+        )
+
     @classmethod
     def validate_access_policy(cls, policy_details):
         """
@@ -121,6 +164,7 @@ class ESDomainDetails(object):
         self.is_logging = is_logging
         self.encrypted = encrypted
         self._policy = json.loads(policy) if policy else {}
+        self.backup_filename = pathlib.Path(f"{self.name}.json")
         self.tags = convert_tags(tags)
 
     @property
@@ -168,9 +212,22 @@ class ESDomainDetails(object):
         """
         restricted_policy = S3Operations.restrict_policy(self._policy)
         try:
-            ElasticSearchOperations.put_domain_policy(self.account.client(""), self.name, restricted_policy)
+            ElasticSearchOperations.put_domain_policy(self.account.client("es"), self.name, restricted_policy)
         except Exception:
             logging.exception(f"Failed to put {self.name} restricted policy")
+            return False
+
+        return True
+
+    def set_logging(self):
+        """
+        
+        :return: 
+        """
+        try:
+            ElasticSearchOperations.set_domain_logging(self.account.client("es"), self.account.client("logs"), self.name)
+        except Exception:
+            logging.exception(f"Failed to enable {self.name} logging")
             return False
 
         return True
@@ -194,7 +251,7 @@ class ESDomainChecker:
         :return: `Elasticsearch Domain` by id
         """
         for domain in self.domains:
-            if domain.id == id:
+            if domain.name == id:
                 return domain
         return None
 
@@ -242,8 +299,14 @@ class ESDomainChecker:
 
             logging_details = domain_detail.get("LogPublishingOptions")
 
-            if logging_details and logging_details["Options"]:
-                is_logging = True
+            if logging_details:
+                index_logs = logging_details.get("INDEX_SLOW_LOGS")
+                search_logs = logging_details.get("SEARCH_SLOW_LOGS")
+                error_logs = logging_details.get("ES_APPLICATION_LOGS")
+                if (index_logs and index_logs["Enable"]) \
+                        or (search_logs and search_logs["Enable"]) \
+                        or (error_logs and error_logs["Enable"]):
+                    is_logging = True
 
             tags = es_client.list_tags(ARN=domain_arn)["TagList"]
 
