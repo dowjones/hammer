@@ -27,7 +27,8 @@
                         "SourceIdentificationEBSVolumes",
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
-                        "SourceIdentificationAMIPublicAccess"
+                        "SourceIdentificationAMIPublicAccess",
+						"SourceIdentificationElasticSearchLogging",
                     ]
                 },
                 {
@@ -92,7 +93,11 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
-                }
+                },
+                "SourceIdentificationElasticSearchLogging":{
+                    "dafault": "Relative path to Elasticsearch domain logging sources"
+                },
+
             }
         }
     },
@@ -188,7 +193,11 @@
         "SourceIdentificationRDSEncryption": {
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
-        }
+        },
+        "SourceIdentificationElasticSearchLogging": {
+            "Type": "String",
+            "Default": "elasticsearch-domain-logging-issues-identification.zip"
+        },
     },
     "Conditions": {
         "LambdaSubnetsEmpty": {
@@ -244,6 +253,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricESLoggingError": {
+                "value": "ESLoggingError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -322,6 +334,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameESLogging": {
+                "value": "describe-es-logging-sns"
+            },
+            "SNSTopicNameESLogging": {
+                "value": "describe-es-logging-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -406,6 +424,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateESLoggingLambdaFunctionName": {
+                "value": "initiate-elasticsearch-logging"
+            },
+            "IdentifyESLoggingLambdaFunctionName": {
+                "value": "describe-elasticsearch-logging"
             }
         }
     },
@@ -1094,6 +1118,46 @@
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateESLogging": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationElasticSearchLogging" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify Elasticsearch domain logging issues.",
+                    "EvaluateLambdaDescription": "Lambda function to describe Elasticsearch domain logging issues.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateESLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyESLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_elasticsearch_domains_logging_issues.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_elasticsearch_domains_logging_issues.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Elasticsearch domain logging evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationESLogging"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameESLogging", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESLogging", "value"] } ]
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
