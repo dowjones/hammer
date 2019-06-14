@@ -75,7 +75,6 @@ class CleanElasticSearchPolicyPermissions:
                     try:
                         account = Account(id=account_id,
                                           name=account_name,
-                                          region=issue.issue_details.region,
                                           role_name=self.config.aws.role_name_reporting)
                         if account.session is None:
                             continue
@@ -85,7 +84,7 @@ class CleanElasticSearchPolicyPermissions:
                         domain_details = checker.get_domain(domain_name)
                         if domain_details is None:
                             logging.debug(f"Elasticsearch domain {domain_name} was removed by user")
-                        elif not domain_details.public:
+                        elif not domain_details.public_by_policy:
                             logging.debug(f"Elasticsearch domain {domain_name} policy issue was remediated by user")
                         else:
                             if not batch and \
