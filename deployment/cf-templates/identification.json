@@ -28,7 +28,7 @@
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
                         "SourceIdentificationAMIPublicAccess",
-						"SourceIdentificationElasticSearchLogging",
+						"SourceIdentificationElasticSearchLogging"
                     ]
                 },
                 {
@@ -96,7 +96,7 @@
                 },
                 "SourceIdentificationElasticSearchLogging":{
                     "dafault": "Relative path to Elasticsearch domain logging sources"
-                },
+                }
 
             }
         }
@@ -197,7 +197,7 @@
         "SourceIdentificationElasticSearchLogging": {
             "Type": "String",
             "Default": "elasticsearch-domain-logging-issues-identification.zip"
-        },
+        }
     },
     "Conditions": {
         "LambdaSubnetsEmpty": {
