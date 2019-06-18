@@ -41,7 +41,6 @@ class CleanElasticSearchDomainLogging:
                 domain_name = issue.issue_id
 
                 in_whitelist = self.config.esLogging.in_whitelist(account_id, domain_name)
-                #in_fixlist = self.config.esLogging.in_fixnow(account_id, domain_name)
 
                 if in_whitelist:
                     logging.debug(f"Skipping {domain_name} (in whitelist)")
@@ -52,9 +51,6 @@ class CleanElasticSearchDomainLogging:
                         label=IssueStatus.Whitelisted.value
                     )
                     continue
-                # if not in_fixlist:
-                #     logging.debug(f"Skipping {domain_name} (not in fixlist)")
-                #     continue
 
                 if issue.timestamps.reported is None:
                     logging.debug(f"Skipping '{domain_name}' (was not reported)")

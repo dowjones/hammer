@@ -8,29 +8,29 @@ from library.aws.utility import Sns
 
 
 def lambda_handler(event, context):
-    """ Lambda handler to initiate to find publicly accessible elasticsearch domains """
+    """ Lambda handler to initiate to find elasticsearch domains logging issue """
     set_logging(level=logging.INFO)
-    logging.debug("Initiating publicly accessible Elasticsearch domains checking")
+    logging.debug("Initiating Elasticsearch domains logging issue checking")
 
     try:
         sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
-        if not config.esPublicAccess.enabled:
-            logging.debug("Elasticsearch publicly accessible domains checking disabled")
+        if not config.esLogging.enabled:
+            logging.debug("Elasticsearch domains logging issue checking disabled")
             return
 
-        logging.debug("Iterating each account to initiate Elasticsearch publicly accessible domains checking")
-        for account_id, account_name in config.esPublicAccess.accounts.items():
+        logging.debug("Iterating each account to initiate Elasticsearch domains logging issue checking")
+        for account_id, account_name in config.esLogging.accounts.items():
             payload = {"account_id": account_id,
                        "account_name": account_name,
                        "regions": config.aws.regions,
                        "sns_arn": sns_arn
                       }
-            logging.debug(f"Initiating Elasticsearch publicly accessible domains checking for '{account_name}'")
+            logging.debug(f"Initiating Elasticsearch domains logging issue checking for '{account_name}'")
             Sns.publish(sns_arn, payload)
     except Exception:
-        logging.exception("Error occurred while initiation of Elasticsearch publicly accessible domains checking")
+        logging.exception("Error occurred while initiation of Elasticsearch domains logging issue checking")
         return
 
-    logging.debug("Elasticsearch publicly accessible domains checking initiation done")
+    logging.debug("Elasticsearch domains logging issue checking initiation done")
