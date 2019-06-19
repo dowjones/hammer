@@ -119,3 +119,9 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+
+
+    - title: Elasticsearch Domains Logging issues
+      url: /playbook23_elasticsearch_logging.html
+      output: web, pdf
+
