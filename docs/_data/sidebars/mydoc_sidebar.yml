@@ -119,3 +119,7 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+
+    - title: Elasticsearch Domains Public Access Policy issues
+      url: /playbook22_elasticsearch_public_access.html
+      output: web, pdf

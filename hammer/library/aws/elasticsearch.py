@@ -67,28 +67,56 @@ class ElasticSearchOperations:
             AccessPolicies=policy_json,
         )
 
-    def retrieve_loggroup_arn(self, cw_client, domain_name):
+    @staticmethod
+    def retrieve_loggroup_arn(cw_client, domain_log_group_name):
         """
+        This method used to retrieve cloud watch log group arn details if log group is available. If not, create a 
+         cloudwatch log group and returns arn of newly created log group
         
         :param cw_client: cloudwatch logs boto3 client
-        :param domain_name: Elasticsearch domain name
+        :param domain_log_group_name: Elasticsearch domain's log group name
         :return: 
         """
         log_groups = cw_client.describe_log_groups()
-        domain_log_group_name = "/aws/aes/domains/" + domain_name + "/application-logs"
+
         log_group_arn = None
         for log_group in log_groups["logGroups"]:
             log_group_name = log_group["logGroupName"]
             if log_group_name == domain_log_group_name:
                 log_group_arn = log_group["arn"]
 
-        if not log_group_arn:
-            cw_client.create_log_group(logGroupName=domain_log_group_name)
-            self.retrieve_loggroup_arn(cw_client, domain_name)
+        if log_group_arn:
+            """
+            In order to successfully deliver the logs to your CloudWatch Logs log group, 
+            Amazon Elasticsearch Service (AES) will need access to two CloudWatch Logs API calls:
+                1. CreateLogStream: Create a CloudWatch Logs log stream for the log group you specified
+                2. PutLogEvents: Deliver CloudTrail events to the CloudWatch Logs log stream
 
+            Adding resource policy that grants above access.
+            """
+            policy_name = "AES-"+domain_log_group_name+"-Application-logs"
+            policy_doc = {}
+            statement = {}
+            principal = {}
+            action = []
+            principal["Service"] = "es.amazonaws.com"
+            action.append("logs:PutLogEvents")
+            action.append("logs:CreateLogStream")
+            statement["Effect"] = "Allow"
+            statement["Principal"] = principal
+            statement["Action"] = action
+            statement["Resource"] = log_group_arn
+
+            policy_doc["Statement"] = statement
+
+            cw_client.put_resource_policy(
+                policyName=policy_name,
+                policyDocument=str(json.dumps(policy_doc))
+            )
         return log_group_arn
 
-    def set_domain_logging(self, es_client, cw_client, domain_name):
+    @staticmethod
+    def set_domain_logging(es_client, cw_client, domain_name):
         """
         
         :param es_client: elastic search boto3 client
@@ -96,16 +124,20 @@ class ElasticSearchOperations:
         :param domain_name: elastic search domain name
         :return: 
         """
-        log_group_arn = self.retrieve_loggroup_arn(cw_client, domain_name)
+        domain_log_group_name = "/aws/aes/domains/" + domain_name + "/application-logs"
+        log_group_arn = ElasticSearchOperations.retrieve_loggroup_arn(cw_client, domain_log_group_name)
+        if not log_group_arn:
+            cw_client.create_log_group(logGroupName=domain_log_group_name)
+            log_group_arn = ElasticSearchOperations.retrieve_loggroup_arn(cw_client, domain_log_group_name)
+
         es_client.update_elasticsearch_domain_config(
             DomainName=domain_name,
             LogPublishingOptions={
                 'ES_APPLICATION_LOGS':
-                    {
-                        'CloudWatchLogsLogGroupArn': log_group_arn,
-                        'Enabled': True
-                    }
-
+                {
+                    'CloudWatchLogsLogGroupArn': log_group_arn,
+                    'Enabled': True
+                }
             }
         )
 
@@ -284,9 +316,9 @@ class ESDomainChecker:
                 logging.exception(f"Failed to describe elasticsearch domains in {self.account}")
             return False
 
-        domain_encrypted = False
-        is_logging = False
         for domain_detail in domain_details:
+            is_logging = False
+            domain_encrypted = False
             domain_name = domain_detail["DomainName"]
             domain_id = domain_detail["DomainId"]
             domain_arn = domain_detail["ARN"]
@@ -303,9 +335,9 @@ class ESDomainChecker:
                 index_logs = logging_details.get("INDEX_SLOW_LOGS")
                 search_logs = logging_details.get("SEARCH_SLOW_LOGS")
                 error_logs = logging_details.get("ES_APPLICATION_LOGS")
-                if (index_logs and index_logs["Enable"]) \
-                        or (search_logs and search_logs["Enable"]) \
-                        or (error_logs and error_logs["Enable"]):
+                if (index_logs and index_logs["Enabled"]) \
+                        or (search_logs and search_logs["Enabled"]) \
+                        or (error_logs and error_logs["Enabled"]):
                     is_logging = True
 
             tags = es_client.list_tags(ARN=domain_arn)["TagList"]
