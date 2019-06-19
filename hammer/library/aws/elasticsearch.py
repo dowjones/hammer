@@ -1,9 +1,14 @@
+import json
 import logging
+import pathlib
 
+from datetime import datetime, timezone
 from botocore.exceptions import ClientError
 from collections import namedtuple
 from library.utility import timeit
+from library.utility import jsonDumps
 from library.aws.utility import convert_tags
+from library.aws.s3 import S3Operations
 
 # structure which describes Elastic search domains
 ElasticSearchDomain_Details = namedtuple('ElasticSearchDomain', [
@@ -14,30 +19,6 @@ ElasticSearchDomain_Details = namedtuple('ElasticSearchDomain', [
     # vpc_id
     'vpc_id'
 ])
-
-
-class ESDomainDetails(object):
-    """
-    Basic class for ElasticSearch domain details.
-
-    """
-
-    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted=None):
-        """
-        :param account: `Account` instance where ECS task definition is present
-
-        :param name: name of the task definition
-        :param arn: arn of the task definition
-        :param arn: tags of task definition.
-        :param is_logging: logging enabled or not.
-        """
-        self.account = account
-        self.name = name
-        self.id = id
-        self.arn = arn
-        self.is_logging = is_logging
-        self.encrypted = encrypted
-        self.tags = convert_tags(tags)
 
 
 class ElasticSearchOperations:
@@ -69,11 +50,225 @@ class ElasticSearchOperations:
 
         return domains_list
 
+    @staticmethod
+    def put_domain_policy(es_client, domain_name, policy):
+        """
+        Replaces a policy on a domain. If the domain already has a policy, the one in this request completely replaces it.
+
+        :param es_client: Elasticsearch boto3 client
+        :param domain_name: Elasticsearch domain where to update policy on
+        :param policy: `dict` or `str` with policy. `Dict` will be transformed to string using pretty json.dumps().
+
+        :return: nothing
+        """
+        policy_json = jsonDumps(policy) if isinstance(policy, dict) else policy
+        es_client.update_elasticsearch_domain_config(
+            DomainName=domain_name,
+            AccessPolicies=policy_json,
+        )
+
+    @staticmethod
+    def retrieve_loggroup_arn(cw_client, domain_log_group_name):
+        """
+        This method used to retrieve cloud watch log group arn details if log group is available. If not, create a 
+         cloudwatch log group and returns arn of newly created log group
+        
+        :param cw_client: cloudwatch logs boto3 client
+        :param domain_log_group_name: Elasticsearch domain's log group name
+        :return: 
+        """
+        log_groups = cw_client.describe_log_groups()
+
+        log_group_arn = None
+        for log_group in log_groups["logGroups"]:
+            log_group_name = log_group["logGroupName"]
+            if log_group_name == domain_log_group_name:
+                log_group_arn = log_group["arn"]
+
+        if log_group_arn:
+            """
+            In order to successfully deliver the logs to your CloudWatch Logs log group, 
+            Amazon Elasticsearch Service (AES) will need access to two CloudWatch Logs API calls:
+                1. CreateLogStream: Create a CloudWatch Logs log stream for the log group you specified
+                2. PutLogEvents: Deliver CloudTrail events to the CloudWatch Logs log stream
+
+            Adding resource policy that grants above access.
+            """
+            policy_name = "AES-"+domain_log_group_name+"-Application-logs"
+            policy_doc = {}
+            statement = {}
+            principal = {}
+            action = []
+            principal["Service"] = "es.amazonaws.com"
+            action.append("logs:PutLogEvents")
+            action.append("logs:CreateLogStream")
+            statement["Effect"] = "Allow"
+            statement["Principal"] = principal
+            statement["Action"] = action
+            statement["Resource"] = log_group_arn
+
+            policy_doc["Statement"] = statement
+
+            cw_client.put_resource_policy(
+                policyName=policy_name,
+                policyDocument=str(json.dumps(policy_doc))
+            )
+        return log_group_arn
+
+    @staticmethod
+    def set_domain_logging(es_client, cw_client, domain_name):
+        """
+        
+        :param es_client: elastic search boto3 client
+        :param cw_client: cloudwatch logs boto3 client
+        :param domain_name: elastic search domain name
+        :return: 
+        """
+        domain_log_group_name = "/aws/aes/domains/" + domain_name + "/application-logs"
+        log_group_arn = ElasticSearchOperations.retrieve_loggroup_arn(cw_client, domain_log_group_name)
+        if not log_group_arn:
+            cw_client.create_log_group(logGroupName=domain_log_group_name)
+            log_group_arn = ElasticSearchOperations.retrieve_loggroup_arn(cw_client, domain_log_group_name)
+
+        es_client.update_elasticsearch_domain_config(
+            DomainName=domain_name,
+            LogPublishingOptions={
+                'ES_APPLICATION_LOGS':
+                {
+                    'CloudWatchLogsLogGroupArn': log_group_arn,
+                    'Enabled': True
+                }
+            }
+        )
+
+    @classmethod
+    def validate_access_policy(cls, policy_details):
+        """
+
+        :param policy_details: 
+        :return: 
+        """
+        public_policy = False
+        for statement in policy_details.get("Statement", []):
+            effect = statement['Effect']
+            principal = statement.get('Principal', {})
+            not_principal = statement.get('NotPrincipal', None)
+            condition = statement.get('Condition', None)
+            suffix = "/0"
+            # check both `Principal` - `{"AWS": "*"}` and `"*"`
+            # and condition (if exists) to be restricted (not "0.0.0.0/0")
+            if effect == "Allow" and \
+                    (principal == "*" or principal.get("AWS") == "*"):
+                if condition is not None:
+                    if suffix in str(condition.get("IpAddress")):
+                        return True
+                else:
+                    return True
+            if effect == "Allow" and \
+                            not_principal is not None:
+                # TODO: it is not recommended to use `Allow` with `NotPrincipal`, need to write proper check for such case
+                # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_notprincipal.html
+                logging.error(f"TODO: is this statement public???\n{statement}")
+            return False
+
+        return public_policy
+
+
+class ESDomainDetails(object):
+    """
+    Basic class for ElasticSearch domain details.
+
+    """
+
+    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted=None, policy=None):
+        """
+        :param account: `Account` instance where ECS task definition is present
+
+        :param name: name of the task definition
+        :param arn: arn of the task definition
+        :param arn: tags of task definition.
+        :param is_logging: logging enabled or not.
+        """
+        self.account = account
+        self.name = name
+        self.id = id
+        self.arn = arn
+        self.is_logging = is_logging
+        self.encrypted = encrypted
+        self._policy = json.loads(policy) if policy else {}
+        self.backup_filename = pathlib.Path(f"{self.name}.json")
+        self.tags = convert_tags(tags)
+
+    @property
+    def policy(self):
+        """
+        :return: pretty formatted string with S3 bucket policy
+        """
+        return jsonDumps(self._policy)
+
+    @property
+    def public(self):
+        """
+        :return: boolean, True - if Elasticsearch domain policy allows public access
+                          False - otherwise
+        """
+        return ElasticSearchOperations.validate_access_policy(self._policy)
+
+    def backup_policy_s3(self, s3_client, bucket):
+        """
+        Backup Elasticsearch policy json to S3.
+
+        :param s3_client: S3 boto3 client
+        :param bucket: S3 bucket name where to put backup of S3 bucket policy
+
+        :return: S3 path (without bucket name) to saved object with elasticsearch domain policy backup
+        """
+        timestamp = datetime.now(timezone.utc).isoformat('T', 'seconds')
+        path = (f"queue_policies/"
+                f"{self.account.id}/"
+                f"{self.backup_filename.stem}_{timestamp}"
+                f"{self.backup_filename.suffix}")
+        if S3Operations.object_exists(s3_client, bucket, path):
+            raise Exception(f"s3://{bucket}/{path} already exists")
+        S3Operations.put_object(s3_client, bucket, path, self.policy)
+        return path
+
+    def restrict_policy(self):
+        """
+        Restrict and replace current policy on domain.
+
+        :return: nothing
+
+        .. note:: This keeps self._policy unchanged.
+                  You need to recheck Elasticsearch domain policy to ensure that it was really restricted.
+        """
+        restricted_policy = S3Operations.restrict_policy(self._policy)
+        try:
+            ElasticSearchOperations.put_domain_policy(self.account.client("es"), self.name, restricted_policy)
+        except Exception:
+            logging.exception(f"Failed to put {self.name} restricted policy")
+            return False
+
+        return True
+
+    def set_logging(self):
+        """
+        
+        :return: 
+        """
+        try:
+            ElasticSearchOperations.set_domain_logging(self.account.client("es"), self.account.client("logs"), self.name)
+        except Exception:
+            logging.exception(f"Failed to enable {self.name} logging")
+            return False
+
+        return True
+
 
 class ESDomainChecker:
     """
-        Basic class for checking EBS snapshots in account/region.
-        Encapsulates discovered EBS snapshots.
+        Basic class for checking Elasticsearch unencrypted and logging issues in account/region.
+        Encapsulates discovered Elasticsearch domains.
         """
 
     def __init__(self, account):
@@ -85,10 +280,10 @@ class ESDomainChecker:
 
     def get_domain(self, id):
         """
-        :return: `EBSSnapshot` by id
+        :return: `Elasticsearch Domain` by id
         """
         for domain in self.domains:
-            if domain.id == id:
+            if domain.name == id:
                 return domain
         return None
 
@@ -121,9 +316,9 @@ class ESDomainChecker:
                 logging.exception(f"Failed to describe elasticsearch domains in {self.account}")
             return False
 
-        domain_encrypted = False
-        is_logging = False
         for domain_detail in domain_details:
+            is_logging = False
+            domain_encrypted = False
             domain_name = domain_detail["DomainName"]
             domain_id = domain_detail["DomainId"]
             domain_arn = domain_detail["ARN"]
@@ -136,10 +331,18 @@ class ESDomainChecker:
 
             logging_details = domain_detail.get("LogPublishingOptions")
 
-            if logging_details and logging_details["Options"]:
-                is_logging = True
+            if logging_details:
+                index_logs = logging_details.get("INDEX_SLOW_LOGS")
+                search_logs = logging_details.get("SEARCH_SLOW_LOGS")
+                error_logs = logging_details.get("ES_APPLICATION_LOGS")
+                if (index_logs and index_logs["Enabled"]) \
+                        or (search_logs and search_logs["Enabled"]) \
+                        or (error_logs and error_logs["Enabled"]):
+                    is_logging = True
 
             tags = es_client.list_tags(ARN=domain_arn)["TagList"]
+
+            access_policy = domain_detail.get("AccessPolicies")
 
             domain = ESDomainDetails(self.account,
                                      name=domain_name,
@@ -147,6 +350,7 @@ class ESDomainChecker:
                                      arn=domain_arn,
                                      tags=tags,
                                      is_logging=is_logging,
-                                     encrypted=domain_encrypted)
+                                     encrypted=domain_encrypted,
+                                     policy=access_policy)
             self.domains.append(domain)
         return True

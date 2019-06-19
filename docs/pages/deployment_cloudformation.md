@@ -98,6 +98,7 @@ You will need to set the following parameters:
 * **SourceIdentificationSQSPublicPolicy**: the relative path to the Lambda package that identifies SQS public queue issues. The default value is **sqs-public-policy-identification.zip**.
 * **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
 * **SourceIdentificationRDSEncryption**: the relative path to the Lambda package that identifies RDS unencrypted instances. The default value is **rds-unencrypted-instance-identification.zip**.
+* **SourceIdentificationElasticSearchEncryption**: the relative path to the Lambda package that identifies Elasticsearch domain encryption issues. The default value is **elasticsearch-unencrypted-domain-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.

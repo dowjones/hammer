@@ -57,6 +57,7 @@ def automation_cronjob(config):
         ("SQS Public Access",         config.sqspolicy,           "create_sqs_policy_issue_tickets",          "clean_sqs_policy_permissions"),
         ("S3 Unencrypted Buckets",    config.s3Encrypt,           "create_s3_unencrypted_bucket_issue_tickets", "clean_s3bucket_unencrypted"),
         ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
+        ("Elasticsearch Unencrypted Domains", config.esEncrypt, "create_elasticsearch_unencrypted_issue_tickets", None)
     ]
 
     for title, module_config, reporting_script, remediation_script in modules:
