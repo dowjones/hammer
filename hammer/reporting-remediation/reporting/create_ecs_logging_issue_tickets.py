@@ -98,7 +98,7 @@ class CreateECSLoggingIssueTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_name}\n"
-                        f"*ECS Task definition disabled logging container names*: {disabled_logging_container_names}\n",
+                        f"*ECS Task definition disabled logging container names*: {disabled_logging_container_names}\n"
                         f"*Container's logging enabled*: False \n"
                     )
 
