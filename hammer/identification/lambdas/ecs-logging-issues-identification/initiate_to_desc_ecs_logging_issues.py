@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating ECS Cluster logging checking")
 
     try:
-        sns_arn = os.environ["SNS_ECS_LOGGING_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.ecs_logging.enabled:

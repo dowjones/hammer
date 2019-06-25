@@ -34,7 +34,7 @@ class CreateECSLoggingIssueTickets(object):
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSLoggingIssue)
             for issue in issues:
                 task_definition_name = issue.issue_id
-                container_name = issue.issue_details.container_name
+                disabled_logging_container_names = issue.issue_details.disabled_logging_container_names
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
@@ -52,7 +52,7 @@ class CreateECSLoggingIssueTickets(object):
                             # Adding label with "whitelisted" to jira ticket.
                             jira.add_label(
                                 ticket_id=issue.jira_details.ticket,
-                                labels=IssueStatus.Whitelisted
+                                label=IssueStatus.Whitelisted.value
                             )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
@@ -98,12 +98,9 @@ class CreateECSLoggingIssueTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_name}\n"
-                        f"*ECS Task definition's Container Name*: {container_name}\n",
+                        f"*ECS Task definition disabled logging container names*: {disabled_logging_container_names}\n",
                         f"*Container's logging enabled*: False \n"
                     )
-
-                    auto_remediation_date = (self.config.now + self.config.ecs_logging.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
