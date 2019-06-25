@@ -98,9 +98,6 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    auto_remediation_date = (self.config.now + self.config.esEncrypt.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
-
                     issue_description += (
                         f"*Recommendation*: Encrypt Elasticsearch domain. To enable encryption follow below steps: \n"
                         f"1. Choose to create new domain. \n"
