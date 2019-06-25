@@ -92,7 +92,7 @@ class CreateECSExternalImageSourceIssueTickets(object):
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description = (
-                        f"The ECS image source taken from external.\n\n"
+                        f"The ECS image source taken from external source.\n\n"
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
