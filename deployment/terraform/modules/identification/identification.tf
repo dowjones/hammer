@@ -1,7 +1,8 @@
 resource "aws_cloudformation_stack" "identification" {
-    name = "hammer-identification"
+    name = "hammer-identification-main"
     depends_on = [
                   "aws_s3_bucket_object.identification-cfn",
+                  "aws_s3_bucket_object.identification-nested-cfn",
                   "aws_s3_bucket_object.logs-forwarder",
                   "aws_s3_bucket_object.ddb-tables-backup",
                   "aws_s3_bucket_object.sg-issues-identification",
@@ -23,6 +24,7 @@ resource "aws_cloudformation_stack" "identification" {
 
     parameters {
         SourceS3Bucket  = "${var.s3bucket}"
+        NestedStackTemplate = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.identification-nested-cfn.id}"
         ResourcesPrefix = "${var.resources-prefix}"
         IdentificationIAMRole = "${var.identificationIAMRole}"
         IdentificationCheckRateExpression = "${var.identificationCheckRateExpression}"

@@ -36,8 +36,7 @@ class CreateECSExternalImageSourceIssueTickets(object):
                 task_definition_name = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
-                container_name = issue.issue_details.container_name
-                image_url = issue.issue_details.image_url
+                container_image_details = issue.issue_details.container_image_details
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
@@ -53,7 +52,7 @@ class CreateECSExternalImageSourceIssueTickets(object):
                             # Adding label with "whitelisted" to jira ticket.
                             jira.add_label(
                                 ticket_id=issue.jira_details.ticket,
-                                labels=IssueStatus.Whitelisted
+                                label=IssueStatus.Whitelisted.value
                             )
                         jira.close_issue(
                             ticket_id=issue.jira_details.ticket,
@@ -99,13 +98,9 @@ class CreateECSExternalImageSourceIssueTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition*: {task_definition_name}\n"
-                        f"*ECS Task definition's Container Name*: {container_name}\n"
                         f"*ECS container image Source*: External \n"
-                        f"*ECS container image url*: {image_url} \n"
+                        f"*ECS container image details*: {container_image_details} \n"
                     )
-
-                    auto_remediation_date = (self.config.now + self.config.ecs_external_image_source.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
