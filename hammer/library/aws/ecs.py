@@ -66,13 +66,19 @@ class ECSTaskDefinitions(object):
     def __init__(self, account, name, arn, tags, is_logging=None, disabled_logging_container_names=None,
                  is_privileged=None, privileged_container_names=None, external_image=None, container_image_details=None):
         """
+        
         :param account: `Account` instance where ECS task definition is present
-
         :param name: name of the task definition
         :param arn: arn of the task definition
-        :param arn: tags of task definition.
-        :param is_logging: logging enabled or not.
+        :param tags: tags of task definition.
+        :param is_logging: boolean. Task definition's container logging is enabled or not
+        :param disabled_logging_container_names: List of containers which logging disabled.
+        :param is_privileged: boolean
+        :param privileged_container_names: List of containers which privileged access enabled
+        :param external_image: boolean 
+        :param container_image_details: List of containers which image source is taken from external
         """
+
         self.account = account
         self.name = name
         self.arn = arn
