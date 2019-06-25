@@ -122,9 +122,6 @@ class ECSChecker(object):
         if "families" in response:
             for task_definition_name in response["families"]:
                 tags = {}
-                logging_enabled = False
-                external_image = False
-                is_privileged = False
                 container_image_details = []
                 disabled_logging_container_names = []
                 privileged_container_names = []
@@ -137,18 +134,11 @@ class ECSChecker(object):
                         for container_definition in task_definition['containerDefinitions']:
                             container_name = container_definition["name"]
                             if container_definition.get('logConfiguration') is None:
-                                logging_enabled = False
                                 disabled_logging_container_names.append(container_name)
-                            else:
-                                logging_enabled = True
 
-                            container_privileged_details = container_definition.get('privileged')
-                            if container_privileged_details is not None:
-                                if container_definition['privileged']:
-                                    is_privileged = True
+                            if container_definition.get('privileged') is not None \
+                                    and container_definition['privileged']:
                                     privileged_container_names.append(container_name)
-                                else:
-                                    is_privileged = False
 
                             image = container_definition.get('image')
                             image_details = {}
@@ -157,9 +147,21 @@ class ECSChecker(object):
                                     image_details["container_name"] = container_name
                                     image_details["image_url"] = image
                                     container_image_details.append(image_details)
-                                    external_image = True
-                                else:
-                                    external_image = False
+
+                        if len(disabled_logging_container_names) > 0:
+                            logging_enabled = False
+                        else:
+                            logging_enabled = True
+
+                        if len(privileged_container_names) > 0:
+                            is_privileged = True
+                        else:
+                            is_privileged = False
+
+                        if len(container_image_details) > 0:
+                            external_image = True
+                        else:
+                            external_image = False
 
                         if "Tags" in task_definition:
                             tags = task_definition["Tags"]
