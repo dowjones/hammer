@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating ECS task definitions' image source checking")
 
     try:
-        sns_arn = os.environ["SNS_ECS_EXTERNAL_IMAGE_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.ecs_external_image_source.enabled:
