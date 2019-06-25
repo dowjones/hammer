@@ -24,7 +24,7 @@
                     }
                 ],
                 "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
+                    "ReadCapacityUnits": "25",
                     "WriteCapacityUnits": "2"
                 },
                 "SSESpecification": {
@@ -330,7 +330,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-public-snapshots" ] ]}
             }
         },
-
         "DynamoDBSQSPublicPolicy": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",

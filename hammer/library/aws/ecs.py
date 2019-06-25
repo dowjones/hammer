@@ -1,4 +1,3 @@
-import json
 import logging
 
 from botocore.exceptions import ClientError
@@ -64,8 +63,8 @@ class ECSTaskDefinitions(object):
 
     """
 
-    def __init__(self, account, name, arn, tags, container_name=None, is_logging=None, is_privileged=None,
-                 external_image=None):
+    def __init__(self, account, name, arn, tags, is_logging=None, disabled_logging_container_names=None,
+                 is_privileged=None, privileged_container_names=None, external_image=None, container_image_details=None):
         """
         :param account: `Account` instance where ECS task definition is present
 
@@ -79,9 +78,11 @@ class ECSTaskDefinitions(object):
         self.arn = arn
         self.tags = convert_tags(tags)
         self.is_logging = is_logging
+        self.disabled_logging_container_names = disabled_logging_container_names
         self.is_privileged = is_privileged
+        self.privileged_container_names = privileged_container_names
         self.external_image = external_image
-        self.container_name = container_name
+        self.container_image_details = container_image_details
 
 
 class ECSChecker(object):
@@ -120,10 +121,9 @@ class ECSChecker(object):
         if "families" in response:
             for task_definition_name in response["families"]:
                 tags = {}
-                logging_enabled = False
-                external_image = False
-                is_privileged = False
-                container_name = None
+                container_image_details = []
+                disabled_logging_container_names = []
+                privileged_container_names = []
                 try:
                     task_definition = self.account.client("ecs").describe_task_definition(
                         taskDefinition=task_definition_name
@@ -133,23 +133,34 @@ class ECSChecker(object):
                         for container_definition in task_definition['containerDefinitions']:
                             container_name = container_definition["name"]
                             if container_definition.get('logConfiguration') is None:
-                                logging_enabled = False
-                            else:
-                                logging_enabled = True
+                                disabled_logging_container_names.append(container_name)
 
-                            container_privileged_details = container_definition.get('privileged')
-                            if container_privileged_details is not None:
-                                if container_definition['privileged']:
-                                    is_privileged = True
-                                else:
-                                    is_privileged = False
+                            if container_definition.get('privileged') is not None \
+                                    and container_definition['privileged']:
+                                    privileged_container_names.append(container_name)
 
                             image = container_definition.get('image')
+                            image_details = {}
                             if image is not None:
                                 if image.split("/")[0].split(".")[-2:] != ['amazonaws', 'com']:
-                                    external_image = True
-                                else:
-                                    external_image = False
+                                    image_details["container_name"] = container_name
+                                    image_details["image_url"] = image
+                                    container_image_details.append(image_details)
+
+                        if len(disabled_logging_container_names) > 0:
+                            logging_enabled = False
+                        else:
+                            logging_enabled = True
+
+                        if len(privileged_container_names) > 0:
+                            is_privileged = True
+                        else:
+                            is_privileged = False
+
+                        if len(container_image_details) > 0:
+                            external_image = True
+                        else:
+                            external_image = False
 
                         if "Tags" in task_definition:
                             tags = task_definition["Tags"]
@@ -157,10 +168,12 @@ class ECSChecker(object):
                                                                      name=task_definition_name,
                                                                      arn=task_definition_arn,
                                                                      tags=tags,
-                                                                     container_name=container_name,
                                                                      is_logging=logging_enabled,
+                                                                     disabled_logging_container_names=disabled_logging_container_names,
                                                                      is_privileged=is_privileged,
-                                                                     external_image=external_image
+                                                                     privileged_container_names=privileged_container_names,
+                                                                     external_image=external_image,
+                                                                     container_image_details=container_image_details,
                                                                      )
                         self.task_definitions.append(task_definition_details)
                 except ClientError as err:

@@ -34,7 +34,7 @@ class CreateECSPrivilegedAccessIssueTickets(object):
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, ECSPrivilegedAccessIssue)
             for issue in issues:
                 task_definition_name = issue.issue_id
-                container_name = issue.issue_details.container_name
+                privileged_container_names = issue.issue_details.privileged_container_names
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 # issue has been already reported
@@ -44,9 +44,11 @@ class CreateECSPrivilegedAccessIssueTickets(object):
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} ECS privileged access disabled '{task_definition_name}' issue")
+                        logging.debug(f"Closing {issue.status.value} ECS privileged access disabled "
+                                      f"'{task_definition_name}' issue")
 
-                        comment = (f"Closing {issue.status.value} ECS privileged access disabled '{task_definition_name}' issue "
+                        comment = (f"Closing {issue.status.value} ECS privileged access disabled "
+                                   f"'{task_definition_name}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
@@ -98,19 +100,17 @@ class CreateECSPrivilegedAccessIssueTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*ECS Task Definition Name*: {task_definition_name}\n"
-                        f"*ECS Task definition's Container Name*: {container_name}\n"
+                        f"*ECS Task definition's privileged container names*: {privileged_container_names}\n"
                         f"*Container has privileged access*: True \n"
                     )
-
-                    auto_remediation_date = (self.config.now + self.config.ecs_privileged_access.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"By default, containers are unprivileged and cannot. To disable ECS privileged access, follow below steps:"
+                        f"By default, containers are unprivileged and cannot. To disable ECS privileged access, "
+                        f"follow below steps:"
                         f"1. Open the Amazon ECS console at https://console.aws.amazon.com/ecs/. \n"
                         f"2. From the navigation bar, "
                         f"choose region that contains your task definition and choose Task Definitions.\n"

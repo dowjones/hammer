@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating ECS privileged access checking")
 
     try:
-        sns_arn = os.environ["SNS_ECS_PRIVILEGED_ACCESS_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.ecs_privileged_access.enabled:
