@@ -1122,7 +1122,7 @@
                 }
             }
         },
-        "StackEvaluateECSExternalImageSource": {
+        "StackEvaluateRedshiftLogging": {
             "Type": "AWS::CloudFormation::Stack",
             "Properties": {
                 "TemplateURL": {"Ref":  "NestedStackTemplate"},
@@ -1137,26 +1137,26 @@
                     "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                     "LambdaSubnets": {"Ref":  "LambdaSubnets"},
                     "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
-                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationECSExternalImageSource" },
-                    "InitiateLambdaDescription": "Lambda function for initiate to identify ECS image source is internal or external.",
-                    "EvaluateLambdaDescription": "Lambda function to describe ECS image source is internal or external.",
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationRedshiftLogging" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify Redshift logging issues.",
+                    "EvaluateLambdaDescription": "Lambda function to describe Redshift logging issues.",
                     "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateRedshiftLoggingLambdaFunctionName", "value"] } ]
                                               ]},
                     "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSExternalImageSourceLambdaFunctionName", "value"] } ]
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftLoggingLambdaFunctionName", "value"] } ]
                                               ]},
-                    "InitiateLambdaHandler": "initiate_to_desc_ecs_external_image_source_issues.lambda_handler",
-                    "EvaluateLambdaHandler": "describe_ecs_external_image_source_issues.lambda_handler",
+                    "InitiateLambdaHandler": "initiate_to_desc_redshift_logging_issues.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_redshift_logging_issues.lambda_handler",
                     "EvaluateLambdaMemorySize": 256,
                     "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
-                    "EventRuleDescription": "Hammer ScheduledRule to initiate ECS image source evaluations",
-                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSExternalImageSource"] ] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Redshift logging issues evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRedshiftLogging"] ] },
                     "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSExternalImageSource", "value"] } ]
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftLogging", "value"] } ]
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSExternalImageSource", "value"] } ]
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftLogging", "value"] } ]
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
