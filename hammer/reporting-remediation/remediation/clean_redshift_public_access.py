@@ -12,7 +12,7 @@ from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import IssueStatus, RedshiftPublicAccessIssue
-from library.aws.redshift import RedshiftClusterPublicAccessChecker
+from library.aws.redshift import RedshiftClusterChecker
 from library.aws.utility import Account
 from library.utility import confirm
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -82,7 +82,7 @@ class CleanRedshiftPublicAccess:
                         if account.session is None:
                             continue
 
-                        checker = RedshiftClusterPublicAccessChecker(account=account)
+                        checker = RedshiftClusterChecker(account=account)
                         checker.check(clusters=[cluster_id])
                         cluster_details = checker.get_cluster(cluster_id)
 

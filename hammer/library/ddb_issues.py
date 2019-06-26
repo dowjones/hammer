@@ -234,12 +234,12 @@ class RdsEncryptionIssue(Issue):
 
 
 class PublicAMIIssue(Issue):
-   def __init__(self, *args):
+    def __init__(self, *args):
         super().__init__(*args)
 
 
 class RedshiftPublicAccessIssue(Issue):
-	def __init__(self, *args):
+    def __init__(self, *args):
         super().__init__(*args)
 
 
