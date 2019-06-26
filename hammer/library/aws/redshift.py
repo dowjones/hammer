@@ -1,15 +1,7 @@
-import json
 import logging
-import mimetypes
-import pathlib
 
-from datetime import datetime, timezone
-from io import BytesIO
-from copy import deepcopy
 from botocore.exceptions import ClientError
-from library.utility import jsonDumps
 from library.utility import timeit
-from library.aws.security_groups import SecurityGroup
 from collections import namedtuple
 from library.aws.utility import convert_tags
 
@@ -21,6 +13,7 @@ RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     # subnet_group_id
     'subnet_group_name'
     ])
+
 
 class RedshiftClusterOperations(object):
 
@@ -125,7 +118,6 @@ class RedshiftClusterChecker(object):
             if cluster.name == name:
                 return cluster
         return None
-
 
     def check(self, clusters=None):
         """
