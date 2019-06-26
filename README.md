@@ -36,14 +36,17 @@ Dow Jones Hammer documentation is available via GitHub Pages at [https://dowjone
 You are welcome to contribute!
 
 ###Issues:
+
 You can use [GitHub Issues](https://github.com/dowjones/hammer/issues) to report issues.
 Describe what is going on wrong and what you expect to be correct behaviour.
 
 ###Patches
+
 We currently use [dev](https://github.com/dowjones/hammer/tree/dev) branch for ongoing development. Please open
 PRs to this branch.
 
 ###Run tests
+
 Run tests with this command:
 ```shell
 tox
