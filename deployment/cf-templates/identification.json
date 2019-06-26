@@ -1146,7 +1146,7 @@
                     "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                      { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftClusterEncryptionLambdaFunctionName", "value"] } ]
                                               ]},
-                    "InitiateLambdaHandler": ".initiate_to_desc_redshift_encryptionlambda_handler",
+                    "InitiateLambdaHandler": "initiate_to_desc_redshift_encryption.lambda_handler",
                     "EvaluateLambdaHandler": "describe_redshift_encryption.lambda_handler",
                     "EvaluateLambdaMemorySize": 256,
                     "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
