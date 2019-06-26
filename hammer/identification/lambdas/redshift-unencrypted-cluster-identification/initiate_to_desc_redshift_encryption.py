@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating Redshift Clusters checking")
 
     try:
-        sns_arn = os.environ["SNS_REDSHIFT_ENCRYPT_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.redshiftEncrypt.enabled:

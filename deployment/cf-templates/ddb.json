@@ -24,7 +24,7 @@
                     }
                 ],
                 "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
+                    "ReadCapacityUnits": "25",
                     "WriteCapacityUnits": "2"
                 },
                 "SSESpecification": {
@@ -458,6 +458,29 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "ec2-public-ami" ] ]}
             }
         },
+        "DynamoDBApiRequests": {
+            "Type": "AWS::DynamoDB::Table",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "request_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "request_id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
+            }
+        },
         "DynamoDBRedshiftClusterEncryption": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -488,29 +511,6 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "redshift-unencrypted" ] ]}
-            }
-        },
-        "DynamoDBApiRequests": {
-            "Type": "AWS::DynamoDB::Table",
-            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
-            "Properties": {
-                "AttributeDefinitions": [
-                    {
-                        "AttributeName": "request_id",
-                        "AttributeType": "S"
-                    }
-                ],
-                "KeySchema": [
-                    {
-                        "AttributeName": "request_id",
-                        "KeyType": "HASH"
-                    }
-                ],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
-                    "WriteCapacityUnits": "2"
-                },
-                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
             }
         }
     }
