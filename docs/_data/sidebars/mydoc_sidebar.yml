@@ -119,3 +119,6 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+    - title: Redshift Unencrypted clusters
+      url: /playbook15_redshift_unencryption.html
+      output: web, pdf
