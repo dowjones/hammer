@@ -27,5 +27,24 @@ Dow Jones Hammer documentation is available via GitHub Pages at [https://dowjone
 * JIRA
 * Slack
 
+## Contributing
+
+You are welcome to contribute!
+
+####Issues:
+You can use [GitHub Issues](https://github.com/dowjones/hammer/issues) to report issues.
+Describe what is going on wrong and what you expect to be correct behaviour.
+
+####Patches
+We currently use [dev](https://github.com/dowjones/hammer/tree/dev) branch for ongoing development. Please open
+PRs to this branch.
+
+####Run tests
+Run tests with this command:
+```shell
+tox
+```
+
+
 ## Contact Us
 Feel free to create [issue report](https://github.com/dowjones/hammer/issues/new), pull request or just email us at [hammer@dowjones.com](mailto:hammer@dowjones.com) with any other questions or concerns you have.
