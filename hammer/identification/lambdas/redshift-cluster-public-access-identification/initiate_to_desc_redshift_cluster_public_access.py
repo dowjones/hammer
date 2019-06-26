@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating Redshift Cluster public access checking")
 
     try:
-        sns_arn = os.environ["SNS_REDSHIFT_PUBLIC_ACCESS_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.redshift_public_access.enabled:
