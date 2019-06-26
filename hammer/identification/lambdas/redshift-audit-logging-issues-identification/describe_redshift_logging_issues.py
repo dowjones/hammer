@@ -4,7 +4,7 @@ import logging
 from library.logger import set_logging
 from library.config import Config
 from library.aws.redshift import RedshiftLoggingChecker
-from library.aws.utility import Account
+from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, RedshiftLoggingIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.aws.utility import Sns
@@ -20,7 +20,8 @@ def lambda_handler(event, context):
         account_name = payload['account_name']
         # get the last region from the list to process
         region = payload['regions'].pop()
-        # region = payload['region']
+        # if request_id is present in payload then this lambda was called from the API
+        request_id = payload.get('request_id', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -65,10 +66,14 @@ def lambda_handler(event, context):
                     # as we already checked it
                     open_issues.pop(cluster.name, None)
 
-        logging.debug(f"Redshift Clusters in DDB:\n{open_issues.keys()}")
-        # all other unresolved issues in DDB are for removed/remediated clusters
-        for issue in open_issues.values():
-            IssueOperations.set_status_resolved(ddb_table, issue)
+            logging.debug(f"Redshift Clusters in DDB:\n{open_issues.keys()}")
+            # all other unresolved issues in DDB are for removed/remediated clusters
+            for issue in open_issues.values():
+                IssueOperations.set_status_resolved(ddb_table, issue)
+        # track the progress of API request to scan specific account/region/feature
+        if request_id:
+            api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+            DDB.track_progress(api_table, request_id)
     except Exception:
         logging.exception(f"Failed to check Redshift clusters for '{account_id} ({account_name})'")
         return

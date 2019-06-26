@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating Redshift Cluster logging checking")
 
     try:
-        sns_arn = os.environ["SNS_REDSHIFT_LOGGING_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.redshift_logging.enabled:

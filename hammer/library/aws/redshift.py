@@ -249,7 +249,6 @@ class RedshiftClusterPublicAccessChecker(object):
                 return cluster
         return None
 
-
     def check(self, clusters=None):
         """
         Walk through clusters in the account/region and check them.

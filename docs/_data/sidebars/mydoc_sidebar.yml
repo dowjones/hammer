@@ -119,3 +119,6 @@ entries:
     - title: RDS Unencrypted instances
       url: /playbook12_rds_unencryption.html
       output: web, pdf
+    - title: Redshift Audit Logging
+      url: /playbook17_redshift_audit_logging.html
+      output: web, pdf

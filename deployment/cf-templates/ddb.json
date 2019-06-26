@@ -24,7 +24,7 @@
                     }
                 ],
                 "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
+                    "ReadCapacityUnits": "25",
                     "WriteCapacityUnits": "2"
                 },
                 "SSESpecification": {
@@ -426,38 +426,6 @@
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "rds-unencrypted" ] ]}
             }
         },
-        "DynamoDBRedshiftLogging": {
-            "Type": "AWS::DynamoDB::Table",
-            "DeletionPolicy": "Retain",
-            "DependsOn": ["DynamoDBCredentials"],
-            "Properties": {
-                "AttributeDefinitions": [
-                    {
-                        "AttributeName": "account_id",
-                        "AttributeType": "S"
-                    },
-                    {
-                        "AttributeName": "issue_id",
-                        "AttributeType": "S"
-                    }
-                ],
-                "KeySchema": [
-                    {
-                        "AttributeName": "account_id",
-                        "KeyType": "HASH"
-                    },
-                    {
-                        "AttributeName": "issue_id",
-                        "KeyType": "RANGE"
-                    }
-                ],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
-                    "WriteCapacityUnits": "2"
-                },
-                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "redshift-logging" ] ]}
-            }
-        },
         "DynamoDBAMIPublicAccess": {
             "Type": "AWS::DynamoDB::Table",
             "DeletionPolicy": "Retain",
@@ -511,6 +479,38 @@
                     "WriteCapacityUnits": "2"
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "api-requests" ] ]}
+            }
+        },
+        "DynamoDBRedshiftLogging": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "DependsOn": ["DynamoDBCredentials"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "redshift-logging" ] ]}
             }
         }
     }

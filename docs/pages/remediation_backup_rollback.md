@@ -27,6 +27,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[SQS Queue Public Access](playbook10_sqs_public_policy.html#3-issue-remediation)      | Yes       | Yes                 |
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
+|[Redshift Logging issues](playbook17_redshift_audit_logging.html#3-issue-remediation)     | `No`      | `No`                |
 
 ## 2. How Remediation Backup Works
 
