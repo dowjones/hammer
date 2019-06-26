@@ -3,7 +3,7 @@ import logging
 
 from library.logger import set_logging
 from library.config import Config
-from library.aws.redshift import RedshiftEncryptionChecker
+from library.aws.redshift import RedshiftClusterChecker
 from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, RedshiftEncryptionIssue
 from library.ddb_issues import Operations as IssueOperations
@@ -48,7 +48,7 @@ def lambda_handler(event, context):
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
         logging.debug(f"Redshift clusters in DDB:\n{open_issues.keys()}")
 
-        checker = RedshiftEncryptionChecker(account=account)
+        checker = RedshiftClusterChecker(account=account)
         if checker.check():
             for cluster in checker.clusters:
                 logging.debug(f"Checking {cluster.name}")
