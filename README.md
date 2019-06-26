@@ -24,7 +24,6 @@ Dow Jones Hammer documentation is available via GitHub Pages at [https://dowjone
 * [RDS Unencrypted Instances](https://dowjones.github.io/hammer/playbook12_rds_unencryption.html)
 * [AMIs Public Access](https://dowjones.github.io/hammer/playbook13_amis_public_access.html)
 
-
 ## Technologies
 * Python 3.6
 * AWS (Lambda, Dynamodb, EC2, SNS, CloudWatch, CloudFormation)
