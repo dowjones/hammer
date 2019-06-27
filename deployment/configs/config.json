@@ -161,5 +161,13 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
-    }
+    },
+    "es_public_access_domain": {
+        "enabled": true,
+        "ddb.table_name": "hammer-es-public-access-domain",
+        "topic_name": "hammer-describe-es-public-access-lambda",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
 }
