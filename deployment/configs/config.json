@@ -164,9 +164,10 @@
     },
     "redshift_public_access": {
         "enabled": true,
-        "ddb.table_name": "djif-hammer-redshift-public-access",
+        "ddb.table_name": "hammer-redshift-public-access",
+        "topic_name": "hammer-describe-redshift-public-access-lambda",
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
-    }
+    },
 }

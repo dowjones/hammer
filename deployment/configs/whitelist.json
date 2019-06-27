@@ -47,6 +47,7 @@
     "rds_encryption": {
 	},
 	"redshift_public_access":{
-
+		"__comment__": "Detects publicly accessible Redshift Clusters.",
+		"123456789012": ["test-cluster"]
 	}
 }
