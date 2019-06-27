@@ -52,12 +52,14 @@ def lambda_handler(event, context):
         checker = ESDomainChecker(account=account)
         if checker.check():
             for domain in checker.domains:
-                if not domain.encrypted:
+                if not (domain.encrypted_at_rest and domain.encrypted_at_transit):
                     issue = ESEncryptionIssue(account_id, domain.name)
                     issue.issue_details.region = domain.account.region
                     issue.issue_details.id = domain.id
                     issue.issue_details.arn = domain.arn
                     issue.issue_details.tags = domain.tags
+                    issue.issue_details.encrypted_at_rest = domain.encrypted_at_rest
+                    issue.issue_details.encrypted_at_transit = domain.encrypted_at_transit
 
                     if config.esEncrypt.in_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Whitelisted

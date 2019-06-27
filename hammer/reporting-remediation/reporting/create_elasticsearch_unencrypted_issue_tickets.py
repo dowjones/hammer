@@ -36,6 +36,8 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                 domain_name = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+                encrypted_at_rest = issue.issue_details.encrypted_at_rest
+                encrypted_at_transit = issue.issue_details.encrypted_at_transit
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
@@ -87,8 +89,28 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                     bu = tags.get("bu", None)
                     product = tags.get("product", None)
 
-                    issue_description = (
-                        f"Elasticsearch domain needs to be encrypted.\n\n"
+                    issue_description = ""
+                    if not encrypted_at_rest:
+                        issue_description +=(
+                            f"Elasticsearch domain needs to encrypted at rest. \n\n"
+                        )
+                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' unencrypted at rest"
+                                         f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
+
+                    elif not encrypted_at_transit:
+                        issue_description += (
+                            f"Elasticsearch domain needs to be encrypt at transit. \n\n"
+                        )
+                        issue_summary = (f"Elasticsearch domain '{domain_name}' unencrypted at transit"
+                                         f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
+                    else:
+                        issue_description += (
+                            f"Elasticsearch domain needs to be encrypt at rest and transit. \n\n"
+                        )
+                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' "
+                                         f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
+
+                    issue_description += (
                         f"*Risk*: High\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
@@ -101,15 +123,14 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                     issue_description += (
                         f"*Recommendation*: Encrypt Elasticsearch domain. To enable encryption follow below steps: \n"
                         f"1. Choose to create new domain. \n"
-                        f"2. Enable node-node encryption or encryption at rest options.\n"
+                        f"2. Enable both node-node encryption and encryption at rest options.\n"
                         f"3. Fill other domain configuration details and navigate to review page. \n"
                         f"4. On the Review page, review your domain configuration, and then choose 'Confirm' to "
                         f"create new domain. \n "
                         f"5. After creation of new domain, migrate your data to new domain. \n "
                     )
 
-                    issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' "
-                                     f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
+
 
                     try:
                         response = jira.add_issue(

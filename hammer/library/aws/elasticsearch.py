@@ -180,21 +180,27 @@ class ESDomainDetails(object):
 
     """
 
-    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted=None, policy=None):
+    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted_at_rest=None, encrypted_at_transit= None, policy=None):
         """
-        :param account: `Account` instance where ECS task definition is present
+        
+        :param account: `Account` instance where Elasticsearch domain is present
+        :param name: name of the Elasticsearch domain
+        :param id: Elasticsearch domain id.
+        :param arn: arn of the Elasticsearch domain
+        :param tags: tags of Elasticsearch domain.
+        :param is_logging: flag for logging enabled or not.
+        :param encrypted_at_rest: flag for encryption enabled at rest or not
+        :param encrypted_at_transit:  flag for encryption enabled at transit or not
+        :param policy: 
+        """
 
-        :param name: name of the task definition
-        :param arn: arn of the task definition
-        :param arn: tags of task definition.
-        :param is_logging: logging enabled or not.
-        """
         self.account = account
         self.name = name
         self.id = id
         self.arn = arn
         self.is_logging = is_logging
-        self.encrypted = encrypted
+        self.encrypted_at_rest = encrypted_at_rest
+        self.encrypted_at_transit = encrypted_at_transit
         self._policy = json.loads(policy) if policy else {}
         self.backup_filename = pathlib.Path(f"{self.name}.json")
         self.tags = convert_tags(tags)
@@ -318,16 +324,17 @@ class ESDomainChecker:
 
         for domain_detail in domain_details:
             is_logging = False
-            domain_encrypted = False
+            domain_encrypted_at_rest = False
+            domain_encrypted_at_transit = False
             domain_name = domain_detail["DomainName"]
             domain_id = domain_detail["DomainId"]
             domain_arn = domain_detail["ARN"]
             encryption_at_rest = domain_detail.get("EncryptionAtRestOptions")
             node_to_node_encryption = domain_detail.get("NodeToNodeEncryptionOptions")
             if encryption_at_rest and encryption_at_rest["Enabled"]:
-                domain_encrypted = True
-            elif node_to_node_encryption and node_to_node_encryption["Enabled"]:
-                domain_encrypted = True
+                domain_encrypted_at_rest = True
+            if node_to_node_encryption and node_to_node_encryption["Enabled"]:
+                domain_encrypted_at_transit = True
 
             logging_details = domain_detail.get("LogPublishingOptions")
 
@@ -350,7 +357,8 @@ class ESDomainChecker:
                                      arn=domain_arn,
                                      tags=tags,
                                      is_logging=is_logging,
-                                     encrypted=domain_encrypted,
+                                     encrypted_at_rest=domain_encrypted_at_rest,
+                                     encrypted_at_transit=domain_encrypted_at_transit,
                                      policy=access_policy)
             self.domains.append(domain)
         return True
