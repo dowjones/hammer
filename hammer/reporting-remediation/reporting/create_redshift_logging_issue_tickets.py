@@ -98,15 +98,24 @@ class CreateRedshiftLoggingIssueTickets(object):
                         f"*Region*: {region}\n"
                         f"*Redshift Cluster ID*: {cluster_id}\n")
 
-                    auto_remediation_date = (self.config.now + self.config.redshift_logging.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
-
                     issue_description += JiraOperations.build_tags_table(tags)
 
                     issue_description += "\n"
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Enable logging for Redshift cluster.")
+                        f"Enable logging for Redshift cluster. To enable logging, follow below steps:\n\n"
+                        f"1. Sign in to the AWS Management Console and open the Amazon Redshift console.\n"
+                        f"2. In the navigation pane, click Clusters.\n" 
+                        f"3. In the list, click the cluster for which you want to enable logging.\n"
+                        f"4. In the cluster details page, click Database, and then click Configure Audit Logging.\n"
+                        f"5. In the Configure Audit Logging dialog box, in the Enable Audit Logging box, click Yes.\n"
+                        f"6. For S3 Bucket, do one of the following:\n"
+                        f" (a)If you already have an S3 bucket that you want to use, "
+                        f"select Use Existing and then select the bucket from the Bucket list.\n"
+                        f" (b)If you need a new S3 bucket,select Create New, and in New Bucket Name box, type a name.\n"
+                        f"7. Optionally, in the S3 Key Prefix box, type a prefix to add to the S3 bucket.\n"
+                        f"8. Click Save \n\n"
+                    )
 
                     try:
                         response = jira.add_issue(
