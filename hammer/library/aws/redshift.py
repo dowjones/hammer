@@ -22,6 +22,7 @@ RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     'subnet_group_name'
     ])
 
+
 class RedshiftClusterOperations(object):
 
     @classmethod
