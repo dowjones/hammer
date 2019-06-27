@@ -161,12 +161,12 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
-    }
+    },
     "ecs_logging": {
         "enabled": true,
-        "ddb.table_name": "djif-hammer-ecs-logging",
-        "reporting": true,
-        "remediation": false,
-        "remediation_retention_period": 21
+        "ddb.table_name": "hammer-ecs-logging",
+        "topic_name": "hammer-describe-ecs-logging-lambda",
+        "reporting": true
     }
+
 }
