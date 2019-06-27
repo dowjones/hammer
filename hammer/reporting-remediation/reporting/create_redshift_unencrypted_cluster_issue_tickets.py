@@ -98,15 +98,24 @@ class CreateRedshiftUnencryptedInstanceTickets(object):
                         f"*Region*: {region}\n"
                         f"*Redshift Cluster ID*: {cluster_id}\n")
 
-                    auto_remediation_date = (self.config.now + self.config.redshiftEncrypt.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.redshiftEncrypt.remediation:
+                        auto_remediation_date = (self.config.now + self.config.redshiftEncrypt.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
                     issue_description += "\n"
                     issue_description += (
-                        f"*Recommendation*: "
-                        f"Encrypt Redshift cluster.")
+                        f"*Recommendation*: \n"
+                        f"Modify an unencrypted cluster using AWS Key Management Service (AWS KMS) encryption. "
+                        f"Follow below steps to encrypt redshift cluster:\n "
+                        f"1. Sign in to the AWS Management Console and open the Amazon Redshift console.\n"
+                        f"2. In navigation pane, choose Clusters, and then choose cluster that you want to modify.\n"
+                        f"3. Choose Cluster, and then choose Modify.\n"
+                        f"4. Choose KMS to enable encryption for Encrypt database field\n"
+                        f"5. For Master Key, choose Enter a key ARN and enter the ARN in the ARN field.\n"
+                        f"6. Choose Modify.\n\n"
+                    )
 
                     try:
                         response = jira.add_issue(

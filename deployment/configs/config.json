@@ -161,5 +161,11 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
+    },
+    "redshift_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-redshift-unencrypted",
+        "topic_name": "hammer-describe-redshift-cluster-encryption-lambda",
+        "reporting": true
     }
 }

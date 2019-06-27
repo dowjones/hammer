@@ -45,5 +45,9 @@
     "s3_encryption": {
 	},
     "rds_encryption": {
+	},
+	"redshift_encryption":{
+		"__comment__": "Detects unencrypted clusters.",
+		"123456789012": ["test-cluster"]
 	}
 }
