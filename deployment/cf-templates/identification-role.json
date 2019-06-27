@@ -176,6 +176,18 @@
                                     "Resource": "*"
                                 },
                                 {
+                                    "Sid": "ESIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "es:ListDomainNames",
+                                        "es:DescribeElasticsearchDomain",
+                                        "es:DescribeElasticsearchDomainConfig",
+                                        "es:DescribeElasticsearchDomains",
+                                        "es:ListTags"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
                                     "Sid": "IAMassumeCrossAccountRole",
                                     "Effect": "Allow",
                                     "Action": [

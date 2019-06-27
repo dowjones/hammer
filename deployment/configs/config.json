@@ -161,5 +161,11 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
+    },
+    "es_unencrypted_domain": {
+        "enabled": true,
+        "ddb.table_name": "hammer-es-unencrypted-domain",
+        "topic_name": "hammer-describe-es-encryption-lambda",
+        "reporting": true
     }
 }
