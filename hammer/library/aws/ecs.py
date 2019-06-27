@@ -85,6 +85,10 @@ class ECSTaskDefinitions(object):
         self.external_image = external_image
         self.container_image_details = container_image_details
 
+    def __str__(self):
+        return f"{self.__class__.__name__}(Name={self.name}, is_logging={self.is_logging}, " \
+               f"is_privileged={self.is_privileged}, external_image={self.external_image})"
+
 
 class ECSChecker(object):
     """
