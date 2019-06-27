@@ -136,6 +136,15 @@
                                         "sqs:SetQueueAttributes"
                                     ],
                                     "Resource": "*"
+                                },
+                                {
+                                    "Sid": "ECSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:Describe*",
+                                        "ecs:List*"
+                                    ],
+                                    "Resource": "*"
                                 }
                             ]
                         }
