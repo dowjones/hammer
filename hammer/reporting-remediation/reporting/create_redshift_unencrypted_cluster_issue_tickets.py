@@ -98,10 +98,6 @@ class CreateRedshiftUnencryptedInstanceTickets(object):
                         f"*Region*: {region}\n"
                         f"*Redshift Cluster ID*: {cluster_id}\n")
 
-                    if self.config.redshiftEncrypt.remediation:
-                        auto_remediation_date = (self.config.now + self.config.redshiftEncrypt.issue_retention_date).date()
-                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
-
                     issue_description += JiraOperations.build_tags_table(tags)
 
                     issue_description += "\n"
