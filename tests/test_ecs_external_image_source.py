@@ -1,5 +1,3 @@
-import boto3
-
 from . import mock_ecs
 from  library.aws.ecs import ECSChecker
 from library.aws.utility import Account
@@ -8,24 +6,23 @@ region = "us-east-1"
 
 task_definitions = {
         "tas_definition": {
-            "family":'test_ecs_task',
+            "family": 'test_ecs_image_source',
             "Description": "Congainer image taken from external source",
+            "CheckShouldPass": True,
             "containerDefinitions": [
                 {
                     'name': 'hello_world1',
                     'image': 'docker/hello-world:latest',
                     'cpu': 1024,
                     'memory': 400,
-                    'essential': True,
-                    'privileged': True
+                    'essential': True
                 },
                 {
                     'name': 'hello_world2',
                     'image': 'docker/hello-world:latest',
                     'cpu': 1024,
                     'memory': 400,
-                    'essential': True,
-                    'privileged': True
+                    'essential': True
                 }
             ]
         }
@@ -66,6 +63,7 @@ def pytest_generate_tests(metafunc):
     # validate ebs volumes in mocked env
     checker = ECSChecker(account)
     checker.check(ids=test_task_definitions)
+
     # create test cases for each response
     metafunc.parametrize("task_definition_details", checker.task_definitions, ids=ident_task_definition_test)
 
