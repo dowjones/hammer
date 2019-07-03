@@ -26,6 +26,8 @@ def create_env_task_definitions(task_definitions, region):
             family=task_definition,
             containerDefinitions= rule["containerDefinitions"]
         )["taskDefinition"]["taskDefinitionArn"]
+
+        logging.debug(f"======> newly created task definition {task_definition_arn}")
         task_definition_name = task_definition
         test_task_definitions.append(task_definition_name)
 
