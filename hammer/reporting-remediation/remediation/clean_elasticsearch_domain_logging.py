@@ -81,7 +81,7 @@ class CleanElasticSearchDomainLogging:
                         domain_details = checker.get_domain(domain_name)
                         if domain_details is None:
                             logging.debug(f"Elasticsearch domain {domain_name} was removed by user")
-                        elif not domain_details.is_logging:
+                        elif domain_details.is_logging:
                             logging.debug(f"Elasticsearch domain {domain_name} logging issue was remediated by user")
                         else:
                             if not batch and \
