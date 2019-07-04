@@ -249,7 +249,19 @@ class ESDomainDetails(object):
         .. note:: This keeps self._policy unchanged.
                   You need to recheck Elasticsearch domain policy to ensure that it was really restricted.
         """
-        restricted_policy = S3Operations.restrict_policy(self._policy)
+        restricted_policy = {}
+        policy_statement = {}
+        principal = {}
+        statement = []
+
+        principal["AWS"] = "*"
+        policy_statement["Effect"] = "Deny"
+        policy_statement["Principal"] = principal
+        policy_statement["Action"] = "es*"
+        policy_statement["Resource"] = self.arn + "/*"
+        statement.append(policy_statement)
+        restricted_policy["Statement"] = statement
+
         try:
             ElasticSearchOperations.put_domain_policy(self.account.client("es"), self.name, restricted_policy)
         except Exception:

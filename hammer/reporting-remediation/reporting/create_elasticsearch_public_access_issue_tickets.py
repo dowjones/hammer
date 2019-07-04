@@ -108,9 +108,9 @@ class CreateElasticSearchPublicAccessDomainTickets(object):
 
                     issue_description += (
                         f"*Recommendation*: "
-                        f"Grant CloudFront OAI applicable permissions on domain "
-                        f"or update domain permissions with VPC CIDRs ranges or ip addresses/ranges from "
-                        f"[RFC1918|https://tools.ietf.org/html/rfc1918]. "
+                        f"Deny public access to domain. Or"
+                        f"Use AWS console which provides preconfigured access policies that can customize for specific"
+                        f" needs of your domain. You also can import access policies from other Amazon ES domains."
                     )
 
                     issue_summary = (f"Elasticsearch publicly accessible domain '{domain_name}' "
