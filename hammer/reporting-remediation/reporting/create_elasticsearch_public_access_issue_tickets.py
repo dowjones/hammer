@@ -109,8 +109,8 @@ class CreateElasticSearchPublicAccessDomainTickets(object):
                     issue_description += (
                         f"*Recommendation*: "
                         f"Deny public access to domain. Or"
-                        f"Use AWS console which provides preconfigured access policies that can customize for specific"
-                        f" needs of your domain. You also can import access policies from other Amazon ES domains."
+                        f"use AWS console which provides preconfigured access policies that can customize for specific"
+                        f" needs of your domain. You also can import access policies from other Amazon ES domains. \n"
                     )
 
                     issue_summary = (f"Elasticsearch publicly accessible domain '{domain_name}' "
