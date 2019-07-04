@@ -102,7 +102,7 @@ class CreateElasticSearchPublicAccessDomainTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    if self.config.esPublicAccess.remediated:
+                    if self.config.esPublicAccess.remediation:
                         auto_remediation_date = (self.config.now + self.config.esPublicAccess.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
