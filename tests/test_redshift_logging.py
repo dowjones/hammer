@@ -8,8 +8,8 @@ region = "us-east-1"
 
 clusters = {
     "cluster1": {
+        "Description": "Cluster logging disabled",
         "DBName": "test1",
-        "ClusterIdentifier": "test1",
         "ClusterType": "single-node",
         "NodeType": "ds2.xlarge",
         "MasterUsername": "user1",
@@ -54,12 +54,10 @@ def pytest_generate_tests(metafunc):
 
     # validate ebs volumes in mocked env
     checker = RedshiftLoggingChecker(account)
-    checker.check(ids=test_clusters)
-
-    redshift_clusters = [(cluster, False) for cluster in checker.clusters]
+    checker.check(clusters=test_clusters)
 
     # create test cases for each response
-    metafunc.parametrize("cluster_details", redshift_clusters, ids=ident_cluster_test)
+    metafunc.parametrize("cluster_details", checker.clusters, ids=ident_cluster_test)
 
 
 @pytest.mark.redshift_public_access
@@ -73,4 +71,4 @@ def test_cluster(cluster_details):
     """
     name = find_cluster_name(cluster_details)
     expected = clusters.get(name, {})["CheckShouldPass"]
-    assert expected == cluster_details.is_logging
+    assert expected == (not cluster_details.is_logging)
