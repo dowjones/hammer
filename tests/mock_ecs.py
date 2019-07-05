@@ -22,25 +22,22 @@ def create_env_task_definitions(task_definitions, region):
     test_task_definitions = []
 
     for task_definition, rule in task_definitions.items():
-        task_definition_arn = ecs_client.register_task_definition(
-            family=task_definition,
-            containerDefinitions= rule["containerDefinitions"]
-        )["taskDefinition"]["taskDefinitionArn"]
+        ecs_client.register_task_definition(
+            family=rule["family"],
+            containerDefinitions=rule["containerDefinitions"]
+        )
 
-        logging.debug(f"======> newly created task definition {task_definition_arn}")
-        task_definition_name = task_definition
-        test_task_definitions.append(task_definition_name)
+        test_task_definitions.append(rule["family"])
 
     # remove moto precreated task definitions
-    task_definitions_list_to_check = ecs_client.client.list_task_definition_families()
-    for task_definition in task_definitions_list_to_check:
-
+    task_definitions_list_to_check = ecs_client.list_task_definition_families()
+    for task_definition in task_definitions_list_to_check["families"]:
         if task_definition not in test_task_definitions:
             ecs_client.deregister_task_definition(
                 taskDefinition=task_definition
             )
 
-    task_definitions = ecs_client.client.list_task_definition_families()
+    task_definitions = ecs_client.list_task_definition_families()["families"]
     logging.debug(f"{jsonDumps(task_definitions)}")
 
     # need to return task definitions
