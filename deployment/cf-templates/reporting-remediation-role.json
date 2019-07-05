@@ -219,7 +219,8 @@
                                         "redshift:DisableLogging",
                                         "redshift:AuthorizeClusterSecurityGroupIngress",
                                         "redshift:ModifyCluster",
-                                        "redshift:RevokeClusterSecurityGroupIngress"
+                                        "redshift:RevokeClusterSecurityGroupIngress",
+                                        "ec2:Describe*"
                                     ],
                                     "Resource": "*"
                                 },
