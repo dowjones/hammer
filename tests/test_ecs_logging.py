@@ -9,7 +9,7 @@ region = "us-east-1"
 task_definitions = {
         "tas_definition1": {
             "Description": "ECS task definition's logging is enabled.",
-            "CheckShouldPass": False,
+            "CheckShouldPass": True,
             "containerDefinitions": [
                 {
                     'name': 'hello_world1',
@@ -31,7 +31,7 @@ task_definitions = {
         },
         "tas_definition2": {
             "Description": "ECS task definition's logging is not enabled.",
-            "CheckShouldPass": True,
+            "CheckShouldPass": False,
             "containerDefinitions": [
                 {
                     'name': 'hello_world3',
@@ -103,4 +103,4 @@ def test_task(task_definition_details):
     """
     name = find_task_definition_name(task_definition_details)
     expected = task_definitions.get(name, {})["CheckShouldPass"]
-    assert expected == (not task_definition_details.is_logging)
+    assert expected == task_definition_details.is_logging
