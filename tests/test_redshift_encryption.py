@@ -8,8 +8,8 @@ region = "us-east-1"
 
 clusters = {
     "cluster1": {
+        "Description": "Encrypted Cluster",
         "DBName": "test1",
-        "ClusterIdentifier": "test1",
         "ClusterType": "single-node",
         "NodeType": "ds2.xlarge",
         "MasterUsername": "user1",
@@ -19,8 +19,8 @@ clusters = {
         "CheckShouldPass": True
     },
     "cluster2": {
+        "Description": "Unencrypted Cluster",
         "DBName": "test2",
-        "ClusterIdentifier": "test2",
         "ClusterType": "single-node",
         "NodeType": "ds2.xlarge",
         "MasterUsername": "user2",
@@ -94,4 +94,4 @@ def test_cluster(cluster, remediated):
     """
 
     expected = True if remediated else find_rule_prop(cluster, "CheckShouldPass", True)
-    assert expected == cluster.is_encrypt
+    assert expected == (cluster.is_encrypt)
