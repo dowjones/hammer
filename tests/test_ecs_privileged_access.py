@@ -1,3 +1,5 @@
+import pytest
+
 from . import mock_ecs
 from  library.aws.ecs import ECSChecker
 from library.aws.utility import Account
@@ -40,7 +42,7 @@ task_definitions = {
 
 def find_task_definition_name(task_definition_details):
     for taskDefinition, props in task_definitions.items():
-        if props["Id"] == task_definition_details.name:
+        if props["family"] == task_definition_details.name:
             return taskDefinition
     return None
 
@@ -77,6 +79,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize("task_definition_details", checker.task_definitions, ids=ident_task_definition_test)
 
 
+@pytest.mark.ecs_privileged_access
 def test_task(task_definition_details):
     """
     Actual testing function.
