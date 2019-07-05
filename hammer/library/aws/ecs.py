@@ -46,7 +46,7 @@ class ECSClusterOperations(object):
 
                 ec2_instance_id = container_instance[0]["ec2InstanceId"]
                 ec2_instance = \
-                ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
+                    ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
 
                 if group_id in str(ec2_instance["SecurityGroups"]):
                     ecs_instances.append(ECSCluster_Details(
@@ -64,9 +64,10 @@ class ECSTaskDefinitions(object):
     """
 
     def __init__(self, account, name, arn, tags, is_logging=None, disabled_logging_container_names=None,
-                 is_privileged=None, privileged_container_names=None, external_image=None, container_image_details=None):
+                 is_privileged=None, privileged_container_names=None, external_image=None,
+                 container_image_details=None):
         """
-        
+
         :param account: `Account` instance where ECS task definition is present
         :param name: name of the task definition
         :param arn: arn of the task definition
@@ -105,7 +106,7 @@ class ECSChecker(object):
         self.account = account
         self.task_definitions = []
 
-    def check(self):
+    def check(self, task_definitions=None):
         """
         Walk through clusters in the account/region and check them.
         Put all ECS task definition's container details.
@@ -126,6 +127,9 @@ class ECSChecker(object):
 
         if "families" in response:
             for task_definition_name in response["families"]:
+                if task_definitions is not None and task_definition_name not in task_definitions:
+                    continue
+
                 tags = {}
                 container_image_details = []
                 disabled_logging_container_names = []
@@ -143,7 +147,7 @@ class ECSChecker(object):
 
                             if container_definition.get('privileged') is not None \
                                     and container_definition['privileged']:
-                                    privileged_container_names.append(container_name)
+                                privileged_container_names.append(container_name)
 
                             image = container_definition.get('image')
                             image_details = {}
