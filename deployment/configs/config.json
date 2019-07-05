@@ -166,6 +166,8 @@
         "enabled": true,
         "ddb.table_name": "hammer-redshift-unencrypted",
         "topic_name": "hammer-describe-redshift-cluster-encryption-lambda",
-        "reporting": true
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
     }
 }

@@ -23,4 +23,4 @@ Dow Jones Hammer can identify and report the following issues:
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html)     |Detects not encrypted at rest RDS instances            |Any one of RDS instances is not encrypted at reset                              |
 |[Redshift Unencrypted Clusters](playbook15_redshift_unencryption.html)     |Detects Redshift unencrypted cluster issues   |Any one of Redshift cluster is not encrypted at rest                              |
 
-Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues** and **RDS Unencrypted instances**, **Redshift Unencrypted Clusters**.
+Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues** and **RDS Unencrypted instances**.

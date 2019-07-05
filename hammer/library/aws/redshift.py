@@ -60,6 +60,21 @@ class RedshiftClusterOperations(object):
             PubliclyAccessible=public_access
         )
 
+    @staticmethod
+    def cluster_encryption(redshift_client, cluster_id):
+        """
+        
+        :param redshift_client: redshift client
+        :param cluster_id: cluster id which need to be encrypted. 
+        
+        :return: 
+        """
+        # Modify cluster as encrypted.
+        redshift_client.modify_cluster(
+            ClusterIdentifier=cluster_id,
+            Encrypted=True
+        )
+
 
 class RedshiftCluster(object):
     """
@@ -75,12 +90,11 @@ class RedshiftCluster(object):
         :param is_encrypted: encrypted or not.
         """
         self.account = account
-        self.name =name
+        self.name = name
         self.tags = convert_tags(tags)
         self.is_encrypt = is_encrypted
         self.is_public = is_public
         self.is_logging = is_logging
-
 
     def modify_cluster(self, public_access):
         """
@@ -91,6 +105,19 @@ class RedshiftCluster(object):
             RedshiftClusterOperations.set_cluster_access(self.account.client("redshift"), self.name, public_access)
         except Exception:
             logging.exception(f"Failed to modify {self.name} cluster ")
+            return False
+
+        return True
+
+    def encrypt_cluster(self):
+        """
+                Modify cluster as encrypted.
+                :return: nothing        
+                """
+        try:
+            RedshiftClusterOperations.cluster_encryption(self.account.client("redshift"), self.name)
+        except Exception:
+            logging.exception(f"Failed to modify {self.name} cluster encryption ")
             return False
 
         return True
@@ -156,7 +183,7 @@ class RedshiftClusterChecker(object):
                 cluster = RedshiftCluster(account=self.account,
                                           name=cluster_id,
                                           tags=tags,
-                                          is_encrypted = is_encrypted,
+                                          is_encrypted=is_encrypted,
                                           is_public=is_public)
                 self.clusters.append(cluster)
 
