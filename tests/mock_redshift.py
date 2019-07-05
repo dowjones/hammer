@@ -24,8 +24,8 @@ def create_env_clusters(clusters, region):
 
     for cluster, rule in clusters.items():
         cluster_id = redshift_client.create_cluster(
-            DBName=cluster,
-            ClusterIdentifier=rule["ClusterIdentifier"],
+            DBName=rule["DBName"],
+            ClusterIdentifier=cluster,
             ClusterType=rule["ClusterType"],
             NodeType=rule["NodeType"],
             MasterUsername=rule["MasterUsername"],
