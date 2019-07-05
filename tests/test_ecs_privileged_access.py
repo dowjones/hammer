@@ -9,7 +9,7 @@ region = "us-east-1"
 task_definitions = {
         "tas_definition1": {
             "Description": "ECS task enabled privileged access",
-            "CheckShouldPass": True,
+            "CheckShouldPass": False,
             "containerDefinitions": [
                 {
                     'name': 'hello_world1',
@@ -23,7 +23,7 @@ task_definitions = {
         },
         "tas_definition2": {
             "Description": "ECS task disabled privileged access",
-            "CheckShouldPass": False,
+            "CheckShouldPass": True,
             "containerDefinitions": [
                 {
                     'name': 'hello_world2',
@@ -88,4 +88,4 @@ def test_task(task_definition_details):
     """
     name = find_task_definition_name(task_definition_details)
     expected = task_definitions.get(name, {})["CheckShouldPass"]
-    assert expected == task_definition_details.is_privileged
+    assert expected == (not task_definition_details.is_privileged)
