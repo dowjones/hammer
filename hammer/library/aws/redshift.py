@@ -58,6 +58,21 @@ class RedshiftClusterOperations(object):
             PubliclyAccessible=public_access
         )
 
+    @staticmethod
+    def cluster_encryption(redshift_client, cluster_id):
+        """
+
+        :param redshift_client: redshift client
+        :param cluster_id: cluster id which need to be encrypted. 
+
+        :return: 
+        """
+        # Modify cluster as encrypted.
+        redshift_client.modify_cluster(
+            ClusterIdentifier=cluster_id,
+            Encrypted=True
+        )
+
 
 class RedshiftCluster(object):
     """
@@ -89,6 +104,19 @@ class RedshiftCluster(object):
             RedshiftClusterOperations.set_cluster_access(self.account.client("redshift"), self.name, public_access)
         except Exception:
             logging.exception(f"Failed to modify {self.name} cluster ")
+            return False
+
+        return True
+
+    def encrypt_cluster(self):
+        """
+                Modify cluster as encrypted.
+                :return: nothing        
+                """
+        try:
+            RedshiftClusterOperations.cluster_encryption(self.account.client("redshift"), self.name)
+        except Exception:
+            logging.exception(f"Failed to modify {self.name} cluster encryption ")
             return False
 
         return True
