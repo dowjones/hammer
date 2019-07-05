@@ -236,7 +236,7 @@ class RedshiftLoggingChecker(object):
 
         if "Clusters" in response:
             for cluster_details in response["Clusters"]:
-                logging_enabled = True
+                logging_enabled = False
                 tags = {}
                 cluster_id = cluster_details["ClusterIdentifier"]
 
