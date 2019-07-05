@@ -1,4 +1,3 @@
-import json
 import logging
 
 from botocore.exceptions import ClientError
@@ -47,7 +46,7 @@ class ECSClusterOperations(object):
 
                 ec2_instance_id = container_instance[0]["ec2InstanceId"]
                 ec2_instance = \
-                ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
+                    ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
 
                 if group_id in str(ec2_instance["SecurityGroups"]):
                     ecs_instances.append(ECSCluster_Details(
@@ -65,15 +64,22 @@ class ECSTaskDefinitions(object):
     """
 
     def __init__(self, account, name, arn, tags, is_logging=None, disabled_logging_container_names=None,
-                 is_privileged=None, privileged_container_names=None, external_image=None, container_image_details=None):
+                 is_privileged=None, privileged_container_names=None, external_image=None,
+                 container_image_details=None):
         """
-        :param account: `Account` instance where ECS task definition is present
 
+        :param account: `Account` instance where ECS task definition is present
         :param name: name of the task definition
         :param arn: arn of the task definition
-        :param arn: tags of task definition.
-        :param is_logging: logging enabled or not.
+        :param tags: tags of task definition.
+        :param is_logging: boolean. Task definition's container logging is enabled or not
+        :param disabled_logging_container_names: List of containers which logging disabled.
+        :param is_privileged: boolean
+        :param privileged_container_names: List of containers which privileged access enabled
+        :param external_image: boolean 
+        :param container_image_details: List of containers which image source is taken from external
         """
+
         self.account = account
         self.name = name
         self.arn = arn
@@ -84,10 +90,6 @@ class ECSTaskDefinitions(object):
         self.privileged_container_names = privileged_container_names
         self.external_image = external_image
         self.container_image_details = container_image_details
-
-    def __str__(self):
-        return f"{self.__class__.__name__}(Name={self.name}, is_logging={self.is_logging}, " \
-               f"is_privileged={self.is_privileged}, external_image={self.external_image})"
 
 
 class ECSChecker(object):
@@ -104,7 +106,7 @@ class ECSChecker(object):
         self.account = account
         self.task_definitions = []
 
-    def check(self):
+    def check(self, task_definitions=None):
         """
         Walk through clusters in the account/region and check them.
         Put all ECS task definition's container details.
@@ -125,6 +127,9 @@ class ECSChecker(object):
 
         if "families" in response:
             for task_definition_name in response["families"]:
+                if task_definitions is not None and task_definition_name not in task_definitions:
+                    continue
+
                 tags = {}
                 container_image_details = []
                 disabled_logging_container_names = []
@@ -142,7 +147,7 @@ class ECSChecker(object):
 
                             if container_definition.get('privileged') is not None \
                                     and container_definition['privileged']:
-                                    privileged_container_names.append(container_name)
+                                privileged_container_names.append(container_name)
 
                             image = container_definition.get('image')
                             image_details = {}

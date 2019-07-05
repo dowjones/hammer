@@ -10,7 +10,7 @@ task_definitions = {
         "tas_definition": {
             "family": 'test_ecs_image_source',
             "Description": "Congainer image taken from external source",
-            "CheckShouldPass": True,
+            "CheckShouldPass": False,
             "containerDefinitions": [
                 {
                     'name': 'hello_world1',
@@ -33,7 +33,7 @@ task_definitions = {
 
 def find_task_definition_name(task_definition_details):
     for taskDefinition, props in task_definitions.items():
-        if props["family"] == task_definition_details.name:
+        if taskDefinition == task_definition_details.name:
             return taskDefinition
     return None
 
@@ -64,7 +64,7 @@ def pytest_generate_tests(metafunc):
 
     # validate ebs volumes in mocked env
     checker = ECSChecker(account)
-    checker.check(ids=test_task_definitions)
+    checker.check(task_definitions=test_task_definitions)
 
     # create test cases for each response
     metafunc.parametrize("task_definition_details", checker.task_definitions, ids=ident_task_definition_test)
@@ -81,4 +81,4 @@ def test_task(task_definition_details):
     """
     name = find_task_definition_name(task_definition_details)
     expected = task_definitions.get(name, {})["CheckShouldPass"]
-    assert expected == task_definition_details.external_image
+    assert expected == (not task_definition_details.external_image)
