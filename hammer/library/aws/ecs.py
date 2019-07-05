@@ -106,7 +106,7 @@ class ECSChecker(object):
         self.account = account
         self.task_definitions = []
 
-    def check(self):
+    def check(self, task_definitions=None):
         """
         Walk through clusters in the account/region and check them.
         Put all ECS task definition's container details.
@@ -127,6 +127,9 @@ class ECSChecker(object):
 
         if "families" in response:
             for task_definition_name in response["families"]:
+                if task_definitions is not None and task_definition_name not in task_definitions:
+                    continue
+
                 tags = {}
                 container_image_details = []
                 disabled_logging_container_names = []

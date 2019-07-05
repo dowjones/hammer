@@ -23,11 +23,11 @@ def create_env_task_definitions(task_definitions, region):
 
     for task_definition, rule in task_definitions.items():
         ecs_client.register_task_definition(
-            family=rule["family"],
+            family=task_definition,
             containerDefinitions=rule["containerDefinitions"]
         )
 
-        test_task_definitions.append(rule["family"])
+        test_task_definitions.append(task_definition)
 
     # remove moto precreated task definitions
     task_definitions_list_to_check = ecs_client.list_task_definition_families()
