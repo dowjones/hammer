@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating S3 acls checking")
 
     try:
-        sns_arn = os.environ["SNS_S3_ACL_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.s3acl.enabled:

@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating public EBS snapshots checking")
 
     try:
-        sns_arn = os.environ["SNS_EBS_SNAPSHOTS_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.ebsSnapshot.enabled:

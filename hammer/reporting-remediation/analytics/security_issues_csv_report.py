@@ -9,7 +9,7 @@ from library.aws.utility import AssumeRole
 from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
-    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, ECSLoggingIssue
+    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, ECSLoggingIssue, SQSPolicyIssue
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
 from library.aws.s3 import S3Operations
@@ -70,6 +70,7 @@ class CSVReport(object):
             (self.config.ebsSnapshot.ddb_table_name, "EBS Public Snapshots", EBSPublicSnapshotIssue),
             (self.config.cloudtrails.ddb_table_name, "CloudTrail Logging Issues", CloudTrailIssue),
             (self.config.rdsSnapshot.ddb_table_name, "RDS Public Snapshots", RdsPublicSnapshotIssue),
+            (self.config.sqspolicy.ddb_table_name, "SQS Policy Public Access", SQSPolicyIssue),
             (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue)
         ]
 

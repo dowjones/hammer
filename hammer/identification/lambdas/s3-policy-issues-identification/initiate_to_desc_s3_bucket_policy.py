@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating S3 policies checking")
 
     try:
-        sns_arn = os.environ["SNS_S3_POLICY_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.s3policy.enabled:
