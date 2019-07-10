@@ -28,6 +28,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
 |[AMIs Public Access](playbook13_amis_public_access.html#3-issue-remediation)     | `Yes`      | `No`                |
+|[ECS Privileged Access issues](playbook19_ecs_privileged_access.html#3-issue-remediation)     | `No`      | `No`                |
 
 ## 2. How Remediation Backup Works
 

@@ -45,5 +45,9 @@
     "s3_encryption": {
 	},
     "rds_encryption": {
+	},
+	"ecs_privileged_access":{
+		"__comment__": "Detects ECS task definitions which are not enabled logging - task definitions ARNs.",
+		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/dev-admin:2993"]
 	}
 }
