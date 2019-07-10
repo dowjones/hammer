@@ -10,7 +10,7 @@ from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
     IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, \
-    ECSPrivilegedAccessIssue
+    ECSPrivilegedAccessIssue, SQSPolicyIssue
 
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
@@ -73,6 +73,7 @@ class CSVReport(object):
             (self.config.cloudtrails.ddb_table_name, "CloudTrail Logging Issues", CloudTrailIssue),
             (self.config.rdsSnapshot.ddb_table_name, "RDS Public Snapshots", RdsPublicSnapshotIssue),
             (self.config.ecs_privileged_access.ddb_table_name, "ECS Privileged Access Issues", ECSPrivilegedAccessIssue),
+            (self.config.sqspolicy.ddb_table_name, "SQS Policy Public Access", SQSPolicyIssue)
         ]
 
         open_security_issues_workbook = xlwt.Workbook()

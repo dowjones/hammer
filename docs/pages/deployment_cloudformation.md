@@ -5,14 +5,14 @@ sidebar: mydoc_sidebar
 permalink: deployment_cloudformation.html
 ---
 
-You should perform the following steps to deploy Dow Jones Hammer using CloudFormation:
+You should perform the steps mentioned below to deploy Dow Jones Hammer using CloudFormation:
 
 1. Accomplish the preliminary steps
 2. Put the Dow Jones Hammer packages into the Dow Jones Hammer deployment bucket
 3. Deploy CloudFormation stacks to the master AWS account
 4. Deploy CloudFormation stacks to the slave AWS accounts
 
-## 1. Preliminary Steps
+## 1. Preliminary steps
 
 Check [this section](configuredeploy_overview.html#2-preliminary-steps) to make sure you have performed all necessary steps before proceeding further.
 
@@ -99,6 +99,7 @@ You will need to set the following parameters:
 * **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
 * **SourceIdentificationRDSEncryption**: the relative path to the Lambda package that identifies RDS unencrypted instances. The default value is **rds-unencrypted-instance-identification.zip**.
 * **SourceIdentificationECSPrivilegedAccess**: the relative path to the Lambda package that identifies ECS privileged access issues. The default value is **ecs-privileged-access-issues-identification.zip**.
+* **SourceIdentificationAMIPublicAccess**: the relative path to the Lambda package that identifies Public AMIs. The default value is **ami-public-acess-issues-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.
