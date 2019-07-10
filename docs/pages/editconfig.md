@@ -387,6 +387,20 @@ Parameters:
 * **accounts**: *optional* comma-separated list of accounts to check and report for issue in square brackets. Use this key to override accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **ignore_accounts**: *optional* comma-separated list of accounts to ignore during check. Use this key to exclude accounts from **aws.accounts** in [config.json](#11-master-aws-account-settings);
 * **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
+
+### 2.13. Public AMI issues
+
+This section describes how to detect whether you have AMIs public access or not. Refer to [issue-specific playbook](playbook13_amis_public_access.html) for further details.
+
+Edit the **public_ami_issues** section of the `config.json` file to configure the handling of this issue.
+
+Parameters:
+* **enabled**: enables/disables issue identification. The default value is `true`;
+* **ddb.table_name**: the name of the DynamoDB table where Dow Jones Hammer will put detection results. The default value is `hammer-public-amis`.
+* **reporting**: defines whether Dow Jones Hammer will report detected issues to JIRA/Slack. The default value is `false`;
+* **remediation**: defines whether Dow Jones Hammer will automatically remediate the detected issue. The default value is `false`;
+* **remediation_retention_period**: the amount of days that should pass between the detection of an issue and its automatic remediation by Dow Jones Hammer. The default value is `0`.
+
 ### 2.17. ECS external image source issues
 
 This section describes how to detect whether you have ECS image source is external or internal. Refer to [issue-specific playbook](playbook20_ecs_external_image_source.html) for further details.

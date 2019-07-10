@@ -97,7 +97,6 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
 
-
 resource "aws_s3_bucket_object" "ecs-external-image-source-issues-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("ecs-external-image-source-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-external-image-source-issues-identification.zip"))}")}"

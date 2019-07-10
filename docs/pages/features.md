@@ -21,6 +21,7 @@ Dow Jones Hammer can identify and report the following issues:
 |[SQS Policy Public Access](playbook10_sqs_public_policy.html)     |Detects publicly accessible SQS policy                 |Any of SQS queues is worldwide accessible by policy                             |
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html)         |Detects not encrypted at reset S3 buckets              |Any of S3 bucket is not encrypted at rest                                       |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html)     |Detects not encrypted at rest RDS instances            |Any one of RDS instances is not encrypted at reset                              |
+|[AMIs public access](playbook13_amis_public_access.html)     |Detects publicly accessible AMIs            |Any one of AMI is worldwide accessible                             |
 |[ECS External Image Source](playbook20_ecs_external_image_source.html)     |Detects ECS task definitions image source issues  |Any one of ECS image source is external or internal                              |
 
 Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues** and **RDS Unencrypted instances**.
