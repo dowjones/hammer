@@ -529,8 +529,11 @@ class SecurityGroupsChecker(object):
                 args['Filters'].append(
                     {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
                 )
+        secgroups = []
         try:
-            secgroups = self.account.client("ec2").describe_security_groups(**args)["SecurityGroups"]
+            paginator = self.account.client("ec2").get_paginator('describe_security_groups')
+            for page in paginator.paginate(**args):
+                secgroups.extend(page["SecurityGroups"])
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
