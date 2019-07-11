@@ -17,6 +17,7 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.sqs-public-policy-identification",
                   "aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification",
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification",
+                  "aws_s3_bucket_object.ecs-privileged-access-issues-identification",
                   "aws_s3_bucket_object.ecs-logging-issues-identification"
                  ]
 
@@ -45,6 +46,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationSQSPublicPolicy = "${aws_s3_bucket_object.sqs-public-policy-identification.id}"
         SourceIdentificationS3Encryption = "${aws_s3_bucket_object.s3-unencrypted-bucket-issues-identification.id}"
         SourceIdentificationRDSEncryption = "${aws_s3_bucket_object.rds-unencrypted-instance-identification.id}"
+        SourceIdentificationECSPrivilegedAccess = "${aws_s3_bucket_object.ecs-privileged-access-issues-identification.id}"
         SourceIdentificationECSLogging = "${aws_s3_bucket_object.ecs-logging-issues-identification.id}"
     }
 

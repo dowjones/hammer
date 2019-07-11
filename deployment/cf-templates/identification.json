@@ -1,3 +1,4 @@
+
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Hammer identification stack",
@@ -28,6 +29,7 @@
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
                         "SourceIdentificationAMIPublicAccess",
+                        "SourceIdentificationECSPrivilegedAccess",
                         "SourceIdentificationECSLogging"
                     ]
                 },
@@ -93,6 +95,9 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
+                },
+                "SourceIdentificationECSPrivilegedAccess":{
+                    "default": "Relative path to privileged access issue ECS sources"
                 },
                 "SourceIdentificationECSLogging":{
                     "default": "Relative path to disabled logging ECS sources"
@@ -193,6 +198,10 @@
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
         },
+        "SourceIdentificationECSPrivilegedAccess": {
+            "Type": "String",
+            "Default": "ecs-privileged-access-issues-identification.zip"
+        },
         "SourceIdentificationECSLogging": {
             "Type": "String",
             "Default": "ecs-logging-issues-identification.zip"
@@ -252,6 +261,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricECSPrivilegedAccessError": {
+                "value": "ECSPrivilegedAccessError"
             },
             "IdentificationMetricECSLoggingError": {
                 "value": "ECSLoggingError"
@@ -333,6 +345,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-sns"
+            },
+            "SNSTopicNameECSPrivilegedAccess": {
+                "value": "describe-ecs-privileged-access-lambda"
             },
             "SNSDisplayNameECSLogging": {
                 "value": "describe-ecs-logging-sns"
@@ -423,6 +441,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateECSPrivilegedAccessLambdaFunctionName": {
+                "value": "initiate-ecs-privileged-access"
+            },
+            "IdentifyECSPrivilegedAccessLambdaFunctionName": {
+                "value": "describe-ecs-privileged-access"
             },
             "InitiateECSLoggingLambdaFunctionName": {
                 "value": "initiate-ecs-logging"
@@ -1117,6 +1141,46 @@
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateECSPrivilegedAccess": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationECSPrivilegedAccess" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify ECS privileged access issues.",
+                    "EvaluateLambdaDescription": "Lambda function to describe ECS privileged access issues.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyECSPrivilegedAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_ecs_privileged_access_issues.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_ecs_privileged_access_issues.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate ECS privileged access evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationECSPrivilegedAccess"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameECSPrivilegedAccess", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSPrivilegedAccess", "value"] } ]
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }

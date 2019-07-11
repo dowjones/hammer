@@ -162,11 +162,16 @@
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
     },
+    "ecs_privileged_access": {
+        "enabled": true,
+        "ddb.table_name": "hammer-ecs-privileged-access",
+        "topic_name": "hammer-describe-ecs-privileged-access-lambda",
+        "reporting": true
+    },
     "ecs_logging": {
         "enabled": true,
         "ddb.table_name": "hammer-ecs-logging",
         "topic_name": "hammer-describe-ecs-logging-lambda",
         "reporting": true
     }
-
 }
