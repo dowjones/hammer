@@ -136,6 +136,7 @@
     "ec2_public_ami": {
         "enabled": true,
         "ddb.table_name": "hammer-ec2-public-ami",
+        "topic_name": "hammer-describe-ami-public-access-lambda",
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 21
