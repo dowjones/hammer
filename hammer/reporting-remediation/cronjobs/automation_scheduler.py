@@ -58,7 +58,8 @@ def automation_cronjob(config):
         ("S3 Unencrypted Buckets",    config.s3Encrypt,           "create_s3_unencrypted_bucket_issue_tickets", "clean_s3bucket_unencrypted"),
         ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
         ("ECS Privileged Access Issues", config.ecs_privileged_access, "create_ecs_privileged_access_issue_tickets", None),
-        ("ECS Logging Issues", config.ecs_logging, "create_ecs_logging_issue_tickets", None)
+        ("ECS Logging Issues", config.ecs_logging, "create_ecs_logging_issue_tickets", None),
+        ("ECS External Image Sources", config.ecs_external_image_source, "create_ecs_external_image_source_issue_tickets", None)
     ]
 
     for title, module_config, reporting_script, remediation_script in modules:

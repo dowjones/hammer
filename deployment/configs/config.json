@@ -174,5 +174,11 @@
         "ddb.table_name": "hammer-ecs-logging",
         "topic_name": "hammer-describe-ecs-logging-lambda",
         "reporting": true
+    },
+    "ecs_external_image_source": {
+        "enabled": true,
+        "topic_name": "hammer-describe-ecs-external-image-source-lambda",
+        "ddb.table_name": "hammer-ecs-external-image-source",
+        "reporting": true
     }
 }
