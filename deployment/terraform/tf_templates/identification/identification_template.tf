@@ -164,7 +164,7 @@ resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-backup-ddb" {
 
 
 module "hammer_id_nested" {
-    source    = "tf_templates/identiifcation/identification_nested_template.tf"
+    source    = "identification_nested_template.tf"
     tags = "${var.tags}"
     parameters {
         ResourcesPrefix = "${var.resources-prefix}"
