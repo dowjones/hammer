@@ -1,5 +1,5 @@
 module "hammer_id_main" {
-    source    = "../../../tf_templates/identiifcation/identification_template.tf"
+    source    = "../../../../tf_templates/identiifcation/identification_template.tf"
     tags = "${var.tags}"
     parameters {
         SourceS3Bucket  = "${var.s3bucket}"
