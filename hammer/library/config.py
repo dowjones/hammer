@@ -65,6 +65,11 @@ class Config(object):
 
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
+        # ECS logging issue config
+        self.ecs_logging = ModuleConfig(self._config, "ecs_logging")
+
+        # ECS access issue config
+        self.ecs_privileged_access = ModuleConfig(self._config, "ecs_privileged_access")
 
         # ECS image source issue config
         self.ecs_external_image_source = ModuleConfig(self._config, "ecs_external_image_source")

@@ -85,6 +85,7 @@ resource "aws_s3_bucket_object" "sqs-public-policy-identification" {
     key    = "lambda/${format("sqs-public-policy-identification-%s.zip", "${md5(file("${path.module}/../../../packages/sqs-public-policy-identification.zip"))}")}"
     source = "${path.module}/../../../packages/sqs-public-policy-identification.zip"
 }
+
 resource "aws_s3_bucket_object" "s3-unencrypted-bucket-issues-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("s3-unencrypted-bucket-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/s3-unencrypted-bucket-issues-identification.zip"))}")}"
@@ -95,6 +96,18 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("rds-unencrypted-instance-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "ecs-privileged-access-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-privileged-access-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-privileged-access-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-privileged-access-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "ecs-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-logging-issues-identification.zip"
 }
 
 resource "aws_s3_bucket_object" "ecs-external-image-source-issues-identification" {

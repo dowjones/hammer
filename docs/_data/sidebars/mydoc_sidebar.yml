@@ -123,7 +123,16 @@ entries:
     - title: AMI public access
       url: /playbook13_amis_public_access.html
       output: web, pdf
+    
+    - title: ECS Logging
+      url: /playbook18_ecs_logging.html
+      output: web, pdf
+      
+    - title: ECS Privileged Access
+      url: /playbook19_ecs_privileged_access.html
+      output: web, pdf
       
     - title: ECS External Image Source
       url: /playbook20_ecs_external_image_source.html
       output: web, pdf 
+    
