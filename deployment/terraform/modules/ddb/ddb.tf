@@ -277,7 +277,7 @@ resource "aws_dynamodb_table" "api-requests" {
     hash_key       = "request_id"
 
     attribute {
-        name = "issue_id"
+        name = "request_id"
         type = "S"
     }
 }
