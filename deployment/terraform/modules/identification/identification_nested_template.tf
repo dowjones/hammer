@@ -49,8 +49,8 @@ resource "aws_lambda_function" "lambda-evaluate" {
   memory_size      = "${var.EvaluateLambdaMemorySize}"
 
   vpc_config {
-      subnet_ids = "${[split(",", var.LambdaSubnets)]}"
-      security_group_ids = "${[split(",", var.LambdaSecurityGroups)]}"
+      subnet_ids = "${var.LambdaSubnets}"
+      security_group_ids = "${var.LambdaSecurityGroups}"
   }
 
 }

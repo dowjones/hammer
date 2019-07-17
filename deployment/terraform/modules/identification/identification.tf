@@ -92,7 +92,7 @@ resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-logs-forwarder
     principal = "logs.${data.aws_region.current.name}.amazonaws.com"
     source_arn = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
 
-}aws_region
+}
 
 resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-backup-ddb" {
     depends_on = [
