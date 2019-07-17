@@ -58,7 +58,7 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
   name = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
-  destination_arn = "${aws_lambda_function.lambda-backup-ddb.arn}"
+  destination_arn = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.arn}"
 }
 
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
