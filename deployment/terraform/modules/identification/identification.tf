@@ -31,7 +31,7 @@ resource "aws_lambda_function" "lambda-backup-ddb" {
   function_name = "${var.resources-prefix}backup-ddb"
 
   s3_bucket = "${var.s3bucket}"
-  s3_key    = "${aws_s3_bucket_object.logs-forwarder.id}"
+  s3_key    = "${aws_s3_bucket_object.ddb-tables-backup.id}"
 
   description = "Lambda function for parsing logs"
   role    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
