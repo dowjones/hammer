@@ -7,7 +7,7 @@ resource "aws_lambda_function" "lambda-initiate" {
   s3_bucket = "${var.SourceS3Bucket}"
   s3_key    = "${var.SourceIdentification}"
 
-  description = ${var.InitiateLambdaDescription}
+  description = "${var.InitiateLambdaDescription}"
   role    = "${var.IdentificationIAMRole}"
   handler = "${var.InitiateLambdaHandler}"
   runtime = "python3.6"
@@ -41,7 +41,7 @@ resource "aws_lambda_function" "lambda-evaluate" {
   s3_bucket = "${var.SourceS3Bucket}"
   s3_key    = "${var.SourceIdentification}"
 
-  description = ${var.EvaluateLambdaDescription}
+  description = "${var.EvaluateLambdaDescription}"
   role    = "${var.IdentificationIAMRole}"
   handler = "${var.EvaluateLambdaHandler}"
   runtime = "python3.6"
