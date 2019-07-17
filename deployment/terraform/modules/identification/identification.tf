@@ -11,7 +11,7 @@ resource "aws_lambda_function" "lambda-logs-forwarder" {
   s3_key    = "${aws_s3_bucket_object.logs-forwarder.id}"
 
   description = "Lambda function for parsing logs"
-  role    = "${var.identificationIAMRole}"
+  role    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
   handler = "logs_forwarder.lambda_handler"
   runtime = "python3.6"
   timeout          = "300"
@@ -34,7 +34,7 @@ resource "aws_lambda_function" "lambda-backup-ddb" {
   s3_key    = "${aws_s3_bucket_object.logs-forwarder.id}"
 
   description = "Lambda function for parsing logs"
-  role    = "${var.identificationIAMRole}"
+  role    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
   handler = "ddb_tables_backup.lambda_handler"
   runtime = "python3.6"
   timeout          = "300"
@@ -166,7 +166,7 @@ module "hammer_id_nested_sg" {
 
     source    = "../identification-nested"
     tags = "${var.tags}"
-    IdentificationIAMRole = "${var.identificationIAMRole}"
+    IdentificationIAMRole = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
     IdentificationCheckRateExpression = "${var.identificationCheckRateExpression}"
     LambdaSubnets = "${var.lambdaSubnets}"
     LambdaSecurityGroups = "${var.lambdaSecurityGroups}"
