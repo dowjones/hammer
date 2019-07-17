@@ -52,13 +52,13 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
 
   depends_on = [
     "aws_cloudwatch_log_group.log-group-lambda-backup-ddb",
-    "aws_lambda_permission.allow-cloudwatch-to-call-lambda-backup-ddb",
+    "aws_lambda_permission.allow-cloudwatch-to-call-lambda-logs-forwarder",
     "aws_lambda_function.lambda-logs-forwarder"
   ]
   name = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
-  destination_arn = "${aws_cloudwatch_log_group.log-group-lambda-forwarder.arn}"
+  destination_arn = "${aws_lambda_function.lambda-logs-forwarder.arn}"
 }
 
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
