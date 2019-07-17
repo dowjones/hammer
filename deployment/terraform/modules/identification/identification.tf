@@ -51,12 +51,13 @@ resource "aws_cloudwatch_log_group" "log-group-lambda-backup-ddb" {
 resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-backup-ddb" {
 
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-backup-ddb, aws_lambda_permission. ,
-    aws_lambda_function.lambda-logs-forwarder
+    "aws_cloudwatch_log_group.log-group-lambda-backup-ddb",
+    "aws_lambda_permission.allow-cloudwatch-to-call-lambda-backup-ddb",
+    "aws_lambda_function.lambda-logs-forwarder"
   ]
-  log_group_name  = "aws_cloudwatch_log_group.log-group-lambda-evaluate.name"
+  log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
-  destination_arn = aws_lambda_function.lambda-logs-forwarder.arn
+  destination_arn = "${aws_lambda_function.lambda-logs-forwarder.arn}"
 }
 
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
@@ -181,7 +182,7 @@ module "hammer_id_nested_sg" {
         InitiateLambdaDescription = "Lambda function for initiate to identify bad security groups"
         InitiateLambdaHandler = "initiate_to_desc_sec_grps.lambda_handler"
         SourceIdentification =  "${aws_s3_bucket_object.sg-issues-identification.id}"
-        LambdaLogsForwarderArn =  ${aws_lambda_function.lambda-logs-forwarder.arn}
+        LambdaLogsForwarderArn =  "${aws_lambda_function.lambda-logs-forwarder.arn}"
         EvaluateLambdaName = ${var.identifySecurityGroupLambdaFunctionName}
         EvaluateLambdaDescription = "Lambda function to describe security groups unrestricted access."
         EvaluateLambdaHandler = "describe_sec_grps_unrestricted_access.lambda_handler"
@@ -190,6 +191,6 @@ module "hammer_id_nested_sg" {
         EventRuleDescription = "Hammer ScheduledRule to initiate Security Groups evaluations"
         SNSDisplayName = ${var.resources-prefix}${var.snsDisplayNameSecurityGroups}
         SNSTopicName = ${var.resources-prefix}${var.snsTopicNameSecurityGroups}
-        SNSIdentificationErrors = aws_sns_topic.sns-identification-errors.name
+        SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.name}"
     }
 }
