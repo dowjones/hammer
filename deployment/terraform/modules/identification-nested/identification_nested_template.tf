@@ -27,6 +27,7 @@ resource "aws_cloudwatch_log_subscription_filter" "lambda_initiate_logfilter" {
   depends_on = [
     "aws_cloudwatch_log_group.log-group-lambda-initiate"
   ]
+  name = "${aws_cloudwatch_log_group.log-group-lambda-initiate.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-initiate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = "${var.LambdaLogsForwarderArn}"
@@ -65,6 +66,7 @@ resource "aws_cloudwatch_log_subscription_filter" "lambda_evaluate_logfilter" {
   depends_on = [
     "aws_cloudwatch_log_group.log-group-lambda-evaluate"
   ]
+  name = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = "${var.LambdaLogsForwarderArn}"
