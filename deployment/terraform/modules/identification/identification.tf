@@ -150,11 +150,11 @@ resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-backup-ddb" {
 
 
   alarm_actions = [
-    "${aws_sns_topic.sns-identification-errors.name}"
+    "${aws_sns_topic.sns-identification-errors.arn}"
   ]
 
   ok_actions = [
-    "${aws_sns_topic.sns-identification-errors.name}"
+    "${aws_sns_topic.sns-identification-errors.arn}"
   ]
 
   dimensions {
@@ -187,5 +187,5 @@ module "hammer_id_nested_sg" {
     EventRuleDescription = "Hammer ScheduledRule to initiate Security Groups evaluations"
     SNSDisplayName = "${var.resources-prefix}${var.snsDisplayNameSecurityGroups}"
     SNSTopicName = "${var.resources-prefix}${var.snsTopicNameSecurityGroups}"
-    SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.name}"
+    SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.arn}"
 }
