@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 
 resource "aws_lambda_function" "lambda-logs-forwarder" {
   depends_on = [
-    "aws_cloudwatch_log_group.log-group-lambda-evaluate"
+    "aws_cloudwatch_log_group.log-group-lambda-forwarder"
   ]
   function_name = "${var.resources-prefix}logs-forwarder"
 
@@ -19,7 +19,7 @@ resource "aws_lambda_function" "lambda-logs-forwarder" {
 
 }
 
-resource "aws_cloudwatch_log_group" "log-group-lambda-evaluate" {
+resource "aws_cloudwatch_log_group" "log-group-lambda-forwarder" {
     name = "/aws/lambda/${var.resources-prefix}logs-forwarder"
     retention_in_days = 7
 }
@@ -58,7 +58,7 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
   name = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
-  destination_arn = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.arn}"
+  destination_arn = "${aws_cloudwatch_log_group.log-group-lambda-forwarder.arn}"
 }
 
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
