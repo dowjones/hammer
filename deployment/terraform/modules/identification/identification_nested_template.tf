@@ -5,7 +5,7 @@ resource "aws_lambda_function" "lambda-initiate" {
   function_name = "${var.InitiateLambdaName}"
 
   s3_bucket = "${var.SourceS3Bucket}"
-  s3_key    = "${var.SourceIdentificationSG}"
+  s3_key    = "${var.SourceIdentification}"
 
   description = ${var.InitiateLambdaDescription}
   role    = "${var.IdentificationIAMRole}"
@@ -39,7 +39,7 @@ resource "aws_lambda_function" "lambda-evaluate" {
   function_name = "${var.EvaluateLambdaName}"
 
   s3_bucket = "${var.SourceS3Bucket}"
-  s3_key    = "${var.SourceIdentificationSG}"
+  s3_key    = "${var.SourceIdentification}"
 
   description = ${var.EvaluateLambdaDescription}
   role    = "${var.IdentificationIAMRole}"

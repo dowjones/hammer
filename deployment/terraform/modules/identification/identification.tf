@@ -183,7 +183,7 @@ module "hammer_id_nested_sg" {
         SourceS3Bucket = "${var.s3bucket}"
         InitiateLambdaDescription = "Lambda function for initiate to identify bad security groups"
         InitiateLambdaHandler = "initiate_to_desc_sec_grps.lambda_handler"
-        SourceIdentificationSG =  "${aws_s3_bucket_object.sg-issues-identification.id}"
+        SourceIdentification =  "${aws_s3_bucket_object.sg-issues-identification.id}"
         LambdaLogsForwarderArn =  aws_lambda_function.lambda-logs-forwarder.arn
         EvaluateLambdaName = ${var.identifySecurityGroupLambdaFunctionName}
         EvaluateLambdaDescription = "Lambda function to describe security groups unrestricted access."
