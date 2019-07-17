@@ -55,10 +55,10 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
     "aws_lambda_permission.allow-cloudwatch-to-call-lambda-backup-ddb",
     "aws_lambda_function.lambda-logs-forwarder"
   ]
-  name = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
-  log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
+  name = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
+  log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-backup-ddb.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
-  destination_arn = "${aws_lambda_function.lambda-logs-forwarder.arn}"
+  destination_arn = "${aws_lambda_function.lambda-backup-ddb.arn}"
 }
 
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
@@ -167,7 +167,7 @@ module "hammer_id_nested_sg" {
     source    = "../identification-nested"
     tags = "${var.tags}"
     IdentificationIAMRole = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
-    IdentificationCheckRateExpression = "${var.identificationCheckRateExpression}"
+    IdentificationCheckRateExpression = "cron(35, ${var.identificationCheckRateExpression})"
     LambdaSubnets = "${var.lambdaSubnets}"
     LambdaSecurityGroups = "${var.lambdaSecurityGroups}"
     SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}"
