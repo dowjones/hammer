@@ -169,8 +169,8 @@ module "hammer_id_nested_sg" {
     IdentificationCheckRateExpression = "${var.identificationCheckRateExpression}"
     LambdaSubnets = "${var.lambdaSubnets}"
     LambdaSecurityGroups = "${var.lambdaSecurityGroups}"
-    SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}",
-    SourceBackupDDB = "${aws_s3_bucket_object.ddb-tables-backup.id}",
+    SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}"
+    SourceBackupDDB = "${aws_s3_bucket_object.ddb-tables-backup.id}"
     IdentificationLambdaSource = "${aws_s3_bucket_object.sg-issues-identification.id}"
     InitiateLambdaName = "${var.initiateSecurityGroupLambdaFunctionName}"
     SourceS3Bucket = "${var.s3bucket}"
