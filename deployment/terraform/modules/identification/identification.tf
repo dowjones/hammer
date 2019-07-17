@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 
 resource "aws_lambda_function" "lambda-logs-forwarder" {
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-evaluate
+    "aws_cloudwatch_log_group.log-group-lambda-evaluate"
   ]
   function_name = "${var.resources-prefix}logs-forwarder"
 
@@ -26,7 +26,7 @@ resource "aws_cloudwatch_log_group" "log-group-lambda-evaluate" {
 
 resource "aws_lambda_function" "lambda-backup-ddb" {
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-backup-ddb
+    "aws_cloudwatch_log_group.log-group-lambda-backup-ddb"
   ]
   function_name = "${var.resources-prefix}backup-ddb"
 
@@ -54,7 +54,7 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
     aws_cloudwatch_log_group.log-group-lambda-backup-ddb, aws_lambda_permission. ,
     aws_lambda_function.lambda-logs-forwarder
   ]
-  log_group_name  = aws_cloudwatch_log_group.log-group-lambda-evaluate.name
+  log_group_name  = "aws_cloudwatch_log_group.log-group-lambda-evaluate.name"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = aws_lambda_function.lambda-logs-forwarder.arn
 }
@@ -62,7 +62,7 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
 resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
 
     depends_on = [
-      aws_lambda_function.lambda-backup-ddb,
+      "aws_lambda_function.lambda-backup-ddb"
     ]
 
     name = "${var.resources-prefix}BackupDDB"
@@ -72,7 +72,7 @@ resource "aws_cloudwatch_event_rule" "event-backup-ddb" {
 
 resource "aws_cloudwatch_event_target" "check-backup-ddb" {
     depends_on = [
-      aws_cloudwatch_event_rule.event-backup-ddb,
+      "aws_cloudwatch_event_rule.event-backup-ddb"
     ]
 
     rule = "${aws_cloudwatch_event_rule.event-backup-ddb.name}"
@@ -82,7 +82,7 @@ resource "aws_cloudwatch_event_target" "check-backup-ddb" {
 
 resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-logs-forwarder" {
     depends_on = [
-      aws_lambda_function.lambda-logs-forwarder
+      "aws_lambda_function.lambda-logs-forwarder"
     ]
 
     statement_id = "AllowExecutionFromCloudWatch"
@@ -95,7 +95,7 @@ resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-logs-forwarder
 
 resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-backup-ddb" {
     depends_on = [
-      aws_lambda_function.lambda-backup-ddb, event-backup-ddb
+      "aws_lambda_function.lambda-backup-ddb", "aws_cloudwatch_event_rule.event-backup-ddb"
     ]
 
     statement_id = "AllowExecutionFromCloudWatch"
@@ -108,14 +108,12 @@ resource "aws_lambda_permission" "allow-cloudwatch-to-call-lambda-backup-ddb" {
 
 
 resource "aws_sns_topic" "sns-identification-errors" {
-  depends_on = [
-
   name         = "${var.resources-prefix}identification-errors"
 }
 
 resource "aws_sns_topic_subscription" "lambda" {
   depends_on = [
-      aws_sns_topic.sns-identification-errors, aws_lambda_function.lambda-logs-forwarder
+      "aws_sns_topic.sns-identification-errors", "aws_lambda_function.lambda-logs-forwarder"
   ]
   topic_arn = "${aws_sns_topic.sns-identification-errors.arn}"
   protocol  = "lambda"
@@ -124,7 +122,7 @@ resource "aws_sns_topic_subscription" "lambda" {
 
 resource "aws_lambda_permission" "with_sns" {
   depends_on = [
-      aws_sns_topic.sns-identification-errors, aws_lambda_function.lambda-logs-forwarder
+      "aws_sns_topic.sns-identification-errors", "aws_lambda_function.lambda-logs-forwarder"
   ]
 
   statement_id  = "AllowExecutionFromSNS"
@@ -136,7 +134,7 @@ resource "aws_lambda_permission" "with_sns" {
 
 resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-backup-ddb" {
   depends_on = [
-      aws_lambda_function.lambda-backup-ddb, aws_sns_topic.sns-identification-errors,
+      "aws_lambda_function.lambda-backup-ddb", "aws_sns_topic.sns-identification-errors"
   ]
   alarm_name          = "/${aws_lambda_function.lambda-backup-ddb.function_name}LambdaError"
   comparison_operator = "GreaterThanThreshold"
@@ -167,8 +165,7 @@ resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-backup-ddb" {
 
 module "hammer_id_nested_sg" {
 
-    depends_on
-    source    = "identification_nested_template.tf"
+    source    = "../identification_nested_template.tf"
     tags = "${var.tags}"
     parameters {
         ResourcesPrefix = "${var.resources-prefix}"
@@ -184,7 +181,7 @@ module "hammer_id_nested_sg" {
         InitiateLambdaDescription = "Lambda function for initiate to identify bad security groups"
         InitiateLambdaHandler = "initiate_to_desc_sec_grps.lambda_handler"
         SourceIdentification =  "${aws_s3_bucket_object.sg-issues-identification.id}"
-        LambdaLogsForwarderArn =  aws_lambda_function.lambda-logs-forwarder.arn
+        LambdaLogsForwarderArn =  ${aws_lambda_function.lambda-logs-forwarder.arn}
         EvaluateLambdaName = ${var.identifySecurityGroupLambdaFunctionName}
         EvaluateLambdaDescription = "Lambda function to describe security groups unrestricted access."
         EvaluateLambdaHandler = "describe_sec_grps_unrestricted_access.lambda_handler"
