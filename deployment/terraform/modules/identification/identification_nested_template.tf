@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "lambda-initiate" {
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-initiate,
+    "aws_cloudwatch_log_group.log-group-lambda-initiate"
   ]
   function_name = "${var.InitiateLambdaName}"
 
@@ -25,16 +25,16 @@ resource "aws_cloudwatch_log_group" "log-group-lambda-initiate" {
 resource "aws_cloudwatch_log_subscription_filter" "lambda_initiate_logfilter" {
 
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-initiate,
+    "aws_cloudwatch_log_group.log-group-lambda-initiate"
   ]
-  log_group_name  = aws_cloudwatch_log_group.log-group-lambda-initiate.name
+  log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-initiate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = "${var.LambdaLogsForwarderArn}"
 }
 
 resource "aws_lambda_function" "lambda-evaluate" {
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-evaluate,
+    "aws_cloudwatch_log_group.log-group-lambda-evaluate"
   ]
   function_name = "${var.EvaluateLambdaName}"
 
@@ -49,8 +49,8 @@ resource "aws_lambda_function" "lambda-evaluate" {
   memory_size      = "${var.EvaluateLambdaMemorySize}"
 
   vpc_config {
-      subnet_ids = "${[] ? var.LambdaSubnetsEmpty : [split(",", var.LambdaSubnets)]}"
-      security_group_ids = "${[] ? var.LambdaSecurityGroupsEmpty :  [split(",", var.LambdaSecurityGroups)]}"
+      subnet_ids = "${[split(",", var.LambdaSubnets)]}"
+      security_group_ids = "${[split(",", var.LambdaSecurityGroups)]}"
   }
 
 }
@@ -63,9 +63,9 @@ resource "aws_cloudwatch_log_group" "log-group-lambda-logs-forwarder" {
 resource "aws_cloudwatch_log_subscription_filter" "lambda_evaluate_logfilter" {
 
   depends_on = [
-    aws_cloudwatch_log_group.log-group-lambda-evaluate
+    "aws_cloudwatch_log_group.log-group-lambda-evaluate"
   ]
-  log_group_name  = aws_cloudwatch_log_group.log-group-lambda-evaluate.name
+  log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = "${var.LambdaLogsForwarderArn}"
 }
@@ -73,7 +73,7 @@ resource "aws_cloudwatch_log_subscription_filter" "lambda_evaluate_logfilter" {
 resource "aws_cloudwatch_event_rule" "eventInitiateEvaluation" {
 
     depends_on = [
-      aws_lambda_function.lambda-initiate,
+      "aws_lambda_function.lambda-initiate"
     ]
 
     name = "${var.EventRuleName}"
@@ -83,7 +83,7 @@ resource "aws_cloudwatch_event_rule" "eventInitiateEvaluation" {
 
 resource "aws_cloudwatch_event_target" "event-initiate-evaluation" {
     depends_on = [
-      aws_cloudwatch_event_rule.eventInitiateEvaluation,
+      "aws_cloudwatch_event_rule.eventInitiateEvaluation"
     ]
 
     rule = "${aws_cloudwatch_event_rule.eventInitiateEvaluation.name}"
@@ -93,7 +93,7 @@ resource "aws_cloudwatch_event_target" "event-initiate-evaluation" {
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_initiate_lambda" {
     depends_on = [
-      aws_lambda_function.lambda-initiate,aws_cloudwatch_event_rule.eventInitiateEvaluation
+      "aws_lambda_function.lambda-initiate" , "aws_cloudwatch_event_rule.eventInitiateEvaluation"
     ]
 
     statement_id = "AllowExecutionFromCloudWatch"
@@ -106,7 +106,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_initiate_lambda" {
 
 resource "aws_sns_topic" "sns-notiify-lambda-evaluate" {
   depends_on = [
-      aws_lambda_function.lambda-evaluate
+      "aws_lambda_function.lambda-evaluate"
     ]
 
   name         = "${var.SNSDisplayName}"
@@ -115,7 +115,7 @@ resource "aws_sns_topic" "sns-notiify-lambda-evaluate" {
 
 resource "aws_sns_topic_subscription" "lambda" {
   depends_on = [
-      aws_sns_topic.sns-notiify-lambda-evaluate,
+      "aws_sns_topic.sns-notiify-lambda-evaluate"
   ]
   topic_arn = "${aws_sns_topic.sns-notiify-lambda-evaluate.arn}"
   protocol  = "lambda"
@@ -124,7 +124,7 @@ resource "aws_sns_topic_subscription" "lambda" {
 
 resource "aws_lambda_permission" "with_sns" {
   depends_on = [
-      aws_sns_topic_subscription.lambda,
+      "aws_sns_topic_subscription.lambda"
   ]
 
   statement_id  = "AllowExecutionFromSNS"
@@ -136,7 +136,7 @@ resource "aws_lambda_permission" "with_sns" {
 
 resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-initiate-evaluation" {
   depends_on = [
-      aws_lambda_function.lambda-initiate,
+      "aws_lambda_function.lambda-initiate"
   ]
   alarm_name          = "/${aws_lambda_function.lambda-initiate.function_name}LambdaError"
   comparison_operator = "GreaterThanThreshold"
@@ -164,7 +164,7 @@ resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-initiate-evaluation"
 
 resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-evaluate-evaluation" {
   depends_on = [
-      aws_lambda_function.lambda-evaluate,
+      "aws_lambda_function.lambda-evaluate"
   ]
   alarm_name          = "/${aws_lambda_function.lambda-evaluate.function_name}LambdaError"
   comparison_operator = "GreaterThanThreshold"
