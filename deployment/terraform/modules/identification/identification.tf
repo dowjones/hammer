@@ -55,6 +55,7 @@ resource "aws_cloudwatch_log_subscription_filter" "subscription-filter-lambda-ba
     "aws_lambda_permission.allow-cloudwatch-to-call-lambda-backup-ddb",
     "aws_lambda_function.lambda-logs-forwarder"
   ]
+  name = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   log_group_name  = "${aws_cloudwatch_log_group.log-group-lambda-evaluate.name}"
   filter_pattern  = "[level != START && level != END && level != DEBUG, ...]"
   destination_arn = "${aws_lambda_function.lambda-logs-forwarder.arn}"
@@ -149,11 +150,11 @@ resource "aws_cloudwatch_metric_alarm" "alarm-errors-lambda-backup-ddb" {
 
 
   alarm_actions = [
-    "aws_sns_topic.sns-identification-errors.function_name",
+    "${aws_sns_topic.sns-identification-errors.name}"
   ]
 
   ok_actions = [
-    "aws_sns_topic.sns-identification-errors.function_name",
+    "${aws_sns_topic.sns-identification-errors.name}"
   ]
 
   dimensions {
