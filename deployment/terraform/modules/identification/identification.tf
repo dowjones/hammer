@@ -177,20 +177,20 @@ module "hammer_id_nested_sg" {
         SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}",
         SourceBackupDDB = "${aws_s3_bucket_object.ddb-tables-backup.id}",
         IdentificationLambdaSource = "${aws_s3_bucket_object.sg-issues-identification.id}"
-        InitiateLambdaName = ${var.initiateSecurityGroupLambdaFunctionName}
+        InitiateLambdaName = "${var.initiateSecurityGroupLambdaFunctionName}"
         SourceS3Bucket = "${var.s3bucket}"
         InitiateLambdaDescription = "Lambda function for initiate to identify bad security groups"
         InitiateLambdaHandler = "initiate_to_desc_sec_grps.lambda_handler"
         SourceIdentification =  "${aws_s3_bucket_object.sg-issues-identification.id}"
         LambdaLogsForwarderArn =  "${aws_lambda_function.lambda-logs-forwarder.arn}"
-        EvaluateLambdaName = ${var.identifySecurityGroupLambdaFunctionName}
+        EvaluateLambdaName = "${var.identifySecurityGroupLambdaFunctionName}"
         EvaluateLambdaDescription = "Lambda function to describe security groups unrestricted access."
         EvaluateLambdaHandler = "describe_sec_grps_unrestricted_access.lambda_handler"
         EvaluateLambdaMemorySize = 512
-        EventRuleName = ${var.resources-prefix}SourceIdentificationSG
+        EventRuleName = "${var.resources-prefix}SourceIdentificationSG"
         EventRuleDescription = "Hammer ScheduledRule to initiate Security Groups evaluations"
-        SNSDisplayName = ${var.resources-prefix}${var.snsDisplayNameSecurityGroups}
-        SNSTopicName = ${var.resources-prefix}${var.snsTopicNameSecurityGroups}
+        SNSDisplayName = "${var.resources-prefix}${var.snsDisplayNameSecurityGroups}"
+        SNSTopicName = "${var.resources-prefix}${var.snsTopicNameSecurityGroups}"
         SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.name}"
     }
 }
