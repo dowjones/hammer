@@ -55,7 +55,7 @@ resource "aws_lambda_function" "lambda-evaluate" {
 
 }
 
-resource "aws_cloudwatch_log_group" "log-group-lambda-logs-forwarder" {
+resource "aws_cloudwatch_log_group" "log-group-lambda-evaluate" {
     name = "/aws/lambda/${var.EvaluateLambdaName}"
     retention_in_days = 7
 }
