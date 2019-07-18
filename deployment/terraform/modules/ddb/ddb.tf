@@ -282,3 +282,44 @@ resource "aws_dynamodb_table" "api-requests" {
     }
 }
 
+resource "aws_dynamodb_table" "ecs-privileged-access" {
+
+    depends_on = ["aws_dynamodb_table.credentials" ]
+
+    name = "${var.resources-prefix}ecs-privileged-access"
+    read_capacity  = 20
+    write_capacity = 4
+    hash_key       = "account_id"
+    range_key      = "issue_id"
+
+    attribute {
+        name = "account_id"
+        type = "S"
+    }
+
+    attribute {
+        name = "issue_id"
+        type = "S"
+    }
+}
+
+resource "aws_dynamodb_table" "ecs-logging" {
+
+    depends_on = ["aws_dynamodb_table.credentials" ]
+
+    name = "${var.resources-prefix}ecs-logging"
+    read_capacity  = 20
+    write_capacity = 4
+    hash_key       = "account_id"
+    range_key      = "issue_id"
+
+    attribute {
+        name = "account_id"
+        type = "S"
+    }
+
+    attribute {
+        name = "issue_id"
+        type = "S"
+    }
+}
