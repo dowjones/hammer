@@ -1,6 +1,6 @@
 resource "aws_dynamodb_table" "credentials" {
 
-    name = "${var.resources-prefix}credentials"
+    name = "${var.resource_prefix}credentials"
     read_capacity  = 25
     write_capacity = 2
     hash_key       = "service"
@@ -18,7 +18,7 @@ resource "aws_dynamodb_table" "credentials" {
 resource "aws_dynamodb_table" "cloudtrails" {
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}cloudtrails"
+    name = "${var.resource_prefix}cloudtrails"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -39,7 +39,7 @@ resource "aws_dynamodb_table" "insecure-sg-dynamodb-table" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}security-groups-unrestricted"
+    name = "${var.resource_prefix}security-groups-unrestricted"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -60,7 +60,7 @@ resource "aws_dynamodb_table" "s3-public-bucket-acl" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}s3-public-bucket-acl"
+    name = "${var.resource_prefix}s3-public-bucket-acl"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -81,7 +81,7 @@ resource "aws_dynamodb_table" "s3-public-bucket-policy" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}s3-public-bucket-policy"
+    name = "${var.resource_prefix}s3-public-bucket-policy"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -102,7 +102,7 @@ resource "aws_dynamodb_table" "iam-user-keys-rotation" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}iam-user-keys-rotation"
+    name = "${var.resource_prefix}iam-user-keys-rotation"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -123,7 +123,7 @@ resource "aws_dynamodb_table" "iam-user-keys-inactive" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}iam-user-keys-inactive"
+    name = "${var.resource_prefix}iam-user-keys-inactive"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -144,28 +144,7 @@ resource "aws_dynamodb_table" "ebs-volumes-unencrypted" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}ebs-volumes-unencrypted"
-    read_capacity  = 20
-    write_capacity = 4
-    hash_key       = "account_id"
-    range_key      = "issue_id"
-
-    attribute {
-        name = "account_id"
-        type = "S"
-    }
-
-    attribute {
-        name = "issue_id"
-        type = "S"
-    }
-}
-
-resource "aws_dynamodb_table" "ebs-snapshots-public" {
-
-    depends_on = ["aws_dynamodb_table.credentials" ]
-
-    name = "${var.resources-prefix}ebs-snapshots-public"
+    name = "${var.resource_prefix}ebs-volumes-unencrypted"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -186,7 +165,7 @@ resource "aws_dynamodb_table" "rds-public-snapshots" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}rds-public-snapshots"
+    name = "${var.resource_prefix}rds-public-snapshots"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -207,7 +186,7 @@ resource "aws_dynamodb_table" "sqs-public-access" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}sqs-public-access"
+    name = "${var.resource_prefix}sqs-public-access"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -228,7 +207,7 @@ resource "aws_dynamodb_table" "s3-unencrypted" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}s3-unencrypted"
+    name = "${var.resource_prefix}s3-unencrypted"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -249,7 +228,7 @@ resource "aws_dynamodb_table" "rds-unencrypted" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}rds-unencrypted"
+    name = "${var.resource_prefix}rds-unencrypted"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -270,7 +249,7 @@ resource "aws_dynamodb_table" "ec2-public-ami" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}ec2-public-ami"
+    name = "${var.resource_prefix}ec2-public-ami"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "account_id"
@@ -286,60 +265,20 @@ resource "aws_dynamodb_table" "ec2-public-ami" {
         type = "S"
     }
 }
+
 
 resource "aws_dynamodb_table" "api-requests" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
 
-    name = "${var.resources-prefix}api-requests"
+    name = "${var.resource_prefix}api-requests"
     read_capacity  = 20
     write_capacity = 4
     hash_key       = "request_id"
 
     attribute {
-        name = "request_id"
-        type = "S"
-    }
-}
-
-resource "aws_dynamodb_table" "ecs-privileged-access" {
-
-    depends_on = ["aws_dynamodb_table.credentials" ]
-
-    name = "${var.resources-prefix}ecs-privileged-access"
-    read_capacity  = 20
-    write_capacity = 4
-    hash_key       = "account_id"
-    range_key      = "issue_id"
-
-    attribute {
-        name = "account_id"
-        type = "S"
-    }
-
-    attribute {
         name = "issue_id"
         type = "S"
     }
 }
 
-resource "aws_dynamodb_table" "ecs-logging" {
-
-    depends_on = ["aws_dynamodb_table.credentials" ]
-
-    name = "${var.resources-prefix}ecs-logging"
-    read_capacity  = 20
-    write_capacity = 4
-    hash_key       = "account_id"
-    range_key      = "issue_id"
-
-    attribute {
-        name = "account_id"
-        type = "S"
-    }
-
-    attribute {
-        name = "issue_id"
-        type = "S"
-    }
-}
