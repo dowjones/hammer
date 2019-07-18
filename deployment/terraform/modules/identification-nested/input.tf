@@ -19,7 +19,6 @@ variable "SNSTopicName" {}
 variable "SNSIdentificationErrors" {}
 variable "SourceLogsForwarder" {}
 variable "SourceBackupDDB" {}
-variable "IdentificationLambdaSource" {}
 
 variable "tags" {
     type = "map"
