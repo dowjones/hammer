@@ -183,9 +183,37 @@ module "hammer_id_nested_sg" {
     EvaluateLambdaDescription = "Lambda function to describe security groups unrestricted access."
     EvaluateLambdaHandler = "describe_sec_grps_unrestricted_access.lambda_handler"
     EvaluateLambdaMemorySize = 512
-    EventRuleName = "${var.resources-prefix}SourceIdentificationSG"
+    EventRuleName = "${var.resources-prefix}InitiateEvaluationSG"
     EventRuleDescription = "Hammer ScheduledRule to initiate Security Groups evaluations"
     SNSDisplayName = "${var.resources-prefix}${var.snsDisplayNameSecurityGroups}"
     SNSTopicName = "${var.resources-prefix}${var.snsTopicNameSecurityGroups}"
+    SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.arn}"
+}
+
+module "hammer_id_nested_s3_acl" {
+
+    source    = "../identification-nested"
+    tags = "${var.tags}"
+    IdentificationIAMRole = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resources-prefix}${var.identificationIAMRole}"
+    IdentificationCheckRateExpression = "cron(10, ${var.identificationCheckRateExpression})"
+    LambdaSubnets = "${var.lambdaSubnets}"
+    LambdaSecurityGroups = "${var.lambdaSecurityGroups}"
+    SourceLogsForwarder = "${aws_s3_bucket_object.logs-forwarder.id}"
+    SourceBackupDDB = "${aws_s3_bucket_object.ddb-tables-backup.id}"
+    IdentificationLambdaSource = "${aws_s3_bucket_object.sg-issues-identification.id}"
+    InitiateLambdaName = "${var.resources-prefix}${var.initiateS3ACLLambdaFunctionName}"
+    SourceS3Bucket = "${var.s3bucket}"
+    InitiateLambdaDescription = "Lambda function for initiate to identify public s3 buckets."
+    InitiateLambdaHandler = "initiate_to_desc_s3_bucket_acl.lambda_handler"
+    SourceIdentification =  "${aws_s3_bucket_object.s3-acl-issues-identification.id}"
+    LambdaLogsForwarderArn =  "${aws_lambda_function.lambda-logs-forwarder.arn}"
+    EvaluateLambdaName = "${var.resources-prefix}${var.identifyS3ACLLambdaFunctionName}"
+    EvaluateLambdaDescription = "Lambda function to describe public s3 buckets."
+    EvaluateLambdaHandler = "describe_s3_bucket_acl.lambda_handler"
+    EvaluateLambdaMemorySize = 128
+    EventRuleName = "${var.resources-prefix}InitiateEvaluationS3ACL"
+    EventRuleDescription = "Hammer ScheduledRule to initiate S3 ACL evaluations"
+    SNSDisplayName = "${var.resources-prefix}${var.snsDisplayNameS3ACL}"
+    SNSTopicName = "${var.resources-prefix}${var.snsTopicNameS3ACL}"
     SNSIdentificationErrors = "${aws_sns_topic.sns-identification-errors.arn}"
 }
