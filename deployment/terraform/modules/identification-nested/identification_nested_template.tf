@@ -14,6 +14,11 @@ resource "aws_lambda_function" "lambda-initiate" {
   timeout          = "300"
   memory_size      = "128"
 
+  environment {
+    variables = {
+      SNS_ARN = "${aws_sns_topic.sns-notiify-lambda-evaluate.arn}"
+    }
+  }
 
 }
 
