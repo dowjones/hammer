@@ -9,7 +9,8 @@ from library.aws.utility import AssumeRole
 from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
-    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, ECSPrivilegedAccessIssue, ECSLoggingIssue, SQSPolicyIssue
+    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, SQSPolicyIssue, \
+    ECSPrivilegedAccessIssue, ECSLoggingIssue, ECSExternalImageSourceIssue
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
 from library.aws.s3 import S3Operations
@@ -72,7 +73,9 @@ class CSVReport(object):
             (self.config.rdsSnapshot.ddb_table_name, "RDS Public Snapshots", RdsPublicSnapshotIssue),
             (self.config.sqspolicy.ddb_table_name, "SQS Policy Public Access", SQSPolicyIssue),
             (self.config.ecs_privileged_access.ddb_table_name, "ECS Privileged Access Issues", ECSPrivilegedAccessIssue),
-            (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue)
+            (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue),
+            (self.config.ecs_external_image_source.ddb_table_name, "ECS External Image Sources",
+             ECSExternalImageSourceIssue)
         ]
 
         open_security_issues_workbook = xlwt.Workbook()

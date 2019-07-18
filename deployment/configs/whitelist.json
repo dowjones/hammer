@@ -54,5 +54,9 @@
   "ecs_logging":{
 		"__comment__": "Detects ECS task definitions which are not enabled logging - task definitions ARNs.",
 		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/test-admin:2993"]
-	}	
+	},
+	"ecs_external_image_source":{
+		"__comment__": "Detects ECS task definitions which are configured with external image source - task definitions ARNs.",
+		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/test-admin:2993"]
+	}
 }
