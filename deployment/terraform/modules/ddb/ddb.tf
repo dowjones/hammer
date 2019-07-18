@@ -161,6 +161,27 @@ resource "aws_dynamodb_table" "ebs-volumes-unencrypted" {
     }
 }
 
+resource "aws_dynamodb_table" "ebs-snapshots-public" {
+
+    depends_on = ["aws_dynamodb_table.credentials" ]
+
+    name = "${var.resources-prefix}ebs-snapshots-public"
+    read_capacity  = 20
+    write_capacity = 4
+    hash_key       = "account_id"
+    range_key      = "issue_id"
+
+    attribute {
+        name = "account_id"
+        type = "S"
+    }
+
+    attribute {
+        name = "issue_id"
+        type = "S"
+    }
+}
+
 resource "aws_dynamodb_table" "rds-public-snapshots" {
 
     depends_on = ["aws_dynamodb_table.credentials" ]
@@ -265,7 +286,6 @@ resource "aws_dynamodb_table" "ec2-public-ami" {
         type = "S"
     }
 }
-
 
 resource "aws_dynamodb_table" "api-requests" {
 
