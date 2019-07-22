@@ -136,6 +136,7 @@
     "ec2_public_ami": {
         "enabled": true,
         "ddb.table_name": "hammer-ec2-public-ami",
+        "topic_name": "hammer-describe-ami-public-access-lambda",
         "reporting": false,
         "remediation": false,
         "remediation_retention_period": 21
@@ -160,6 +161,24 @@
         "enabled": true,
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
+        "reporting": true
+    },
+    "ecs_privileged_access": {
+        "enabled": true,
+        "ddb.table_name": "hammer-ecs-privileged-access",
+        "topic_name": "hammer-describe-ecs-privileged-access-lambda",
+        "reporting": true
+    },
+    "ecs_logging": {
+        "enabled": true,
+        "ddb.table_name": "hammer-ecs-logging",
+        "topic_name": "hammer-describe-ecs-logging-lambda",
+        "reporting": true
+    },
+    "ecs_external_image_source": {
+        "enabled": true,
+        "topic_name": "hammer-describe-ecs-external-image-source-lambda",
+        "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true
     },
     "redshift_logging": {

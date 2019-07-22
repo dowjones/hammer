@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating AMIs public access checking")
 
     try:
-        sns_arn = os.environ["SNS_PUBLIC_AMI_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.publicAMIs.enabled:
