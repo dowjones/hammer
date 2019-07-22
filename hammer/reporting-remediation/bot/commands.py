@@ -67,7 +67,6 @@ def status(message):
     """ shows global modules status """
     response = "\n"
     for module in config.modules:
-        response += f"• *{module.section}*\t"
         if module.enabled:
             response += f"`identification`"
             if config.aws.accounts != module.accounts:
