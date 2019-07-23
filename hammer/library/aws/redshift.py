@@ -168,6 +168,7 @@ class RedshiftClusterChecker(object):
 
         if "Clusters" in response:
             for cluster_details in response["Clusters"]:
+                logging_enabled = False
                 tags = {}
                 cluster_id = cluster_details["ClusterIdentifier"]
 
@@ -178,80 +179,25 @@ class RedshiftClusterChecker(object):
                 is_encrypted = cluster_details["Encrypted"]
                 if "Tags" in cluster_details:
                     tags = cluster_details["Tags"]
+                try:
+                    logging_details = self.account.client("redshift").describe_logging_status(
+                        ClusterIdentifier=cluster_id)
+                    if "LoggingEnabled" in logging_details:
+                        logging_enabled = logging_details["LoggingEnabled"]
+                except ClientError as err:
+                    if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                        logging.error(f"Access denied in {self.account} "
+                                      f"(redshift:{err.operation_name})")
+                    else:
+                        logging.exception(f"Failed to describe logging status cluster in {self.account}")
+
+                    continue
 
                 cluster = RedshiftCluster(account=self.account,
                                           name=cluster_id,
                                           tags=tags,
                                           is_encrypted=is_encrypted,
-                                          is_public=is_public)
-                self.clusters.append(cluster)
-
-        return True
-
-
-class RedshiftLoggingChecker(object):
-    """
-    Basic class for checking redshift cluster's logging enabled or not in account/region.
-    Encapsulates check settings and discovered clusters.
-    """
-
-    def __init__(self, account):
-        """
-        :param account: `Account` clusters to check
-
-        """
-        self.account = account
-        self.clusters = []
-
-    def get_cluster(self, name):
-        """
-        :return: `Redshift cluster` by name
-        """
-        for cluster in self.clusters:
-            if cluster.name == name:
-                return cluster
-        return None
-
-    def check(self, clusters=None):
-        """
-        Walk through clusters in the account/region and check them.
-        Put all gathered clusters to `self.clusters`.
-
-        :param clusters: list with clusters to check, if it is not supplied - all clusters must be checked
-
-        :return: boolean. True - if check was successful,
-                          False - otherwise
-        """
-        try:
-            # AWS does not support filtering dirung list, so get all clusters for account
-            response = self.account.client("redshift").describe_clusters()
-        except ClientError as err:
-            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
-                logging.error(f"Access denied in {self.account} "
-                              f"(redshift:{err.operation_name})")
-            else:
-                logging.exception(f"Failed to list cluster in {self.account}")
-            return False
-
-        if "Clusters" in response:
-            for cluster_details in response["Clusters"]:
-                logging_enabled = False
-                tags = {}
-                cluster_id = cluster_details["ClusterIdentifier"]
-
-                if clusters is not None and cluster_id not in clusters:
-                    continue
-
-                logging_details = self.account.client("redshift").describe_logging_status(ClusterIdentifier=cluster_id)
-                if "LoggingEnabled" in logging_details:
-                    logging_enabled = logging_details["LoggingEnabled"]
-
-                if "Tags" in cluster_details:
-                    tags = cluster_details["Tags"]
-
-                cluster = RedshiftCluster(account=self.account,
-                                          name=cluster_id,
-                                          tags=tags,
+                                          is_public=is_public,
                                           is_logging=logging_enabled)
                 self.clusters.append(cluster)
 

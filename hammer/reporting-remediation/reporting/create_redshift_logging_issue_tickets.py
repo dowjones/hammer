@@ -43,9 +43,9 @@ class CreateRedshiftLoggingIssueTickets(object):
                     product = issue.jira_details.product
 
                     if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} Redshift logging enabled '{cluster_id}' issue")
+                        logging.debug(f"Closing {issue.status.value} Redshift logging '{cluster_id}' issue")
 
-                        comment = (f"Closing {issue.status.value} Redshift cluster logging enabled '{cluster_id}' issue "
+                        comment = (f"Closing {issue.status.value} Redshift cluster logging '{cluster_id}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
