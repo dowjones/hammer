@@ -19,7 +19,8 @@ resource "aws_cloudformation_stack" "identification" {
                   "aws_s3_bucket_object.rds-unencrypted-instance-identification",
                   "aws_s3_bucket_object.ecs-privileged-access-issues-identification",
                   "aws_s3_bucket_object.ecs-logging-issues-identification",
-                  "aws_s3_bucket_object.ecs-external-image-source-issues-identification"
+                  "aws_s3_bucket_object.ecs-external-image-source-issues-identification",
+                  "aws_s3_bucket_object.redshift-audit-logging-issues-identification"
                  ]
 
     tags = "${var.tags}"
@@ -50,7 +51,7 @@ resource "aws_cloudformation_stack" "identification" {
         SourceIdentificationECSPrivilegedAccess = "${aws_s3_bucket_object.ecs-privileged-access-issues-identification.id}"
         SourceIdentificationECSLogging = "${aws_s3_bucket_object.ecs-logging-issues-identification.id}"
         SourceIdentificationECSExternalImageSource = "${aws_s3_bucket_object.ecs-external-image-source-issues-identification.id}"
+        SourceIdentificationRedshiftLogging = "${aws_s3_bucket_object.redshift-audit-logging-issues-identification.id}"
     }
-
     template_url = "https://${var.s3bucket}.s3.amazonaws.com/${aws_s3_bucket_object.identification-cfn.id}"
 }

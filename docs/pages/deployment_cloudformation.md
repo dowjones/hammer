@@ -101,6 +101,7 @@ You will need to set the following parameters:
 * **SourceIdentificationECSPrivilegedAccess**: the relative path to the Lambda package that identifies ECS privileged access issues. The default value is **ecs-privileged-access-issues-identification.zip**.
 * **SourceIdentificationAMIPublicAccess**: the relative path to the Lambda package that identifies Public AMIs. The default value is **ami-public-acess-issues-identification.zip**.
 * **SourceIdentificationECSExternalImageSource**: the relative path to the Lambda package that identifies ECS external image source issues. The default value is **ecs-external-image-source-issues-identification.zip**.
+* **SourceIdentificationRedshiftLogging**: the relative path to the Lambda package that identifies audit logging redshift issues. The default value is **redshift-audit-logging-issues-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.

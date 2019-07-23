@@ -1,4 +1,3 @@
-
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Hammer identification stack",
@@ -29,6 +28,7 @@
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
                         "SourceIdentificationAMIPublicAccess",
+                        "SourceIdentificationRedshiftLogging",
                         "SourceIdentificationECSPrivilegedAccess",
                         "SourceIdentificationECSLogging",
                         "SourceIdentificationECSExternalImageSource"
@@ -96,6 +96,9 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
+                },
+                "SourceIdentificationRedshiftLogging": {
+                    "default": "Relative path to disabled logging Redshift Cluster sources"
                 },
                 "SourceIdentificationECSPrivilegedAccess":{
                     "default": "Relative path to privileged access issue ECS sources"
@@ -202,6 +205,10 @@
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
         },
+        "SourceIdentificationRedshiftLogging": {
+            "Type": "String",
+            "Default": "redshift-audit-logging-issues-identification.zip"
+        },
         "SourceIdentificationECSPrivilegedAccess": {
             "Type": "String",
             "Default": "ecs-privileged-access-issues-identification.zip"
@@ -269,6 +276,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricRedshiftLoggingError": {
+                "value": "RedshiftLoggingError"
             },
             "IdentificationMetricECSPrivilegedAccessError": {
                 "value": "ECSPrivilegedAccessError"
@@ -356,6 +366,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameRedshiftLogging": {
+                "value": "describe-redshift-logging-sns"
+            },
+            "SNSTopicNameRedshiftLogging": {
+                "value": "describe-redshift-logging-lambda"
             },
             "SNSDisplayNameECSPrivilegedAccess": {
                 "value": "describe-ecs-privileged-access-sns"
@@ -458,6 +474,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateRedshiftLoggingLambdaFunctionName": {
+                "value": "initiate-redshift-logging"
+            },
+            "IdentifyRedshiftLoggingLambdaFunctionName": {
+                "value": "describe-redshift-logging"
             },
             "InitiateECSPrivilegedAccessLambdaFunctionName": {
                 "value": "initiate-ecs-privileged-access"
@@ -1169,6 +1191,46 @@
                 }
             }
         },
+        "StackEvaluateRedshiftLogging": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationRedshiftLogging" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify Redshift logging issues.",
+                    "EvaluateLambdaDescription": "Lambda function to describe Redshift logging issues.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateRedshiftLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftLoggingLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_redshift_logging_issues.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_redshift_logging_issues.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Redshift logging issues evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRedshiftLogging"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftLogging", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftLogging", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
         "StackEvaluateECSPrivilegedAccess": {
             "Type": "AWS::CloudFormation::Stack",
             "Properties": {
@@ -1184,7 +1246,7 @@
                     "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                     "LambdaSubnets": {"Ref":  "LambdaSubnets"},
                     "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
-                                        "IdentificationLambdaSource": { "Ref": "SourceIdentificationECSPrivilegedAccess" },
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationECSPrivilegedAccess" },
                     "InitiateLambdaDescription": "Lambda function for initiate to identify ECS privileged access issues.",
                     "EvaluateLambdaDescription": "Lambda function to describe ECS privileged access issues.",
                     "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
@@ -1221,122 +1283,31 @@
                                              {"Ref": "ResourcesPrefix"},
                                              {"Ref": "IdentificationIAMRole"}
                                            ] ]},
-                    "IdentificationCheckRateExpression": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "cron(",
-                                "40 ",
-                                {
-                                    "Ref": "IdentificationCheckRateExpression"
-                                },
-                                ")"
-                            ]
-                        ]
-                    },
-                    "LambdaSubnets": {
-                        "Ref": "LambdaSubnets"
-                    },
-                    "LambdaSecurityGroups": {
-                        "Ref": "LambdaSecurityGroups"
-                    },
-                    "IdentificationLambdaSource": {
-                        "Ref": "SourceIdentificationECSLogging"
-                    },
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["",["cron(","40 ",{"Ref": "IdentificationCheckRateExpression"},")"]]},
+                    "LambdaSubnets": {"Ref": "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref": "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": {"Ref": "SourceIdentificationECSLogging"},
                     "InitiateLambdaDescription": "Lambda function for initiate to identify ECS logging enabled or not.",
                     "EvaluateLambdaDescription": "Lambda function to describe ECS logging enabled or not.",
-                    "InitiateLambdaName": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                {
-                                    "Ref": "ResourcesPrefix"
-                                },
-                                {
-                                    "Fn::FindInMap": [
-                                        "NamingStandards",
-                                        "InitiateECSLoggingLambdaFunctionName",
-                                        "value"
-                                    ]
-                                }
-                            ]
-                        ]
-                    },
-                    "EvaluateLambdaName": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                {
-                                    "Ref": "ResourcesPrefix"
-                                },
-                                {
-                                    "Fn::FindInMap": [
-                                        "NamingStandards",
-                                        "IdentifyECSLoggingLambdaFunctionName",
-                                        "value"
-                                    ]
-                                }
-                            ]
-                        ]
-                    },
+                    "InitiateLambdaName": {"Fn::Join": ["",[{"Ref": "ResourcesPrefix"},
+                                { "Fn::FindInMap": ["NamingStandards","InitiateECSLoggingLambdaFunctionName","value"]}]
+                    ]},
+                    "EvaluateLambdaName": {"Fn::Join": ["",[{"Ref": "ResourcesPrefix"},
+                                {"Fn::FindInMap": ["NamingStandards","IdentifyECSLoggingLambdaFunctionName","value"]}]
+                    ]},
                     "InitiateLambdaHandler": "initiate_to_desc_ecs_logging_issues.lambda_handler",
                     "EvaluateLambdaHandler": "describe_ecs_logging_issues.lambda_handler",
                     "EvaluateLambdaMemorySize": 256,
-                    "LambdaLogsForwarderArn": {
-                        "Fn::GetAtt": [
-                            "LambdaLogsForwarder",
-                            "Arn"
-                        ]
-                    },
+                    "LambdaLogsForwarderArn": {"Fn::GetAtt": ["LambdaLogsForwarder","Arn"]},
                     "EventRuleDescription": "Hammer ScheduledRule to initiate ECS logging enabled or not evaluations",
-                    "EventRuleName": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                {
-                                    "Ref": "ResourcesPrefix"
-                                },
-                                "InitiateEvaluationECSLogging"
-                            ]
-                        ]
-                    },
-                    "SNSDisplayName": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                {
-                                    "Ref": "ResourcesPrefix"
-                                },
-                                {
-                                    "Fn::FindInMap": [
-                                        "NamingStandards",
-                                        "SNSDisplayNameECSLogging",
-                                        "value"
-                                    ]
-                                }
-                            ]
-                        ]
-                    },
-                    "SNSTopicName": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                {
-                                    "Ref": "ResourcesPrefix"
-                                },
-                                {
-                                    "Fn::FindInMap": [
-                                        "NamingStandards",
-                                        "SNSTopicNameECSLogging",
-                                        "value"
-                                    ]
-                                }
-                            ]
-                        ]
-                    },
-                    "SNSIdentificationErrors": {
-                        "Ref": "SNSIdentificationErrors"
-                    }
+                    "EventRuleName": {"Fn::Join": ["", [ {"Ref": "ResourcesPrefix"}, "InitiateEvaluationECSLogging"]]},
+                    "SNSDisplayName": {"Fn::Join": ["",[{"Ref": "ResourcesPrefix"},
+                                {"Fn::FindInMap": ["NamingStandards","SNSDisplayNameECSLogging","value"]}]
+                    ]},
+                    "SNSTopicName": {"Fn::Join": ["",[{"Ref": "ResourcesPrefix"},
+                        {"Fn::FindInMap": ["NamingStandards","SNSTopicNameECSLogging","value"]}]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref": "SNSIdentificationErrors"}
                 }
             }
         },    

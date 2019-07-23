@@ -180,5 +180,11 @@
         "topic_name": "hammer-describe-ecs-external-image-source-lambda",
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true
+    },
+    "redshift_logging": {
+        "enabled": true,
+        "ddb.table_name": "hammer-redshift-logging",
+        "topic_name": "hammer-describe-redshift-logging-lambda",
+        "reporting": true
     }
 }

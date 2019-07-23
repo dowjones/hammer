@@ -135,4 +135,8 @@ entries:
     - title: ECS External Image Source
       url: /playbook20_ecs_external_image_source.html
       output: web, pdf 
-    
+
+    - title: Redshift Audit Logging
+      url: /playbook17_redshift_audit_logging.html
+      output: web, pdf
+

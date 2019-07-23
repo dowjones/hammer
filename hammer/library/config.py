@@ -63,6 +63,7 @@ class Config(object):
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
+        self.redshift_logging = ModuleConfig(self._config, "redshift_logging")
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
         # ECS logging issue config
