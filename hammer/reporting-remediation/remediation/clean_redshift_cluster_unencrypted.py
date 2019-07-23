@@ -40,18 +40,14 @@ class CleanRedshiftClusterUnencryption:
                 cluster_id = issue.issue_id
 
                 in_whitelist = self.config.redshiftEncrypt.in_whitelist(account_id, cluster_id)
-                in_fixlist = True
 
                 if in_whitelist:
                     logging.debug(f"Skipping {cluster_id} (in whitelist)")
                     # Adding label with "whitelisted" to jira ticket.
                     jira.add_label(
                         ticket_id=issue.jira_details.ticket,
-                        labels=IssueStatus.Whitelisted
+                        labels=IssueStatus.Whitelisted.value
                     )
-                    continue
-                if not in_fixlist:
-                    logging.debug(f"Skipping {cluster_id} (not in fixlist)")
                     continue
 
                 if issue.timestamps.reported is None:
@@ -72,7 +68,7 @@ class CleanRedshiftClusterUnencryption:
 
                     try:
                         if not batch and \
-                           not confirm(f"Do you want to remediate '{cluster_id}' Redshift cluster Un-encryption", False):
+                           not confirm(f"Do you want to remediate '{cluster_id}' Redshift cluster un-encryption", False):
                             continue
 
                         account = Account(id=account_id,
@@ -96,13 +92,13 @@ class CleanRedshiftClusterUnencryption:
                             remediation_succeed = True
                             if cluster_details.encrypt_cluster():
                                 comment = (f"Cluster '{cluster_details.name}' un-encryption issue "
-                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
-                                           f"was remediated by hammer")
+                                           f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}'"
+                                           f" region was remediated by hammer")
                             else:
                                 remediation_succeed = False
                                 comment = (f"Failed to remediate cluster '{cluster_details.name}' un-encryption issue "
-                                           f"in '{account_name} / {account_id}' account , '{issue.issue_details.region}' region"
-                                           f"due to some limitations. Please, check manually")
+                                           f"in '{account_name}/{account_id}' account, '{issue.issue_details.region}'"
+                                           f" region due to some limitations. Please, check manually")
 
                             jira.remediate_issue(
                                 ticket_id=issue.jira_details.ticket,
