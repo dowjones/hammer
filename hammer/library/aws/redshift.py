@@ -191,8 +191,6 @@ class RedshiftClusterChecker(object):
                     else:
                         logging.exception(f"Failed to describe logging status cluster in {self.account}")
 
-                    continue
-
                 cluster = RedshiftCluster(account=self.account,
                                           name=cluster_id,
                                           tags=tags,
