@@ -117,17 +117,26 @@
                                 "Resource": "*"
                             },
                             {
+                                "Sid": "ECSIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ecs:Describe*",
+                                    "ecs:List*"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
                                 "Sid": "RedshiftIssues",
                                 "Effect": "Allow",
                                 "Action": [
-                                    "redshift:DescribeClusterSecurityGroups",
-                                    "redshift:DescribeClusterParameterGroups",
-                                    "redshift:DescribeLoggingStatus",
-                                    "redshift:GetClusterCredentials",
-                                    "redshift:DescribeClusters"
+                                  "redshift:DescribeClusterSecurityGroups",
+                                  "redshift:DescribeClusterParameterGroups",
+                                  "redshift:DescribeLoggingStatus",
+                                  "redshift:GetClusterCredentials",
+                                  "redshift:DescribeClusters"
                                 ],
                                 "Resource": "*"
-                                }
+                            }
                         ]
                     }
                 }]

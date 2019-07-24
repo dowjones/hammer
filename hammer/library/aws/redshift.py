@@ -5,7 +5,6 @@ from library.utility import timeit
 from collections import namedtuple
 from library.aws.utility import convert_tags
 
-
 # structure which describes EC2 instance
 RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     # cluster_id
@@ -16,7 +15,6 @@ RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
 
 
 class RedshiftClusterOperations(object):
-
     @classmethod
     @timeit
     def get_redshift_vpc_security_groups(cls, redshift_client, group_id):
@@ -63,10 +61,9 @@ class RedshiftClusterOperations(object):
     @staticmethod
     def cluster_encryption(redshift_client, cluster_id):
         """
-        
         :param redshift_client: redshift client
         :param cluster_id: cluster id which need to be encrypted. 
-        
+
         :return: 
         """
         # Modify cluster as encrypted.
@@ -124,7 +121,6 @@ class RedshiftCluster(object):
 
 
 class RedshiftClusterChecker(object):
-
     """
     Basic class for checking redshift clusters public access and encryption in account/region.
     Encapsulates check settings and discovered clusters.
@@ -181,7 +177,8 @@ class RedshiftClusterChecker(object):
                 if "Tags" in cluster_details:
                     tags = cluster_details["Tags"]
                 try:
-                    logging_details = self.account.client("redshift").describe_logging_status(ClusterIdentifier=cluster_id)
+                    logging_details = self.account.client("redshift").describe_logging_status(
+                        ClusterIdentifier=cluster_id)
                     if "LoggingEnabled" in logging_details:
                         logging_enabled = logging_details["LoggingEnabled"]
                 except ClientError as err:
