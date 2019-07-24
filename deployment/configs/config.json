@@ -163,6 +163,14 @@
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
     },
+    "redshift_encryption": {
+        "enabled": true,
+        "ddb.table_name": "hammer-redshift-unencrypted",
+        "topic_name": "hammer-describe-redshift-cluster-encryption-lambda",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    },
     "ecs_privileged_access": {
         "enabled": true,
         "ddb.table_name": "hammer-ecs-privileged-access",

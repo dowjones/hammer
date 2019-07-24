@@ -57,6 +57,9 @@ def automation_cronjob(config):
         ("SQS Public Access",         config.sqspolicy,           "create_sqs_policy_issue_tickets",          "clean_sqs_policy_permissions"),
         ("S3 Unencrypted Buckets",    config.s3Encrypt,           "create_s3_unencrypted_bucket_issue_tickets", "clean_s3bucket_unencrypted"),
         ("RDS Unencrypted Instances", config.rdsEncrypt,          "create_rds_unencrypted_instance_issue_tickets", None),
+        ("Redshift Unencrypted Clusters", config.redshiftEncrypt, "create_redshift_unencrypted_cluster_issue_tickets",
+         "clean_redshift_cluster_unencrypted"),
+        ("Redshift Logging Issues", config.redshift_logging, "create_redshift_logging_issue_tickets", None),
         ("ECS Privileged Access Issues", config.ecs_privileged_access, "create_ecs_privileged_access_issue_tickets", None),
         ("ECS Logging Issues", config.ecs_logging, "create_ecs_logging_issue_tickets", None),
         ("ECS External Image Sources", config.ecs_external_image_source, "create_ecs_external_image_source_issue_tickets", None)

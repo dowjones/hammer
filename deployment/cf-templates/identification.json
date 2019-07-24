@@ -28,6 +28,7 @@
                         "SourceIdentificationEBSSnapshots",
                         "SourceIdentificationRDSSnapshots",
                         "SourceIdentificationAMIPublicAccess",
+                        "SourceIdentificationRedshiftClusterEncryption",
                         "SourceIdentificationRedshiftLogging",
                         "SourceIdentificationECSPrivilegedAccess",
                         "SourceIdentificationECSLogging",
@@ -96,6 +97,9 @@
                 },
                 "SourceIdentificationAMIPublicAccess":{
                     "default": "Relative path to Public AMI sources"
+                },
+                "SourceIdentificationRedshiftClusterEncryption":{
+                    "default": "Relative path to unencrypted Redshift Cluster sources"
                 },
                 "SourceIdentificationRedshiftLogging": {
                     "default": "Relative path to disabled logging Redshift Cluster sources"
@@ -205,6 +209,10 @@
             "Type": "String",
             "Default": "rds-unencrypted-instance-identification.zip"
         },
+        "SourceIdentificationRedshiftClusterEncryption": {
+            "Type": "String",
+            "Default": "redshift-unencrypted-cluster-identification.zip"
+        },
         "SourceIdentificationRedshiftLogging": {
             "Type": "String",
             "Default": "redshift-audit-logging-issues-identification.zip"
@@ -276,6 +284,9 @@
             },
             "IdentificationMetricRDSEncryptionError": {
                 "value": "RDSEncryptionError"
+            },
+            "IdentificationMetricRedshiftClusterEncryptionError": {
+                "value": "RedshiftClusterEncryptionError"
             },
             "IdentificationMetricRedshiftLoggingError": {
                 "value": "RedshiftLoggingError"
@@ -366,6 +377,12 @@
             },
             "SNSTopicNameRDSEncryption": {
                 "value": "describe-rds-encryption-lambda"
+            },
+            "SNSDisplayNameRedshiftClusterEncryption": {
+                "value": "describe-redshift-cluster-encryption-sns"
+            },
+            "SNSTopicNameRedshiftClusterEncryption": {
+                "value": "describe-redshift-cluster-encryption-lambda"
             },
             "SNSDisplayNameRedshiftLogging": {
                 "value": "describe-redshift-logging-sns"
@@ -474,6 +491,12 @@
             },
             "IdentifyRDSEncryptionLambdaFunctionName": {
                 "value": "describe-rds-encryption"
+            },
+            "InitiateRedshiftClusterEncryptionLambdaFunctionName": {
+                "value": "initiate-redshift-cluster-encryption"
+            },
+            "IdentifyRedshiftClusterEncryptionLambdaFunctionName": {
+                "value": "describe-redshift-cluster-encryption"
             },
             "InitiateRedshiftLoggingLambdaFunctionName": {
                 "value": "initiate-redshift-logging"
@@ -1186,6 +1209,47 @@
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateRedshiftClusterEncryption": {
+                    "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                                        "IdentificationLambdaSource": { "Ref": "SourceIdentificationRedshiftClusterEncryption" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify Redshift cluster is encrypted or not.",
+                    "EvaluateLambdaDescription": "Lambda function to describe Redshift cluster is encrypted or not.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateRedshiftClusterEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyRedshiftClusterEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_redshift_encryption.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_redshift_encryption.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Redshift Cluster evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationRedshiftClusterEncryption"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameRedshiftClusterEncryption", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftClusterEncryption", "value"] } ]
+
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }

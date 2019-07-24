@@ -11,7 +11,7 @@ RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     'id',
     # subnet_group_id
     'subnet_group_name'
-])
+    ])
 
 
 class RedshiftClusterOperations(object):
@@ -61,7 +61,6 @@ class RedshiftClusterOperations(object):
     @staticmethod
     def cluster_encryption(redshift_client, cluster_id):
         """
-
         :param redshift_client: redshift client
         :param cluster_id: cluster id which need to be encrypted. 
 
@@ -79,7 +78,6 @@ class RedshiftCluster(object):
     Basic class for Redshift Cluster.
     Encapsulates `Owner`/`Tags`.
     """
-
     def __init__(self, account, name, tags, is_encrypted=None, is_public=None, is_logging=None):
         """
         :param account: `Account` instance where redshift cluster is present
@@ -127,11 +125,10 @@ class RedshiftClusterChecker(object):
     Basic class for checking redshift clusters public access and encryption in account/region.
     Encapsulates check settings and discovered clusters.
     """
-
     def __init__(self, account):
         """
         :param account: `Account` clusters to check
-
+        
         """
         self.account = account
         self.clusters = []

@@ -23,6 +23,7 @@ Dow Jones Hammer can identify and report the following issues:
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html)     |Detects not encrypted at rest RDS instances            |Any one of RDS instances is not encrypted at reset                              |
 |[AMIs public access](playbook13_amis_public_access.html)     |Detects publicly accessible AMIs            |Any one of AMI is worldwide accessible                             |
 |[Redshift Logging Issues](playbook17_redshift_audit_logging.html)     |Detects Redshift logging issues            |Any one of Redshift cluster logging is not enabled                              |
+|[Redshift Unencrypted Clusters](playbook15_redshift_unencryption.html)     |Detects Redshift unencrypted cluster issues   |Any one of Redshift cluster is not encrypted at rest                              |
 |[ECS Logging](playbook18_ecs_logging.html)     |Detects ECS task definition's logging issues   |Any one of ECS task definition's logging enabled or not                              |
 |[ECS Privileged Access](playbook19_ecs_privileged_access.html)     |Detects ECS task definition's privileged access issues |Any one of ECS task definition have privileged access enabled or not                  |
 |[ECS External Image Source](playbook20_ecs_external_image_source.html)     |Detects ECS task definitions image source issues  |Any one of ECS image source is external or internal                              |

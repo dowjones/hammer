@@ -10,7 +10,8 @@ from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
     IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, SQSPolicyIssue, \
-    ECSPrivilegedAccessIssue, ECSLoggingIssue, ECSExternalImageSourceIssue
+    RedshiftEncryptionIssue, RedshiftLoggingIssue, ECSPrivilegedAccessIssue, ECSLoggingIssue, \
+    ECSExternalImageSourceIssue
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
 from library.aws.s3 import S3Operations
@@ -72,6 +73,8 @@ class CSVReport(object):
             (self.config.cloudtrails.ddb_table_name, "CloudTrail Logging Issues", CloudTrailIssue),
             (self.config.rdsSnapshot.ddb_table_name, "RDS Public Snapshots", RdsPublicSnapshotIssue),
             (self.config.sqspolicy.ddb_table_name, "SQS Policy Public Access", SQSPolicyIssue),
+            (self.config.redshiftEncrypt.ddb_table_name, "Redshift Unencrypted Clusters", RedshiftEncryptionIssue),
+            (self.config.redshift_logging.ddb_table_name, "Redshift Logging Issues ", RedshiftLoggingIssue),
             (self.config.ecs_privileged_access.ddb_table_name, "ECS Privileged Access Issues", ECSPrivilegedAccessIssue),
             (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue),
             (self.config.ecs_external_image_source.ddb_table_name, "ECS External Image Sources",
@@ -129,7 +132,6 @@ class CSVReport(object):
                 file_name=closed_security_issues_file_name,
                 file_data=closed_security_issues,
                 channel=channel)
-
 
 
 if __name__ == '__main__':
