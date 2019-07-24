@@ -40,7 +40,6 @@ class CleanRedshiftPublicAccess:
                 cluster_id = issue.issue_id
 
                 in_whitelist = self.config.redshift_public_access.in_whitelist(account_id, cluster_id)
-                in_fixlist = True
 
                 if in_whitelist:
                     logging.debug(f"Skipping {cluster_id} (in whitelist)")
@@ -49,9 +48,6 @@ class CleanRedshiftPublicAccess:
                         ticket_id=issue.jira_details.ticket,
                         label=IssueStatus.Whitelisted.value
                     )
-                    continue
-                if not in_fixlist:
-                    logging.debug(f"Skipping {cluster_id} (not in fixlist)")
                     continue
 
                 if issue.timestamps.reported is None:
@@ -94,7 +90,7 @@ class CleanRedshiftPublicAccess:
                             logging.debug(f"Remediating '{cluster_details.name}' public access")
 
                             remediation_succeed = True
-                            if cluster_details.modify_cluster(False):
+                            if cluster_details.make_priviate():
                                 comment = (f"Cluster '{cluster_details.name}' public access issue "
                                            f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
                                            f"was remediated by hammer")

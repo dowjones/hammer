@@ -149,10 +149,9 @@
                                         "redshift:GetClusterCredentials",
                                         "redshift:DescribeClusters",
                                         "redshift:EnableLogging",
-                                        "redshift:DisableLogging",
                                         "redshift:AuthorizeClusterSecurityGroupIngress",
                                         "redshift:ModifyCluster",
-                                        "redshift:RevokeClusterSecurityGroupIngress"
+                                        "ec2:Describe*"
                                     ],
                                     "Resource": "*"
                                 }
