@@ -127,6 +127,18 @@
                                     "sqs:ListQueueTags"
                                 ],
                                 "Resource": "*"
+                            },
+                            {
+                                "Sid": "RedshiftIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "redshift:DescribeClusterSecurityGroups",
+                                    "redshift:DescribeClusterParameterGroups",
+                                    "redshift:DescribeLoggingStatus",
+                                    "redshift:GetClusterCredentials",
+                                    "redshift:DescribeClusters"
+                                ],
+                                "Resource": "*"
                             }
                         ]
                     }
