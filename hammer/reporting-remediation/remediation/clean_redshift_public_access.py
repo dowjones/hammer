@@ -90,7 +90,7 @@ class CleanRedshiftPublicAccess:
                             logging.debug(f"Remediating '{cluster_details.name}' public access")
 
                             remediation_succeed = True
-                            if cluster_details.make_priviate():
+                            if cluster_details.make_private():
                                 comment = (f"Cluster '{cluster_details.name}' public access issue "
                                            f"in '{account_name} / {account_id}' account, '{issue.issue_details.region}' region "
                                            f"was remediated by hammer")

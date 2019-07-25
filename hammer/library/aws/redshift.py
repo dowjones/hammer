@@ -42,7 +42,7 @@ class RedshiftClusterOperations(object):
         return redshift_clusters
 
     @staticmethod
-    def make_priviate(redshift_client, cluster_id):
+    def make_private(redshift_client, cluster_id):
         """
         Sets the cluster access as private.
 
@@ -98,7 +98,7 @@ class RedshiftCluster(object):
         :return: nothing        
         """
         try:
-            RedshiftClusterOperations.make_priviate(self.account.client("redshift"), self.name)
+            RedshiftClusterOperations.make_private(self.account.client("redshift"), self.name)
         except Exception:
             logging.exception(f"Failed to modify {self.name} cluster ")
             return False
