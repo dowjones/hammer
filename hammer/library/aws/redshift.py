@@ -11,7 +11,7 @@ RedshiftCluster_Details = namedtuple('RedshiftCluster_Details', [
     'id',
     # subnet_group_id
     'subnet_group_name'
-    ])
+])
 
 
 class RedshiftClusterOperations(object):
@@ -42,20 +42,19 @@ class RedshiftClusterOperations(object):
         return redshift_clusters
 
     @staticmethod
-    def set_cluster_access(redshift_client, cluster_id, public_access):
+    def make_private(redshift_client, cluster_id):
         """
         Sets the cluster access as private.
 
         :param redshift_client: Redshift boto3 client
-        :param cluster_id: Redshift cluster name which to make as private
-        :param public_access: Redshift cluster public access True or False.
+        :param cluster_id: Redshift cluster name which to make as private.
 
         :return: nothing
         """
 
         redshift_client.modify_cluster(
             ClusterIdentifier=cluster_id,
-            PubliclyAccessible=public_access
+            PubliclyAccessible=False
         )
 
     @staticmethod
@@ -93,13 +92,13 @@ class RedshiftCluster(object):
         self.is_public = is_public
         self.is_logging = is_logging
 
-    def modify_cluster(self, public_access):
+    def make_priviate(self):
         """
         Modify cluster as private.
         :return: nothing        
         """
         try:
-            RedshiftClusterOperations.set_cluster_access(self.account.client("redshift"), self.name, public_access)
+            RedshiftClusterOperations.make_private(self.account.client("redshift"), self.name)
         except Exception:
             logging.exception(f"Failed to modify {self.name} cluster ")
             return False
@@ -125,10 +124,11 @@ class RedshiftClusterChecker(object):
     Basic class for checking redshift clusters public access and encryption in account/region.
     Encapsulates check settings and discovered clusters.
     """
+
     def __init__(self, account):
         """
         :param account: `Account` clusters to check
-        
+
         """
         self.account = account
         self.clusters = []

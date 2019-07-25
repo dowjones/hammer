@@ -98,10 +98,22 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
 
+resource "aws_s3_bucket_object" "redshift-cluster-public-access-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-cluster-public-access-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"
+}
+
 resource "aws_s3_bucket_object" "redshift-unencrypted-cluster-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("redshift-unencrypted-cluster-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"))}")}"
     source = "${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "redshift-audit-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-audit-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"
 }
 
 resource "aws_s3_bucket_object" "ecs-privileged-access-issues-identification" {
@@ -121,10 +133,3 @@ resource "aws_s3_bucket_object" "ecs-external-image-source-issues-identification
     key    = "lambda/${format("ecs-external-image-source-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-external-image-source-issues-identification.zip"))}")}"
     source = "${path.module}/../../../packages/ecs-external-image-source-issues-identification.zip"
 }
-
-resource "aws_s3_bucket_object" "redshift-audit-logging-issues-identification" {
-    bucket = "${var.s3bucket}"
-    key    = "lambda/${format("redshift-audit-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"))}")}"
-    source = "${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"
-}
-

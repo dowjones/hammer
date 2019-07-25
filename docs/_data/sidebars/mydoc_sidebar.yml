@@ -123,6 +123,18 @@ entries:
     - title: AMI public access
       url: /playbook13_amis_public_access.html
       output: web, pdf
+      
+    - title: Redshift Unencrypted clusters
+      url: /playbook15_redshift_unencryption.html
+      output: web, pdf
+
+    - title: Redshift Publicly Accessible clusters
+      url: /playbook16_redshift_public_clusters.html
+      output: web, pdf
+     
+    - title: Redshift Audit Logging
+      url: /playbook17_redshift_audit_logging.html
+      output: web, pdf
     
     - title: ECS Logging
       url: /playbook18_ecs_logging.html
@@ -135,11 +147,3 @@ entries:
     - title: ECS External Image Source
       url: /playbook20_ecs_external_image_source.html
       output: web, pdf 
-
-    - title: Redshift Audit Logging
-      url: /playbook17_redshift_audit_logging.html
-      output: web, pdf
-    
-    - title: Redshift Unencrypted clusters
-      url: /playbook15_redshift_unencryption.html
-      output: web, pdf

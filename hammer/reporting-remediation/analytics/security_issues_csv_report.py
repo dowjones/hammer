@@ -9,9 +9,9 @@ from library.aws.utility import AssumeRole
 from library.config import Config
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
-    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, SQSPolicyIssue, \
-    RedshiftEncryptionIssue, RedshiftLoggingIssue, ECSPrivilegedAccessIssue, ECSLoggingIssue, \
-    ECSExternalImageSourceIssue
+    IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, SQSPolicyIssue,\
+    RedshiftEncryptionIssue, RedshiftLoggingIssue, ECSPrivilegedAccessIssue, ECSLoggingIssue,\
+    ECSExternalImageSourceIssue, RedshiftPublicAccessIssue
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
 from library.aws.s3 import S3Operations
@@ -75,6 +75,7 @@ class CSVReport(object):
             (self.config.sqspolicy.ddb_table_name, "SQS Policy Public Access", SQSPolicyIssue),
             (self.config.redshiftEncrypt.ddb_table_name, "Redshift Unencrypted Clusters", RedshiftEncryptionIssue),
             (self.config.redshift_logging.ddb_table_name, "Redshift Logging Issues ", RedshiftLoggingIssue),
+            (self.config.redshift_public_access.ddb_table_name, "Redshift Public Clusters", RedshiftPublicAccessIssue),
             (self.config.ecs_privileged_access.ddb_table_name, "ECS Privileged Access Issues", ECSPrivilegedAccessIssue),
             (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue),
             (self.config.ecs_external_image_source.ddb_table_name, "ECS External Image Sources",
