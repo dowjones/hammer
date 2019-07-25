@@ -207,6 +207,15 @@
                                     "Resource": "*"
                                 },
                                 {
+                                    "Sid": "ECSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:Describe*",
+                                        "ecs:List*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
                                     "Sid": "RedshiftIssues",
                                     "Effect": "Allow",
                                     "Action": [
@@ -216,10 +225,9 @@
                                         "redshift:GetClusterCredentials",
                                         "redshift:DescribeClusters",
                                         "redshift:EnableLogging",
-                                        "redshift:DisableLogging",
                                         "redshift:AuthorizeClusterSecurityGroupIngress",
                                         "redshift:ModifyCluster",
-                                        "redshift:RevokeClusterSecurityGroupIngress"
+                                        "ec2:Describe*"
                                     ],
                                     "Resource": "*"
                                 },
