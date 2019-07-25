@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating S3 encryption checking")
 
     try:
-        sns_arn = os.environ["SNS_S3_ENCRYPT_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.s3Encrypt.enabled:

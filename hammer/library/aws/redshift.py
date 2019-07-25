@@ -77,7 +77,6 @@ class RedshiftCluster(object):
     Basic class for Redshift Cluster.
     Encapsulates `Owner`/`Tags`.
     """
-
     def __init__(self, account, name, tags, is_encrypted=None, is_public=None, is_logging=None):
         """
         :param account: `Account` instance where redshift cluster is present

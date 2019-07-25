@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     logging.debug("Initiating unencrypted EBS volumes checking")
 
     try:
-        sns_arn = os.environ["SNS_EBS_VOLUMES_ARN"]
+        sns_arn = os.environ["SNS_ARN"]
         config = Config()
 
         if not config.ebsVolume.enabled:
