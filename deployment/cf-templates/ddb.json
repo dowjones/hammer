@@ -510,7 +510,7 @@
                     "ReadCapacityUnits": "10",
                     "WriteCapacityUnits": "2"
                 },
-                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "redshift-unencrypted" ] ]}}
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "redshift-unencrypted" ] ]}
             }
         },
         "DynamoDBECSPrivilegedAccess": {
