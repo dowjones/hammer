@@ -340,7 +340,7 @@ class CreateSecurityGroupsTickets(object):
 
                     iam_client = account.client("iam") if account.session is not None else None
                     redshift_client = account.client("redshift") if account.session is not None else None
-                    rds_instance_details = elb_instance_details = None
+                    rds_instance_details = elb_instance_details = sg_redshift_details = None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
