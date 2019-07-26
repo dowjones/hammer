@@ -9,7 +9,7 @@
         },
         "InstanceType" : {
             "Type" : "String",
-            "Default" : "t2.small",
+            "Default" : "t2.medium",
             "AllowedValues" : ["t2.small", "t2.medium", "t2.large", "t2.xlarge", "t2.2xlarge"]
         },
         "Vpcid": {
