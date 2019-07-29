@@ -77,6 +77,9 @@
   "es_unencrypted_domain": {
       "__comment__": "Detects Unencrypted Elasticsearch domains - domain ARNs.",
 		  "1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
+  },
+	"es_public_access_domain": {
+      "__comment__": "Detects Unencrypted Elasticsearch publicly accessible domains - domain ARNs.",
+	  	"1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
   }
-  
 }

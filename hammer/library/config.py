@@ -83,6 +83,9 @@ class Config(object):
         # Elasticsearch unencrypted domain issue config
         self.esEncrypt = ModuleConfig(self._config, "es_unencrypted_domain")
 
+        # Elasticsearch publicly accessed domain issue config
+        self.esPublicAccess = ModuleConfig(self._config, "es_public_access_domain")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

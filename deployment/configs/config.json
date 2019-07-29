@@ -163,6 +163,12 @@
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
     },
+    "redshift_logging": {
+        "enabled": true,
+        "ddb.table_name": "hammer-redshift-logging",
+        "topic_name": "hammer-describe-redshift-logging-lambda",
+        "reporting": true
+    },  
     "redshift_public_access": {
         "enabled": true,
         "ddb.table_name": "hammer-redshift-public-access",
@@ -196,13 +202,7 @@
         "topic_name": "hammer-describe-ecs-external-image-source-lambda",
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true
-    },
-    "redshift_logging": {
-        "enabled": true,
-        "ddb.table_name": "hammer-redshift-logging",
-        "topic_name": "hammer-describe-redshift-logging-lambda",
-        "reporting": true
-    },
+    },    
     "es_domain_logging": {
         "enabled": true,
         "ddb.table_name": "hammer-es-domain-logging",
@@ -216,5 +216,13 @@
         "ddb.table_name": "hammer-es-unencrypted-domain",
         "topic_name": "hammer-describe-es-encryption-lambda",
         "reporting": true
-    }  
+    }, 
+    "es_public_access_domain": {
+        "enabled": true,
+        "ddb.table_name": "hammer-es-public-access-domain",
+        "topic_name": "hammer-describe-es-public-access-lambda",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    }
 }

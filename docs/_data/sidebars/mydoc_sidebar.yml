@@ -151,7 +151,11 @@ entries:
     - title: Elasticsearch Domains Unencryption issues
       url: /playbook21_elasticsearch_unencryption.html
       output: web, pdf
+
+    - title: Elasticsearch Domains Public Access Policy issues
+      url: /playbook22_elasticsearch_public_access.html
+      output: web, pdf
       
-   - title: Elasticsearch Domains Logging issues
+    - title: Elasticsearch Domains Logging issues
       url: /playbook23_elasticsearch_logging.html
       output: web, pdf

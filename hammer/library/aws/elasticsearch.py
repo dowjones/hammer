@@ -53,7 +53,7 @@ class ElasticSearchOperations:
     @staticmethod
     def put_domain_policy(es_client, domain_name, policy):
         """
-        Replaces a policy on a domain. If the domain already has a policy, the one in this request completely replaces it.
+        Replaces a policy on a domain. If the domain already has a policy, one in this request completely replaces it.
 
         :param es_client: Elasticsearch boto3 client
         :param domain_name: Elasticsearch domain where to update policy on
@@ -230,7 +230,19 @@ class ESDomainDetails(object):
         .. note:: This keeps self._policy unchanged.
                   You need to recheck Elasticsearch domain policy to ensure that it was really restricted.
         """
-        restricted_policy = S3Operations.restrict_policy(self._policy)
+        restricted_policy = {}
+        policy_statement = {}
+        principal = {}
+        statement = []
+
+        principal["AWS"] = "*"
+        policy_statement["Effect"] = "Deny"
+        policy_statement["Principal"] = principal
+        policy_statement["Action"] = "es*"
+        policy_statement["Resource"] = self.arn + "/*"
+        statement.append(policy_statement)
+        restricted_policy["Statement"] = statement
+
         try:
             ElasticSearchOperations.put_domain_policy(self.account.client("es"), self.name, restricted_policy)
         except Exception:
@@ -241,6 +253,7 @@ class ESDomainDetails(object):
 
     def set_logging(self):
         """
+
         :return: 
         """
         try:
@@ -279,7 +292,8 @@ class ESDomainChecker:
         """
         Walk through Elasticsearch domains in the account/region and put them to `self.domains`.
 
-        :param ids: list with Elasticsearch domain ids to check, if it is not supplied - all Elasticsearch domains must be checked
+        :param ids: list with Elasticsearch domain ids to check, 
+                    if it is not supplied - all Elasticsearch domains must be checked
 
         :return: boolean. True - if check was successful,
                           False - otherwise

@@ -35,7 +35,8 @@
                         "SourceIdentificationECSLogging",
                         "SourceIdentificationECSExternalImageSource",
              						"SourceIdentificationElasticSearchLogging",
-                        "SourceIdentificationElasticSearchEncryption"
+                        "SourceIdentificationElasticSearchEncryption",
+                        "SourceIdentificationElasticSearchPublicAccess"
                     ]
                 },
                 {
@@ -124,6 +125,9 @@
                 },
                 "SourceIdentificationElasticSearchEncryption":{
                     "dafault": "Relative path to Unencrypted Elasticsearch domain sources"
+                },
+                "SourceIdentificationElasticSearchPublicAccess":{
+                    "dafault": "Relative path to Unencrypted Elasticsearch domain public access sources"          
                 }
             }
         }
@@ -252,7 +256,11 @@
         "SourceIdentificationElasticSearchEncryption": {
             "Type": "String",
             "Default": "elasticsearch-unencrypted-domain-identification.zip"
-        }
+        },
+        "SourceIdentificationElasticSearchPublicAccess": {
+            "Type": "String",
+            "Default": "elasticsearch-public-access-domain-identification.zip"
+        }        
     },
     "Conditions": {
         "LambdaSubnetsEmpty": {
@@ -332,6 +340,9 @@
             },
             "IdentificationMetricESEncryptionError": {
                 "value": "ESEncryptionError"
+            },
+            "IdentificationMetricESPublicAccessError": {
+                "value": "ESPublicAccessError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -458,6 +469,12 @@
             },
             "SNSTopicNameESEncryption": {
                 "value": "describe-es-encryption-lambda"
+            },
+            "SNSDisplayNameESPublicAccess": {
+                "value": "describe-es-public-access-sns"
+            },
+            "SNSTopicNameESPublicAccess": {
+                "value": "describe-es-public-access-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -590,7 +607,13 @@
             },
             "IdentifyESEncryptionLambdaFunctionName": {
                 "value": "describe-elasticsearch-encryption"
-            }
+            },
+            "InitiateESPublicAccessLambdaFunctionName": {
+                "value": "initiate-elasticsearch-public-access"
+            },
+            "IdentifyESPublicAccessLambdaFunctionName": {
+                "value": "describe-elasticsearch-public-access"
+            }           
         }
     },
     "Resources": {
@@ -1599,6 +1622,46 @@
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESLogging", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateESPublicAccess": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationElasticSearchPublicAccess" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify publicly accessible Elasticsearch domains.",
+                    "EvaluateLambdaDescription": "Lambda function to describe publicly accessible Elasticsearch domains.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateESPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyESPublicAccessLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_elasticsearch_public_access_domains.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_elasticsearch_public_access_domains.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Elasticsearch domain public access evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationESPublicAccess"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameESPublicAccess", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESPublicAccess", "value"] } ]               
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }

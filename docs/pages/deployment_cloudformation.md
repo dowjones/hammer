@@ -107,6 +107,7 @@ You will need to set the following parameters:
 * **SourceIdentificationRedshiftPublicAccess**: the relative path to the Lambda package that identifies publicly accessibly redshift cluster issues. The default value is **redshift-cluster-public-access-identification.zip**.
 * **SourceIdentificationElasticSearchEncryption**: the relative path to the Lambda package that identifies Elasticsearch domain encryption issues. The default value is **elasticsearch-unencrypted-domain-identification.zip**.
 * **SourceIdentificationElasticSearchLogging**: the relative path to the Lambda package that identifies Elasticsearch domain logging issues. The default value is **elasticsearch-domain-logging-issues-identification.zip**.
+* **SourceIdentificationElasticSearchPublicAccess**: the relative path to the Lambda package that identifies Elasticsearch domain public access issues. The default value is **elasticsearch-public-access-domain-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.
