@@ -116,6 +116,8 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*Domain ID*: {domain_name}\n"
+                        f" Encryption enabled at rest: {encrypted_at_rest}\n"
+                        f" Encryption enabled in transit: {encrypted_at_transit}\n"
                     )
 
                     issue_description += JiraOperations.build_tags_table(tags)
@@ -129,8 +131,6 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                         f"create new domain. \n "
                         f"5. After creation of new domain, migrate your data to new domain. \n "
                     )
-
-
 
                     try:
                         response = jira.add_issue(
