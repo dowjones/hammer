@@ -138,7 +138,7 @@
                                         "sqs:SetQueueAttributes"
                                     ],
                                     "Resource": "*"
-                                },                                
+                                },
                                 {
                                     "Sid": "ECSIssues",
                                     "Effect": "Allow",
