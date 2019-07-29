@@ -27,6 +27,16 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[SQS Queue Public Access](playbook10_sqs_public_policy.html#3-issue-remediation)      | Yes       | Yes                 |
 |[S3 Unencrypted Buckets](playbook11_s3_unencryption.html#3-issue-remediation)         | Yes       | Yes                 |
 |[RDS Unencrypted instances](playbook12_rds_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
+|[AMIs Public Access](playbook13_amis_public_access.html#3-issue-remediation)     | `Yes`      | `No`                |
+|[Redshift Unencryption issues](playbook15__unencryption.html#3-issue-remediation)     | `Yes`      | `No`                |
+|[Redshift Public Access issues](playbook16_redshift_public_clusters.html#3-issue-remediation)     | `Yes`      | `No`                |
+|[Redshift Logging issues](playbook17_redshift_audit_logging.html#3-issue-remediation)     | `No`      | `No`                |
+|[ECS Logging issues](playbook18_ecs_logging.html#3-issue-remediation)     | `No`      | `No`                |
+|[ECS Privileged Access issues](playbook19_ecs_privileged_access.html#3-issue-remediation)     | `No`      | `No`                |
+|[ECS External Image Source issues](playbook20_ecs_external_image_source.html#3-issue-remediation)  | `No`      | `No`                |
+|[Elasticsearch Domains Unencrypted Domains](playbook21_elasticsearch_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
+|[Elasticsearch Domains Public Access issues](playbook22_elasticsearch_logging.html#3-issue-remediation)     | `Yes`      | `Yes`                |
+|[Elasticsearch Domains Logging issues](playbook23_elasticsearch_logging.html#3-issue-remediation)     | `Yes`      | `No`                |
 
 ## 2. How Remediation Backup Works
 

@@ -63,6 +63,29 @@ class Config(object):
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
+        self.redshift_public_access = ModuleConfig(self._config, "redshift_public_access")
+        self.redshiftEncrypt = ModuleConfig(self._config, "redshift_encryption")
+        self.redshift_logging = ModuleConfig(self._config, "redshift_logging")
+        # AMI public access issue config
+        self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
+        # ECS logging issue config
+        self.ecs_logging = ModuleConfig(self._config, "ecs_logging")
+
+        # ECS access issue config
+        self.ecs_privileged_access = ModuleConfig(self._config, "ecs_privileged_access")
+
+        # ECS image source issue config
+        self.ecs_external_image_source = ModuleConfig(self._config, "ecs_external_image_source")
+
+        # Elasticsearch domain logging issue config
+        self.esLogging = ModuleConfig(self._config, "es_domain_logging")
+
+        # Elasticsearch unencrypted domain issue config
+        self.esEncrypt = ModuleConfig(self._config, "es_unencrypted_domain")
+
+        # Elasticsearch publicly accessed domain issue config
+        self.esPublicAccess = ModuleConfig(self._config, "es_public_access_domain")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 
@@ -82,6 +105,14 @@ class Config(object):
         self.slack = SlackConfig(slack_config)
         # CSV configuration
         self.csv = CSVConfig(self._config, self.slack)
+
+        # API configuration
+        self.api = ApiConfig({
+            'credentials':  self.json_load_from_ddb(self._config["credentials"]["ddb.table_name"],
+                                                    self.aws.region,
+                                                    "api"),
+            'table': self._config["api"]["ddb.table_name"]
+        })
 
     def get_bu_by_name(self, name):
         """
@@ -106,6 +137,11 @@ class Config(object):
     @property
     def now(self):
         return datetime.now(timezone.utc)
+
+    def get_module_config_by_name(self, name):
+        for module in self.modules:
+            if module.name == name:
+                return module
 
     def json_load_from_file(self, filename, default=None):
         """
@@ -265,6 +301,23 @@ class JiraConfig(object):
         if key in self._config:
             return self._config[key]
         raise AttributeError(f"section 'jira' has no option '{key}'")
+
+
+class ApiConfig(object):
+    def __init__(self, config):
+        self._config = config
+
+    @property
+    def token(self):
+        return self._config.get("credentials", {}).get("token", None)
+
+    @property
+    def url(self):
+        return self._config.get("credentials", {}).get("url", None)
+
+    @property
+    def ddb_table_name(self):
+        return self._config['table']
 
 
 class SlackConfig(object):
@@ -429,6 +482,7 @@ class ModuleConfig(BaseConfig):
         self._fixnow = config["fixnow"].get(section, {})
         # main accounts dict
         self._accounts = config["aws"]["accounts"]
+        self.name = section
 
     def module_accounts(self, option):
         """
@@ -439,12 +493,13 @@ class ModuleConfig(BaseConfig):
         :return: dict with AWS accounts to identify/remediate {'account id': 'account name', ...}
         """
         module_accounts = self._config.get(option, None)
-        if module_accounts is None:
+        if module_accounts is None or len(module_accounts) == 0:
             accounts = self._accounts
         else:
             # construct dict similar to main accounts dict
             accounts = {account: self._accounts.get(account, "") for account in module_accounts}
         # exclude 'ignore_accounts' from resulting dict
+
         return {k: v for k, v in accounts.items() if k not in self._config.get("ignore_accounts", [])}
 
     @property
@@ -492,6 +547,10 @@ class ModuleConfig(BaseConfig):
     def ddb_table_name(self):
         """ :return: DDB table name to use for storing issue details """
         return self._config["ddb.table_name"]
+
+    @property
+    def sns_topic_name(self):
+        return self._config['topic_name']
 
     @property
     def reporting(self):

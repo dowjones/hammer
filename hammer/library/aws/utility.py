@@ -1,12 +1,13 @@
-import logging
-import json
 import boto3
+import decimal
+from functools import lru_cache
+import json
+import logging
 import socket
 import time
+
+
 import botocore.config
-
-
-from functools import lru_cache
 from botocore.exceptions import ClientError
 from boto3.session import Session
 
@@ -195,6 +196,40 @@ class Sns:
             TopicArn=arn,
             Message=message,
         )
+
+
+class DDB:
+    @staticmethod
+    def track_progress(table, request_id):
+        table.update_item(
+            Key={
+                'request_id': request_id
+            },
+            UpdateExpression='SET updated=:upd, progress=progress + :val',
+            ExpressionAttributeValues={':upd': int(time.time()), ':val': 1})
+
+    @staticmethod
+    def _convert_item(item):
+        for k in item.keys():
+            if isinstance(item[k], decimal.Decimal):
+                item[k] = int(item[k])
+        return item
+
+    @staticmethod
+    def get_request_data(table, request_id):
+        item = table.get_item(Key={'request_id': request_id})
+        if 'Item' in item:
+            return DDB._convert_item(item['Item'])
+
+    @staticmethod
+    def add_request(table, request_id, request_params, total):
+        table.put_item(Item={
+            'request_id': request_id,
+            'request_params': request_params,
+            'progress': 0,
+            'total': total,
+            'updated': int(time.time())
+        })
 
 
 class AWSMetric(object):

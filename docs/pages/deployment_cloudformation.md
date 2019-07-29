@@ -5,14 +5,14 @@ sidebar: mydoc_sidebar
 permalink: deployment_cloudformation.html
 ---
 
-You should perform the following steps to deploy Dow Jones Hammer using CloudFormation:
+You should perform the steps mentioned below to deploy Dow Jones Hammer using CloudFormation:
 
 1. Accomplish the preliminary steps
 2. Put the Dow Jones Hammer packages into the Dow Jones Hammer deployment bucket
 3. Deploy CloudFormation stacks to the master AWS account
 4. Deploy CloudFormation stacks to the slave AWS accounts
 
-## 1. Preliminary Steps
+## 1. Preliminary steps
 
 Check [this section](configuredeploy_overview.html#2-preliminary-steps) to make sure you have performed all necessary steps before proceeding further.
 
@@ -31,6 +31,8 @@ Number of stacks to deploy depends on the desired functionality:
 * Identification only;
 * Identification, Reporting and Remediation.
 
+Additionally you can deploy API stack to use Dow Jones Hammer capabilities via REST API.
+
 Choose json templates according to desired functionality from the table below and deploy them **in the same order** as they appear in the table:
 
 1. Log in to the AWS Management Console and select **CloudFormation** in the **Services** menu.
@@ -46,10 +48,13 @@ Choose json templates according to desired functionality from the table below an
 | IAM identification role             | `deployment/cf-templates/identification-role.json`        | **+**          | **+**                    |
 | DynamoDB tables                     | `deployment/cf-templates/ddb.json`                        | **+**          | **+**                    |
 | Identification functionality        | `deployment/cf-templates/identification.json`             | **+**          | **+**                    |
+| API functionality                   | `deployment/cf-templates/api.json`                        | **+**          | **+**                    |
 | IAM reporting/remediation role      | `deployment/cf-templates/reporting-remediation-role.json` |                | **+**                    |
 | Reporting/remediation functionality | `deployment/cf-templates/reporting-remediation.json`      |                | **+**                    |
 
 **Note**: you should deploy `DynamoDB tables`, `Identification functionality` and `Reporting/remediation functionality` CloudFormation stacks to the same AWS region as you configured in [aws.region](/editconfig.html#11-master-aws-account-settings) parameter of **config.json** file.
+
+**Note**: note down **ApiUrl** value from the [API functionality](#316-api-functionality) stack [outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) to access Dow Jones Hammer REST API.
 
 **Note:** in case you intend to use Dow Jones Hammer reporting/remediation functionality:
 1. Note down the value for the **LambdaLogsForwarderArn** from the [Identification functionality](#313-identification-functionality) stack [outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) and provide it as an input parameter for the [Reporting/remediation functionality](#315-reportingremediation-functionality) stack.
@@ -93,6 +98,16 @@ You will need to set the following parameters:
 * **SourceIdentificationSQSPublicPolicy**: the relative path to the Lambda package that identifies SQS public queue issues. The default value is **sqs-public-policy-identification.zip**.
 * **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
 * **SourceIdentificationRDSEncryption**: the relative path to the Lambda package that identifies RDS unencrypted instances. The default value is **rds-unencrypted-instance-identification.zip**.
+* **SourceIdentificationAMIPublicAccess**: the relative path to the Lambda package that identifies Public AMIs. The default value is **ami-public-acess-issues-identification.zip**.
+* **SourceIdentificationECSPrivilegedAccess**: the relative path to the Lambda package that identifies ECS privileged access issues. The default value is **ecs-privileged-access-issues-identification.zip**.
+* **SourceIdentificationECSExternalImageSource**: the relative path to the Lambda package that identifies ECS external image source issues. The default value is **ecs-external-image-source-issues-identification.zip**.
+* **SourceIdentificationECSLogging**: the relative path to the Lambda package that identifies ECS logging issues. The default value is **ecs-logging-issues-identification.zip**.
+* **SourceIdentificationRedshiftLogging**: the relative path to the Lambda package that identifies audit logging redshift issues. The default value is **redshift-audit-logging-issues-identification.zip**.
+* **SourceIdentificationRedshiftClusterEncryption**: the relative path to the Lambda package that identifies unencrypted redshift cluster issues. The default value is **redshift-unencrypted-cluster-identification.zip**.
+* **SourceIdentificationRedshiftPublicAccess**: the relative path to the Lambda package that identifies publicly accessibly redshift cluster issues. The default value is **redshift-cluster-public-access-identification.zip**.
+* **SourceIdentificationElasticSearchEncryption**: the relative path to the Lambda package that identifies Elasticsearch domain encryption issues. The default value is **elasticsearch-unencrypted-domain-identification.zip**.
+* **SourceIdentificationElasticSearchLogging**: the relative path to the Lambda package that identifies Elasticsearch domain logging issues. The default value is **elasticsearch-domain-logging-issues-identification.zip**.
+* **SourceIdentificationElasticSearchPublicAccess**: the relative path to the Lambda package that identifies Elasticsearch domain public access issues. The default value is **elasticsearch-public-access-domain-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.
@@ -115,8 +130,16 @@ You will need to set the following parameters:
 * **Subnet**: the ID of the Subnet for deployment of the reporting/remediation EC2.
 * **ReportingRemediationIAMRole**: the name of the reporting/remediation IAM role for the Dow Jones Hammer reporting/remediation functionality in master account. Use the same value as for **ReportingRemediationIAMRole** parameter in [IAM Reporting/Remediation Role](#314-iam-reportingremediation-role) step.
 * **LambdaLogForwarderArn**: the ARN of the Lambda log forwarding function created during `Identification Functionality` deployment. Use the [output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html) **LambdaLogsForwarderArn** value from [Identification Functionality](#313-identification-functionality) step.
-* **HammerEngineBucket**: the name of the S3 bucket you [created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) to deploy Dow Jones Hammer.
-* **HammerEnginePath**: the relative path to the EC2 package with Dow Jones Hammer reporting and remediation sources. The default value is **reporting-remediation.zip**.
+* **SourceS3Bucket**: the name of the S3 bucket you [created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) to deploy Dow Jones Hammer.
+* **SourceAMIInfo**: the relative path to the Lambda package with AMI autodetect code. The default value is **ami-info.zip**.
+* **SourceReportingRemediation**: the relative path to the EC2 package with Dow Jones Hammer reporting and remediation sources. The default value is **reporting-remediation.zip**.
+
+#### 3.1.6. API functionality
+
+* **ResourcesPrefix**: the prefix for all Dow Jones Hammer resources. The default value is **hammer-**.
+* **SourceS3Bucket**: the name of [pre-created](configuredeploy_overview.html#24-create-s3-buckets-for-hammer) S3 deployment bucket.
+* **SourceApi**: the relative path to the Lambda package that implements REST API. The default value is **api.zip**.
+* **IdentificationIAMRole**: the name of identification IAM role for the Dow Jones Hammer identification functionality in master account. Use the same value as for **IdentificationIAMRole** parameter in [IAM Identification Role](#311-iam-identification-role) step. The default value is **cloudsec-master-id**.
 
 ## 4. Deploy CloudFormation Stacks to the Slave AWS Accounts
 

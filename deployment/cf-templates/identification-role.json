@@ -78,7 +78,8 @@
                                         "ec2:DescribeRegions",
                                         "ec2:DescribeNetworkInterfaces",
                                         "ec2:CreateNetworkInterface",
-                                        "ec2:DeleteNetworkInterface"
+                                        "ec2:DeleteNetworkInterface",
+                                        "ec2:DescribeImages"
                                     ],
                                     "Resource": "*"
                                 },
@@ -180,6 +181,30 @@
                                     "Action": [
                                         "ecs:Describe*",
                                         "ecs:List*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RedshiftIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "redshift:DescribeClusterSecurityGroups",
+                                        "redshift:DescribeClusterParameterGroups",
+                                        "redshift:DescribeLoggingStatus",
+                                        "redshift:GetClusterCredentials",
+                                        "redshift:DescribeClusters"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                  "Sid": "ESIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "es:ListDomainNames",
+                                        "es:DescribeElasticsearchDomain",
+                                        "es:DescribeElasticsearchDomainConfig",
+                                        "es:DescribeElasticsearchDomains",
+                                        "es:ListTags"
                                     ],
                                     "Resource": "*"
                                 },

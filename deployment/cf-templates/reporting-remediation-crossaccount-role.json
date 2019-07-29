@@ -52,6 +52,8 @@
                                         "ec2:DescribeSubnets",
                                         "ec2:AuthorizeSecurityGroupIngress",
                                         "ec2:RevokeSecurityGroupIngress",
+                                        "ec2:DescribeImages",
+                                        "ec2:ModifyImageAttribute",
                                         "elasticloadbalancing:DescribeLoadBalancers",
                                         "iam:ListInstanceProfiles",
                                         "iam:GetInstanceProfile",
@@ -143,6 +145,40 @@
                                     "Action": [
                                         "ecs:Describe*",
                                         "ecs:List*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RedshiftIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "redshift:DescribeClusterSecurityGroups",
+                                        "redshift:DescribeClusterParameterGroups",
+                                        "redshift:DescribeLoggingStatus",
+                                        "redshift:GetClusterCredentials",
+                                        "redshift:DescribeClusters",
+                                        "redshift:EnableLogging",
+                                        "redshift:AuthorizeClusterSecurityGroupIngress",
+                                        "redshift:ModifyCluster",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "ESIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "es:ListDomainNames",
+                                        "es:DescribeElasticsearchDomain",
+                                        "es:DescribeElasticsearchDomainConfig",
+                                        "es:DescribeElasticsearchDomains",
+                                        "es:ListTags",
+                                        "es:UpdateElasticsearchDomainConfig",
+                                        "logs:DescribeLogGroups",
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents",
+                                        "logs:PutResourcePolicy"
                                     ],
                                     "Resource": "*"
                                 }

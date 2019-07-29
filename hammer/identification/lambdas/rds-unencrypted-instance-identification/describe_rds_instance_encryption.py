@@ -8,7 +8,7 @@ from library.aws.rds import RdsEncryptionChecker
 from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, RdsEncryptionIssue
 from library.ddb_issues import Operations as IssueOperations
-from library.aws.utility import Sns
+from library.aws.utility import DDB, Sns
 
 
 def lambda_handler(event, context):
@@ -21,6 +21,8 @@ def lambda_handler(event, context):
         account_name = payload['account_name']
         # get the last region from the list to process
         region = payload['regions'].pop()
+        # if request_id is present in payload then this lambda was called from the API
+        request_id = payload.get('request_id', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -71,6 +73,9 @@ def lambda_handler(event, context):
             # all other unresolved issues in DDB are for removed/remediated RDS encryption
             for issue in open_issues.values():
                 IssueOperations.set_status_resolved(ddb_table, issue)
+        if request_id:
+            api_table = main_account.resource("dynamodb").Table(config.api.ddb_table_name)
+            DDB.track_progress(api_table, request_id)
     except Exception:
         logging.exception(f"Failed to check RDS encryption in '{region}' for '{account_id} ({account_name})'")
 

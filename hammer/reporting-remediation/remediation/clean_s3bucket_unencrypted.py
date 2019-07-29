@@ -11,7 +11,7 @@ from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
 from library.ddb_issues import Operations as IssueOperations
-from library.ddb_issues import S3EncryptionIssue
+from library.ddb_issues import IssueStatus, S3EncryptionIssue
 from library.aws.s3 import S3EncryptionChecker
 from library.aws.utility import Account
 from library.utility import confirm
@@ -33,7 +33,7 @@ class CleanS3BucketUnencrypted:
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3Encrypt.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3EncryptionIssue)
             for issue in issues:
@@ -44,6 +44,12 @@ class CleanS3BucketUnencrypted:
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")
+
+                    # Adding label with "whitelisted" to jira ticket.
+                    jira.add_label(
+                        ticket_id=issue.jira_details.ticket,
+                        label=IssueStatus.Whitelisted.value
+                    )
                     continue
                 if not in_fixlist:
                     logging.debug(f"Skipping {bucket_name} (not in fixlist)")

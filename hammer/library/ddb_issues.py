@@ -130,6 +130,16 @@ class Issue(object):
         issue.jira_details = Details(item['jira_details'])
         return issue
 
+    def contains_tags(self, tags):
+        if not tags:
+            return True
+        for k in tags:
+            if k not in self.issue_details.tags:
+                return False
+            if self.issue_details.tags[k] not in tags[k]:
+                return False
+        return True
+
 
 class SecurityGroupIssue(Issue):
     def __init__(self, *args):
@@ -223,6 +233,56 @@ class RdsEncryptionIssue(Issue):
         super().__init__(*args)
 
 
+class PublicAMIIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftEncryptionIssue(Issue):
+   def __init__(self, *args):
+       super().__init__(*args)
+
+
+class RedshiftLoggingIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftPublicAccessIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ECSLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ECSPrivilegedAccessIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ECSExternalImageSourceIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ESEncryptionIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ESLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ESPublicAccessIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)        
+
+        
 class Operations(object):
     @staticmethod
     def find(ddb_table, issue):
