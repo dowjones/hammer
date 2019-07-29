@@ -105,6 +105,7 @@ You will need to set the following parameters:
 * **SourceIdentificationRedshiftLogging**: the relative path to the Lambda package that identifies audit logging redshift issues. The default value is **redshift-audit-logging-issues-identification.zip**.
 * **SourceIdentificationRedshiftClusterEncryption**: the relative path to the Lambda package that identifies unencrypted redshift cluster issues. The default value is **redshift-unencrypted-cluster-identification.zip**.
 * **SourceIdentificationRedshiftPublicAccess**: the relative path to the Lambda package that identifies publicly accessibly redshift cluster issues. The default value is **redshift-cluster-public-access-identification.zip**.
+* **SourceIdentificationElasticSearchEncryption**: the relative path to the Lambda package that identifies Elasticsearch domain encryption issues. The default value is **elasticsearch-unencrypted-domain-identification.zip**.
 * **SourceIdentificationElasticSearchLogging**: the relative path to the Lambda package that identifies Elasticsearch domain logging issues. The default value is **elasticsearch-domain-logging-issues-identification.zip**.
 
 **VPC config (optional)**:

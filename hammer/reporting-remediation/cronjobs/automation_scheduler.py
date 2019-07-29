@@ -79,6 +79,7 @@ def automation_cronjob(config):
          "create_ecs_external_image_source_issue_tickets", None),
         ("Elasticsearch Logging Issues", config.esLogging, "create_elasticsearch_domain_logging_issue_tickets", 
          "clean_elasticsearch_domain_logging"),
+        ("Elasticsearch Unencrypted Domains", config.esEncrypt, "create_elasticsearch_unencrypted_issue_tickets", None)
     ]
 
     for title, module_config, reporting_script, remediation_script in modules:

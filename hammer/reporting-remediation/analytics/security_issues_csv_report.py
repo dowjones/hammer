@@ -11,7 +11,7 @@ from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import SecurityGroupIssue, S3AclIssue, S3PolicyIssue, CloudTrailIssue, IAMKeyRotationIssue, \
     IAMKeyInactiveIssue, RdsPublicSnapshotIssue, EBSUnencryptedVolumeIssue, EBSPublicSnapshotIssue, SQSPolicyIssue,\
     RedshiftEncryptionIssue, RedshiftLoggingIssue, ECSPrivilegedAccessIssue, ECSLoggingIssue,\
-    ECSExternalImageSourceIssue, RedshiftPublicAccessIssue, ESLoggingIssue
+    ECSExternalImageSourceIssue, RedshiftPublicAccessIssue, ESLoggingIssue, ESEncryptionIssue
 from analytics.add_excel_sheet_records import AddRecordsToSheet
 from library.slack_utility import SlackNotification
 from library.aws.s3 import S3Operations
@@ -80,7 +80,8 @@ class CSVReport(object):
             (self.config.ecs_logging.ddb_table_name, "ECS Logging Issues", ECSLoggingIssue),
             (self.config.ecs_external_image_source.ddb_table_name, "ECS External Image Sources",
              ECSExternalImageSourceIssue),
-            (self.config.esLogging.ddb_table_name, "Elasticsearch Logging Issues", ESLoggingIssue)
+            (self.config.esLogging.ddb_table_name, "Elasticsearch Logging Issues", ESLoggingIssue),
+            (self.config.esEncrypt.ddb_table_name, "Elasticsearch Encryption Issue", ESEncryptionIssue)
         ]
 
         open_security_issues_workbook = xlwt.Workbook()

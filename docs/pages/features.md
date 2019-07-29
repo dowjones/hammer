@@ -28,7 +28,8 @@ Dow Jones Hammer can identify and report the following issues:
 |[ECS Logging](playbook18_ecs_logging.html)     |Detects ECS task definition's logging issues   |Any one of ECS task definition's logging enabled or not                              |
 |[ECS Privileged Access](playbook19_ecs_privileged_access.html)     |Detects ECS task definition's privileged access issues |Any one of ECS task definition have privileged access enabled or not                  |
 |[ECS External Image Source](playbook20_ecs_external_image_source.html)     |Detects ECS task definitions image source issues  |Any one of ECS image source is external or internal                              |
+|[Elasticsearch Domain Encryption Issues](playbook21_elasticsearch_unencryption.html)     |Detects Elasticsearch domains encryption issues            |Any one of Elasticsearch Domain unencryption issue                        |
 |[Elasticsearch Domain Logging Issues](playbook23_elasticsearch_logging.html)     |Detects Elasticsearch domains logging issues            |Any one of Elasticsearch Domain logging issue                        |
 
-Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues**, **RDS Unencrypted instances** **ECS Logging**, **ECS Privileged Access**, **ECS External Image Source** and **Redshift Audit Logging**.
+Dow Jones Hammer can perform remediation for all issues [except](remediation_backup_rollback.html#1-overview) **EBS Unencrypted volumes**, **CloudTrail Logging Issues**, **RDS Unencrypted instances** **ECS Logging**, **ECS Privileged Access**, **ECS External Image Source**, **Redshift Audit Logging** and **Elasticsearch Domain Encryption Issues**.
 

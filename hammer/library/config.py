@@ -80,6 +80,9 @@ class Config(object):
         # Elasticsearch domain logging issue config
         self.esLogging = ModuleConfig(self._config, "es_domain_logging")
 
+        # Elasticsearch unencrypted domain issue config
+        self.esEncrypt = ModuleConfig(self._config, "es_unencrypted_domain")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 

@@ -34,7 +34,8 @@
                         "SourceIdentificationECSPrivilegedAccess",
                         "SourceIdentificationECSLogging",
                         "SourceIdentificationECSExternalImageSource",
-             						"SourceIdentificationElasticSearchLogging"
+             						"SourceIdentificationElasticSearchLogging",
+                        "SourceIdentificationElasticSearchEncryption"
                     ]
                 },
                 {
@@ -120,6 +121,9 @@
                 },
                 "SourceIdentificationElasticSearchLogging":{
                     "dafault": "Relative path to Elasticsearch domain logging sources"
+                },
+                "SourceIdentificationElasticSearchEncryption":{
+                    "dafault": "Relative path to Unencrypted Elasticsearch domain sources"
                 }
             }
         }
@@ -244,6 +248,10 @@
         "SourceIdentificationElasticSearchLogging": {
             "Type": "String",
             "Default": "elasticsearch-domain-logging-issues-identification.zip"
+        },
+        "SourceIdentificationElasticSearchEncryption": {
+            "Type": "String",
+            "Default": "elasticsearch-unencrypted-domain-identification.zip"
         }
     },
     "Conditions": {
@@ -321,6 +329,9 @@
             },
             "IdentificationMetricESLoggingError": {
                 "value": "ESLoggingError"
+            },
+            "IdentificationMetricESEncryptionError": {
+                "value": "ESEncryptionError"
             },
             "SNSDisplayNameSecurityGroups": {
                 "value": "describe-security-groups-sns"
@@ -441,6 +452,12 @@
             },
             "SNSTopicNameESLogging": {
                 "value": "describe-es-logging-lambda"
+            },
+            "SNSDisplayNameESEncryption": {
+                "value": "describe-es-encryption-sns"
+            },
+            "SNSTopicNameESEncryption": {
+                "value": "describe-es-encryption-lambda"
             },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
@@ -567,7 +584,13 @@
             },
             "IdentifyESLoggingLambdaFunctionName": {
                 "value": "describe-elasticsearch-logging"
-            }          
+            },
+            "InitiateESEncryptionLambdaFunctionName": {
+                "value": "initiate-elasticsearch-encryption"
+            },
+            "IdentifyESEncryptionLambdaFunctionName": {
+                "value": "describe-elasticsearch-encryption"
+            }
         }
     },
     "Resources": {
@@ -1427,7 +1450,7 @@
                 "TemplateURL": {"Ref": "NestedStackTemplate"},
                 "Parameters": {
                     "SourceS3Bucket": {"Ref": "SourceS3Bucket"},
-                    "IdentificationIAMRole": {"Fn::Join": ["",["arn:aws:iam::",
+                    "IdentificationIAMRole": {"Fn::Join": ["", ["arn:aws:iam::",
                                              {"Ref": "AWS::AccountId"},
                                              ":role/",
                                              {"Ref": "ResourcesPrefix"},
@@ -1496,6 +1519,46 @@
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSExternalImageSource", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateESEncryption": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationElasticSearchEncryption" },
+                    "InitiateLambdaDescription": "Lambda function for initiate to identify unencrypted Elasticsearch domains.",
+                    "EvaluateLambdaDescription": "Lambda function to describe un-encrypted Elasticsearch domains.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "InitiateESEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "IdentifyESEncryptionLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_elasticsearch_unencrypted_domains.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_elasticsearch_unencrypted_domains.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Elasticsearch domain encryption evaluations",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationESEncryption"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameESEncryption", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESEncryption", "value"] } ]
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }

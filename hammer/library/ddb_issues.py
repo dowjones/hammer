@@ -263,6 +263,11 @@ class ECSPrivilegedAccessIssue(Issue):
         super().__init__(*args)
 
 
+class ESEncryptionIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
 class ECSExternalImageSourceIssue(Issue):
     def __init__(self, *args):
         super().__init__(*args)

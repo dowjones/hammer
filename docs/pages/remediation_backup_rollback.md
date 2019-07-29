@@ -34,6 +34,7 @@ The following table gives an overview of Dow Jones Hammer remediation functional
 |[ECS Logging issues](playbook18_ecs_logging.html#3-issue-remediation)     | `No`      | `No`                |
 |[ECS Privileged Access issues](playbook19_ecs_privileged_access.html#3-issue-remediation)     | `No`      | `No`                |
 |[ECS External Image Source issues](playbook20_ecs_external_image_source.html#3-issue-remediation)  | `No`      | `No`                |
+|[Elasticsearch Domains Unencrypted Domains](playbook21_elasticsearch_unencryption.html#3-issue-remediation)     | `No`      | `No`                |
 |[Elasticsearch Domains Logging issues](playbook23_elasticsearch_logging.html#3-issue-remediation)     | `Yes`      | `No`                |
 
 ## 2. How Remediation Backup Works

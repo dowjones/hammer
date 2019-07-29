@@ -204,7 +204,8 @@
                                         "es:DescribeElasticsearchDomain",
                                         "es:DescribeElasticsearchDomainConfig",
                                         "es:DescribeElasticsearchDomains",
-                                        "es:ListTags"],
+                                        "es:ListTags"
+                                    ],
                                     "Resource": "*"
                                 },
                                 {

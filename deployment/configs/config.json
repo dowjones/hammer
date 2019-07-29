@@ -210,5 +210,11 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
+    },
+    "es_unencrypted_domain": {
+        "enabled": true,
+        "ddb.table_name": "hammer-es-unencrypted-domain",
+        "topic_name": "hammer-describe-es-encryption-lambda",
+        "reporting": true
     }  
 }

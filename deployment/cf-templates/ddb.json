@@ -703,6 +703,37 @@
                 },
                 "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "es-domain-logging" ] ]}
             }
+        },
+        "DynamoDBESEncryptionRequests": {
+            "Type": "AWS::DynamoDB::Table",
+            "DependsOn": ["DynamoDBCredentials", "DynamoDBSQSPublicPolicy"],
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "account_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "account_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "issue_id",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": "10",
+                    "WriteCapacityUnits": "2"
+                },
+                "TableName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "es-unencrypted-domain" ] ]}
+            }
         }
     }
 }

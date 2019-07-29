@@ -150,26 +150,7 @@ class ElasticSearchOperations:
         """
         public_policy = False
         for statement in policy_details.get("Statement", []):
-            effect = statement['Effect']
-            principal = statement.get('Principal', {})
-            not_principal = statement.get('NotPrincipal', None)
-            condition = statement.get('Condition', None)
-            suffix = "/0"
-            # check both `Principal` - `{"AWS": "*"}` and `"*"`
-            # and condition (if exists) to be restricted (not "0.0.0.0/0")
-            if effect == "Allow" and \
-                    (principal == "*" or principal.get("AWS") == "*"):
-                if condition is not None:
-                    if suffix in str(condition.get("IpAddress")):
-                        return True
-                else:
-                    return True
-            if effect == "Allow" and \
-                            not_principal is not None:
-                # TODO: it is not recommended to use `Allow` with `NotPrincipal`, need to write proper check for such case
-                # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_notprincipal.html
-                logging.error(f"TODO: is this statement public???\n{statement}")
-            return False
+            public_policy = S3Operations.public_statement(statement)
 
         return public_policy
 
@@ -260,7 +241,6 @@ class ESDomainDetails(object):
 
     def set_logging(self):
         """
-
         :return: 
         """
         try:
