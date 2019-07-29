@@ -202,5 +202,13 @@
         "ddb.table_name": "hammer-redshift-logging",
         "topic_name": "hammer-describe-redshift-logging-lambda",
         "reporting": true
-    }
+    },
+    "es_domain_logging": {
+        "enabled": true,
+        "ddb.table_name": "hammer-es-domain-logging",
+        "topic_name": "hammer-describe-es-logging-lambda",
+        "reporting": true,
+        "remediation": false,
+        "remediation_retention_period": 21
+    }  
 }

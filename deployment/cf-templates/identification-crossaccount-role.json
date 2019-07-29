@@ -129,7 +129,7 @@
                                 "Resource": "*"
                             },
                             {
-                                "Sid": "ECSIssues", 
+                                "Sid": "ECSIssues",
                                 "Effect": "Allow",
                                 "Action": [
                                     "ecs:Describe*",
@@ -146,6 +146,18 @@
                                   "redshift:DescribeLoggingStatus",
                                   "redshift:GetClusterCredentials",
                                   "redshift:DescribeClusters"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Sid": "ESIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "es:ListDomainNames",
+                                    "es:DescribeElasticsearchDomain",
+                                    "es:DescribeElasticsearchDomainConfig",
+                                    "es:DescribeElasticsearchDomains",
+                                    "es:ListTags"
                                 ],
                                 "Resource": "*"
                             }

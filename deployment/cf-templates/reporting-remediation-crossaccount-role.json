@@ -138,7 +138,7 @@
                                         "sqs:SetQueueAttributes"
                                     ],
                                     "Resource": "*"
-                                },
+                                },                                
                                 {
                                     "Sid": "ECSIssues",
                                     "Effect": "Allow",
@@ -161,6 +161,24 @@
                                         "redshift:AuthorizeClusterSecurityGroupIngress",
                                         "redshift:ModifyCluster",
                                         "ec2:Describe*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "ESIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "es:ListDomainNames",
+                                        "es:DescribeElasticsearchDomain",
+                                        "es:DescribeElasticsearchDomainConfig",
+                                        "es:DescribeElasticsearchDomains",
+                                        "es:ListTags",
+                                        "es:UpdateElasticsearchDomainConfig",
+                                        "logs:DescribeLogGroups",
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents",
+                                        "logs:PutResourcePolicy"
                                     ],
                                     "Resource": "*"
                                 }

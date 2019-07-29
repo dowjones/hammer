@@ -146,4 +146,8 @@ entries:
       
     - title: ECS External Image Source
       url: /playbook20_ecs_external_image_source.html
-      output: web, pdf 
+      output: web, pdf
+      
+   - title: Elasticsearch Domains Logging issues
+      url: /playbook23_elasticsearch_logging.html
+      output: web, pdf

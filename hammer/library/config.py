@@ -77,6 +77,9 @@ class Config(object):
         # ECS image source issue config
         self.ecs_external_image_source = ModuleConfig(self._config, "ecs_external_image_source")
 
+        # Elasticsearch domain logging issue config
+        self.esLogging = ModuleConfig(self._config, "es_domain_logging")
+
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
 
