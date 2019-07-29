@@ -53,7 +53,7 @@ class ElasticSearchOperations:
     @staticmethod
     def put_domain_policy(es_client, domain_name, policy):
         """
-        Replaces a policy on a domain. If the domain already has a policy, the one in this request completely replaces it.
+        Replaces a policy on a domain. If the domain already has a policy, one in this request completely replaces it.
 
         :param es_client: Elasticsearch boto3 client
         :param domain_name: Elasticsearch domain where to update policy on
@@ -292,7 +292,8 @@ class ESDomainChecker:
         """
         Walk through Elasticsearch domains in the account/region and put them to `self.domains`.
 
-        :param ids: list with Elasticsearch domain ids to check, if it is not supplied - all Elasticsearch domains must be checked
+        :param ids: list with Elasticsearch domain ids to check, 
+                    if it is not supplied - all Elasticsearch domains must be checked
 
         :return: boolean. True - if check was successful,
                           False - otherwise

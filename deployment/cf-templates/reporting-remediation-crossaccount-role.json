@@ -138,6 +138,31 @@
                                         "sqs:SetQueueAttributes"
                                     ],
                                     "Resource": "*"
+                                },                                
+                                {
+                                    "Sid": "ECSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:Describe*",
+                                        "ecs:List*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RedshiftIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "redshift:DescribeClusterSecurityGroups",
+                                        "redshift:DescribeClusterParameterGroups",
+                                        "redshift:DescribeLoggingStatus",
+                                        "redshift:GetClusterCredentials",
+                                        "redshift:DescribeClusters",
+                                        "redshift:EnableLogging",
+                                        "redshift:AuthorizeClusterSecurityGroupIngress",
+                                        "redshift:ModifyCluster",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Resource": "*"
                                 },
                                 {
                                     "Sid": "ESIssues",
