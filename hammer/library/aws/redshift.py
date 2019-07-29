@@ -92,7 +92,7 @@ class RedshiftCluster(object):
         self.is_public = is_public
         self.is_logging = is_logging
 
-    def make_priviate(self):
+    def make_private(self):
         """
         Modify cluster as private.
         :return: nothing        
