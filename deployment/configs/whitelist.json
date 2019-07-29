@@ -46,8 +46,32 @@
 	},
     "rds_encryption": {
 	},
-	"es_domain_logging": {
+	"redshift_public_access":{
+		"__comment__": "Detects publicly accessible Redshift Clusters.",
+		"123456789012": ["test-cluster"]
+	},
+	"redshift_encryption":{
+		"__comment__": "Detects unencrypted clusters.",
+		"123456789012": ["test-cluster"]
+	},
+	"ecs_privileged_access":{
+		"__comment__": "Detects ECS task definitions which are not enabled logging - task definitions ARNs.",
+		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/dev-admin:2993"]
+	},
+    "ecs_logging":{
+		"__comment__": "Detects ECS task definitions which are not enabled logging - task definitions ARNs.",
+		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/test-admin:2993"]
+	},
+	"ecs_external_image_source":{
+		"__comment__": "Detects ECS task definitions which are configured with external image source - task definitions ARNs.",
+		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/test-admin:2993"]
+	},
+    "redshift_logging": {
+		"__comment__": "Detects Redshift clusters which are audit logging is not enabled.",
+		"123456789012": ["test-cluster"]
+    },
+    "es_domain_logging": {
         "__comment__": "Detects Elasticsearch domains which are not enabled logging - domain ARNs.",
-		"1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
+	    "1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
     }
 }
