@@ -72,7 +72,7 @@ class ElasticSearchOperations:
         """
         This method used to retrieve cloud watch log group arn details if log group is available. If not, create a 
          cloudwatch log group and returns arn of newly created log group
-        
+
         :param cw_client: cloudwatch logs boto3 client
         :param domain_log_group_name: Elasticsearch domain's log group name
         :return: 
@@ -94,7 +94,7 @@ class ElasticSearchOperations:
 
             Adding resource policy that grants above access.
             """
-            policy_name = "AES-"+domain_log_group_name+"-Application-logs"
+            policy_name = "AES-" + domain_log_group_name + "-Application-logs"
             policy_doc = {}
             statement = {}
             principal = {}
@@ -118,7 +118,7 @@ class ElasticSearchOperations:
     @staticmethod
     def set_domain_logging(es_client, cw_client, domain_name):
         """
-        
+
         :param es_client: elastic search boto3 client
         :param cw_client: cloudwatch logs boto3 client
         :param domain_name: elastic search domain name
@@ -134,10 +134,10 @@ class ElasticSearchOperations:
             DomainName=domain_name,
             LogPublishingOptions={
                 'ES_APPLICATION_LOGS':
-                {
-                    'CloudWatchLogsLogGroupArn': log_group_arn,
-                    'Enabled': True
-                }
+                    {
+                        'CloudWatchLogsLogGroupArn': log_group_arn,
+                        'Enabled': True
+                    }
             }
         )
 
@@ -150,26 +150,7 @@ class ElasticSearchOperations:
         """
         public_policy = False
         for statement in policy_details.get("Statement", []):
-            effect = statement['Effect']
-            principal = statement.get('Principal', {})
-            not_principal = statement.get('NotPrincipal', None)
-            condition = statement.get('Condition', None)
-            suffix = "/0"
-            # check both `Principal` - `{"AWS": "*"}` and `"*"`
-            # and condition (if exists) to be restricted (not "0.0.0.0/0")
-            if effect == "Allow" and \
-                    (principal == "*" or principal.get("AWS") == "*"):
-                if condition is not None:
-                    if suffix in str(condition.get("IpAddress")):
-                        return True
-                else:
-                    return True
-            if effect == "Allow" and \
-                            not_principal is not None:
-                # TODO: it is not recommended to use `Allow` with `NotPrincipal`, need to write proper check for such case
-                # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_notprincipal.html
-                logging.error(f"TODO: is this statement public???\n{statement}")
-            return False
+            public_policy = S3Operations.public_statement(statement)
 
         return public_policy
 
@@ -180,9 +161,10 @@ class ESDomainDetails(object):
 
     """
 
-    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted_at_rest=None, encrypted_at_transit= None, policy=None):
+    def __init__(self, account, name, id, arn, tags=None, is_logging=None, encrypted_at_rest=None,
+                 encrypted_at_transit=None, policy=None):
         """
-        
+
         :param account: `Account` instance where Elasticsearch domain is present
         :param name: name of the Elasticsearch domain
         :param id: Elasticsearch domain id.
@@ -259,11 +241,11 @@ class ESDomainDetails(object):
 
     def set_logging(self):
         """
-        
         :return: 
         """
         try:
-            ElasticSearchOperations.set_domain_logging(self.account.client("es"), self.account.client("logs"), self.name)
+            ElasticSearchOperations.set_domain_logging(self.account.client("es"), self.account.client("logs"),
+                                                       self.name)
         except Exception:
             logging.exception(f"Failed to enable {self.name} logging")
             return False

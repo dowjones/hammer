@@ -5,14 +5,14 @@ sidebar: mydoc_sidebar
 permalink: deployment_cloudformation.html
 ---
 
-You should perform the following steps to deploy Dow Jones Hammer using CloudFormation:
+You should perform the steps mentioned below to deploy Dow Jones Hammer using CloudFormation:
 
 1. Accomplish the preliminary steps
 2. Put the Dow Jones Hammer packages into the Dow Jones Hammer deployment bucket
 3. Deploy CloudFormation stacks to the master AWS account
 4. Deploy CloudFormation stacks to the slave AWS accounts
 
-## 1. Preliminary Steps
+## 1. Preliminary steps
 
 Check [this section](configuredeploy_overview.html#2-preliminary-steps) to make sure you have performed all necessary steps before proceeding further.
 
@@ -98,7 +98,15 @@ You will need to set the following parameters:
 * **SourceIdentificationSQSPublicPolicy**: the relative path to the Lambda package that identifies SQS public queue issues. The default value is **sqs-public-policy-identification.zip**.
 * **SourceIdentificationS3Encryption**: the relative path to the Lambda package that identifies S3 un-encrypted bucket issues. The default value is **s3-unencrypted-bucket-issues-identification.zip**.
 * **SourceIdentificationRDSEncryption**: the relative path to the Lambda package that identifies RDS unencrypted instances. The default value is **rds-unencrypted-instance-identification.zip**.
+* **SourceIdentificationAMIPublicAccess**: the relative path to the Lambda package that identifies Public AMIs. The default value is **ami-public-acess-issues-identification.zip**.
+* **SourceIdentificationECSPrivilegedAccess**: the relative path to the Lambda package that identifies ECS privileged access issues. The default value is **ecs-privileged-access-issues-identification.zip**.
+* **SourceIdentificationECSExternalImageSource**: the relative path to the Lambda package that identifies ECS external image source issues. The default value is **ecs-external-image-source-issues-identification.zip**.
+* **SourceIdentificationECSLogging**: the relative path to the Lambda package that identifies ECS logging issues. The default value is **ecs-logging-issues-identification.zip**.
+* **SourceIdentificationRedshiftLogging**: the relative path to the Lambda package that identifies audit logging redshift issues. The default value is **redshift-audit-logging-issues-identification.zip**.
+* **SourceIdentificationRedshiftClusterEncryption**: the relative path to the Lambda package that identifies unencrypted redshift cluster issues. The default value is **redshift-unencrypted-cluster-identification.zip**.
+* **SourceIdentificationRedshiftPublicAccess**: the relative path to the Lambda package that identifies publicly accessibly redshift cluster issues. The default value is **redshift-cluster-public-access-identification.zip**.
 * **SourceIdentificationElasticSearchEncryption**: the relative path to the Lambda package that identifies Elasticsearch domain encryption issues. The default value is **elasticsearch-unencrypted-domain-identification.zip**.
+* **SourceIdentificationElasticSearchLogging**: the relative path to the Lambda package that identifies Elasticsearch domain logging issues. The default value is **elasticsearch-domain-logging-issues-identification.zip**.
 
 **VPC config (optional)**:
 * **LambdaSubnets**: comma-separated list, without spaces, of subnet IDs in your VPC to run identification lambdas in.

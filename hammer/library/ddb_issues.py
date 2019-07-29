@@ -234,6 +234,31 @@ class RdsEncryptionIssue(Issue):
 
 
 class PublicAMIIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftEncryptionIssue(Issue):
+   def __init__(self, *args):
+       super().__init__(*args)
+
+
+class RedshiftLoggingIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftPublicAccessIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ECSLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ECSPrivilegedAccessIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
 
@@ -243,6 +268,16 @@ class ESEncryptionIssue(Issue):
         super().__init__(*args)
 
 
+class ECSExternalImageSourceIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ESLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+        
 class Operations(object):
     @staticmethod
     def find(ddb_table, issue):

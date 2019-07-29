@@ -176,7 +176,28 @@
                                     "Resource": "*"
                                 },
                                 {
-                                    "Sid": "ESIssues",
+                                    "Sid": "ECSIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:Describe*",
+                                        "ecs:List*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "RedshiftIssues",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "redshift:DescribeClusterSecurityGroups",
+                                        "redshift:DescribeClusterParameterGroups",
+                                        "redshift:DescribeLoggingStatus",
+                                        "redshift:GetClusterCredentials",
+                                        "redshift:DescribeClusters"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                  "Sid": "ESIssues",
                                     "Effect": "Allow",
                                     "Action": [
                                         "es:ListDomainNames",
