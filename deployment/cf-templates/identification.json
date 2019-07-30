@@ -929,7 +929,7 @@
                                              { "Ref": "ResourcesPrefix" },
                                              { "Ref": "IdentificationIAMRole" }
                                            ] ]},
-                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "10 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "0 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
                     "LambdaSubnets": {"Ref":  "LambdaSubnets"},
                     "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
                     "IdentificationLambdaSource": { "Ref": "SourceIdentificationIAMUserInactiveKeys" },
