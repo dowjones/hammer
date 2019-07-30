@@ -90,24 +90,24 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                     product = tags.get("product", None)
 
                     issue_description = ""
-                    if not encrypted_at_rest:
-                        issue_description +=(
-                            f"Elasticsearch domain needs to encrypted at rest. \n\n"
-                        )
-                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' unencrypted at rest"
-                                         f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    if not encrypted_at_rest and not encrypted_at_transit:
+                        issue_description += (
+                            f"Elasticsearch domain needs to be encrypt at rest and transit. \n\n"
+                        )
+                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' "
+                                         f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
                     elif not encrypted_at_transit:
                         issue_description += (
                             f"Elasticsearch domain needs to be encrypt at transit. \n\n"
                         )
                         issue_summary = (f"Elasticsearch domain '{domain_name}' unencrypted at transit"
                                          f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
-                    else:
+                    elif not encrypted_at_rest:
                         issue_description += (
-                            f"Elasticsearch domain needs to be encrypt at rest and transit. \n\n"
+                            f"Elasticsearch domain needs to encrypted at rest. \n\n"
                         )
-                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' "
+                        issue_summary = (f"Elasticsearch unencrypted domain '{domain_name}' unencrypted at rest"
                                          f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
                     issue_description += (
@@ -116,8 +116,8 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
                         f"*Domain ID*: {domain_name}\n"
-                        f" Encryption enabled at rest: {encrypted_at_rest}\n"
-                        f" Encryption enabled in transit: {encrypted_at_transit}\n"
+                        f"*Encryption enabled at rest*: {encrypted_at_rest}\n"
+                        f"*Encryption enabled in transit*: {encrypted_at_transit}\n"
                     )
 
                     issue_description += JiraOperations.build_tags_table(tags)
