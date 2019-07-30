@@ -22,6 +22,7 @@ from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
 from library.aws.ecs import ECSClusterOperations
 from library.aws.redshift import RedshiftClusterOperations
+from library.aws.elasticsearch import ElasticSearchOperations
 from library.utility import SingletonInstance, SingletonInstanceException
 
 
@@ -251,6 +252,23 @@ class CreateSecurityGroupsTickets(object):
 
         return cluster_details, in_use
 
+    @staticmethod
+    def build_es_domains_table(es_domains):
+        domain_details = ""
+        in_use = False
+
+        if len(es_domains) > 0:
+            in_use = True
+            domain_details += (
+                f"\n*Elasticsearch Domains:*\n"
+                f"||Domain Name||Domain Arn||\n")
+            for domain in es_domains:
+                domain_details += (
+                    f"|{domain.domain_name}|{domain.domain_arn}|\n"
+                )
+
+        return domain_details, in_use
+
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
         table_name = self.config.sg.ddb_table_name
@@ -350,7 +368,7 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_ecs = sg_in_use_redshift = None
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_ecs = sg_in_use_redshift = sg_in_use_es = None
                     sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
@@ -360,8 +378,10 @@ class CreateSecurityGroupsTickets(object):
                     iam_client = account.client("iam") if account.session is not None else None
 
                     ecs_client = account.client("ecs") if account.session is not None else None
-                    rds_instance_details = elb_instance_details = sg_redshift_details = sg_ecs_details = None
+                    rds_instance_details = elb_instance_details = sg_redshift_details = sg_ecs_details = sg_es_details = None
                     redshift_client = account.client("redshift") if account.session is not None else None
+
+                    es_client = account.client("es") if account.session is not None else None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
@@ -397,7 +417,6 @@ class CreateSecurityGroupsTickets(object):
                             logging.exception(
                                 f"Failed to build ECS Cluster details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_ecs
                     if redshift_client is not None:
                         try:
                             redshift_clusters = RedshiftClusterOperations.get_redshift_vpc_security_groups(
@@ -408,7 +427,17 @@ class CreateSecurityGroupsTickets(object):
                             logging.exception(
                                 f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift
+                    if es_client is not None:
+                        try:
+                            es_domains = ElasticSearchOperations.get_elasticsearch_details_of_sg_associated(
+                                es_client, group_id)
+                            sg_es_details, sg_in_use_es = self.build_es_domains_table(
+                                es_domains)
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift or sg_in_use_ecs or sg_in_use_es
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -505,6 +534,8 @@ class CreateSecurityGroupsTickets(object):
                     issue_description += f"{sg_ecs_details if sg_ecs_details else ''}"
 
                     issue_description += f"{sg_redshift_details if sg_redshift_details else ''}"
+
+                    issue_description += f"{sg_es_details if sg_es_details else ''}"
 
                     issue_description += (
                         f"*Recommendation*: "
