@@ -23,6 +23,15 @@ Dow Jones Hammer documentation is available via GitHub Pages at [https://dowjone
 * [S3 Unencrypted Buckets](https://dowjones.github.io/hammer/playbook11_s3_unencryption.html)
 * [RDS Unencrypted Instances](https://dowjones.github.io/hammer/playbook12_rds_unencryption.html)
 * [AMIs Public Access](https://dowjones.github.io/hammer/playbook13_amis_public_access.html)
+* [Redshift Unencrypted Clusters](https://dowjones.github.io/hammer/playbook15_redshift_unencryption.html)
+* [Redshift Public Clusters](https://dowjones.github.io/hammer/playbook16_redshift_public_clusters.html)
+* [Redshift Logging Issues](https://dowjones.github.io/hammer/playbook17_redshift_audit_logging.html)
+* [ECS Logging Issues](https://dowjones.github.io/hammer/playbook18_ecs_logging.html)
+* [ECS Privileged Access Issues](https://dowjones.github.io/hammer/playbook19_ecs_privileged_access.html)
+* [ECS Exteranal Image Source Issues](https://dowjones.github.io/hammer/playbook20_ecs_external_image_source.html)
+* [Elasticsearch Unencrypted Domains](https://dowjones.github.io/hammer/playbook21_elasticsearch_unencryption.html)
+* [Elasticsearch Public Domains](https://dowjones.github.io/hammer/playbook22_elasticsearch_public_access.html)
+* [Elasticsearch Logging Issues](https://dowjones.github.io/hammer/playbook23_elasticsearch_logging.html)
 
 ## Technologies
 * Python 3.6
