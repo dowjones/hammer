@@ -20,7 +20,7 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
-#from library.aws.ecs import ECSClusterOperations
+from library.aws.ecs import ECSClusterOperations
 from library.aws.redshift import RedshiftClusterOperations
 from library.aws.elasticsearch import ElasticSearchOperations
 from library.utility import SingletonInstance, SingletonInstanceException
@@ -407,7 +407,7 @@ class CreateSecurityGroupsTickets(object):
                             logging.exception(
                                 f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
-                    """if ecs_client is not None:
+                    if ecs_client is not None:
                         try:
                             ecs_instances = ECSClusterOperations.get_ecs_instance_security_groups(ec2_client,
                                                                                                   ecs_client, group_id)
@@ -416,7 +416,6 @@ class CreateSecurityGroupsTickets(object):
                         except Exception:
                             logging.exception(
                                 f"Failed to build ECS Cluster details for '{group_name} / {group_id}' in {account}")
-                    """
 
                     if redshift_client is not None:
                         try:
