@@ -43,7 +43,6 @@ class ECSClusterOperations(object):
                         instance_arn,
                     ]
                 )
-
                 ec2_instance_id = container_instance["containerInstances"][0]["ec2InstanceId"]
                 ec2_instance = ec2_client.describe_instances(InstanceIds=[ec2_instance_id])['Reservations'][0]["Instances"][0]
                 if group_id in str(ec2_instance["SecurityGroups"]):
