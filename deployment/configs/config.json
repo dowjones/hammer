@@ -201,7 +201,8 @@
         "enabled": true,
         "topic_name": "hammer-describe-ecs-external-image-source-lambda",
         "ddb.table_name": "hammer-ecs-external-image-source",
-        "reporting": true
+        "reporting": true,
+        "safe_image_sources": ["amazonaws", "dowjones"]
     },    
     "es_domain_logging": {
         "enabled": true,
