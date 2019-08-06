@@ -202,7 +202,7 @@
         "topic_name": "hammer-describe-ecs-external-image-source-lambda",
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true,
-        "safe_image_sources": ["amazonaws", "dowjones", "artifactory"]
+        "safe_image_sources": ["amazonaws", "artifactory"]
     },    
     "es_domain_logging": {
         "enabled": true,

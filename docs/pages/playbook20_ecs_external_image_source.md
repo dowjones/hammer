@@ -9,7 +9,7 @@ permalink: playbook20_ecs_external_image_source.html
 
 ## Introduction
 
-This playbook describes how to configure Dow Jones Hammer to detect ECS image source is external or internal.
+This playbook describes how to configure Dow Jones Hammer to detect ECS image source is external or internal based on configured image known sources.
 
 ## 1. Issue Identification
 
@@ -66,8 +66,7 @@ Sample **config.json** section:
         "enabled": true,
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true,
-        "remediation": false,
-        "remediation_retention_period": 21
+        "safe_image_sources": ["amazonaws", "artifactory"]
     }
 ```
 
