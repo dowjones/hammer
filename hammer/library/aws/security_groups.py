@@ -8,12 +8,14 @@ from botocore.exceptions import ClientError
 from library.utility import jsonDumps
 from library.aws.s3 import S3Operations
 from library.aws.utility import convert_tags
+from library.config import Config
 
 
 class RestrictionStatus(Enum):
     Restricted = "restricted"
     OpenCompletely = "open_completely"
     OpenPartly = "open_partly"
+    SafeIP = "safe_ips"
 
 
 class SecurityGroupOperations:
@@ -372,6 +374,19 @@ class SecurityGroup(object):
         perms = ", ".join([str(perm) for perm in self.permissions])
         return f"{self.__class__.__name__}(Name={self.name}, Id={self.id}, Permissions=[{perms}])"
 
+    def validate_known_ip_soource(self, cidr):
+        """
+        
+        :param cidr: ip address
+        :return: boolean
+        """
+        config = Config()
+        known_ip_sources = config.sg.known_ip_sources
+        for ip_address in known_ip_sources:
+            if ip_address == cidr:
+                return True
+        return False
+
     def restriction_status(self, cidr):
         """
         Check restriction status of cidr
@@ -380,11 +395,19 @@ class SecurityGroup(object):
 
         :return: RestrictionStatus with check result
         """
+        is_known_ip = self.validate_ip_soource(cidr)
+        if is_known_ip:
+            status = RestrictionStatus.Restricted
+
         status = RestrictionStatus.Restricted
         if cidr.endswith("/0"):
             status = RestrictionStatus.OpenCompletely
         elif ipaddress.ip_network(cidr).is_global:
             status = RestrictionStatus.OpenPartly
+
+        elif is_known_ip:
+            status = RestrictionStatus.SafeIP
+
         logging.debug(f"Checked '{cidr}' - '{status.value}'")
         return status
 
@@ -406,10 +429,11 @@ class SecurityGroup(object):
                 logging.debug(f"Checking '{perm.protocol}' '{perm.from_port}-{perm.to_port}' ports for {ip_range}")
                 # first condition - CIDR is Global/Public
                 status = self.restriction_status(ip_range.cidr)
-                if status == RestrictionStatus.Restricted:
-                    logging.debug(f"Skipping restricted '{ip_range}'")
+                if status in (RestrictionStatus.Restricted, RestrictionStatus.SafeIP):
+                    logging.debug(f"Skipping restricted/safe IP address '{ip_range}'")
                     continue
-                # second - check if ports from `restricted_ports` list has intersection with ports from FromPort..ToPort range
+                # second - check if ports from `restricted_ports` list has intersection with ports from FromPort..
+                # ToPort range
                 if perm.from_port is None or perm.to_port is None:
                     logging.debug(f"Marking world-wide open all ports from '{ip_range}'")
                     ip_range.status = status

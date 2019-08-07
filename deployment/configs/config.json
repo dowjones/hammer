@@ -75,7 +75,8 @@
         "reporting": false,
         "remediation": false,
         "remediation_accounts": ["210987654321", "654321210987"],
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "known_ip_sources": ["205.203.150.72/32", "205.203.130.22/32"]
     },
     "user_inactivekeys": {
         "enabled": true,
