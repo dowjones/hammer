@@ -382,8 +382,9 @@ class SecurityGroup(object):
         """
         config = Config()
         known_ip_sources = config.sg.known_ip_sources
+
         for ip_address in known_ip_sources:
-            if ip_address == cidr:
+            if ip_address in str(list(ipaddress.ip_network(cidr))):
                 return True
         return False
 
