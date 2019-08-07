@@ -204,20 +204,22 @@ class CreateEBSUnencryptedVolumeTickets(object):
                     )
 
                     IssueOperations.set_status_reported(ddb_table, issue)
-                    comment = f"EBS unencrypted volume '{issue.issue_id}' issue is going to be remediated in " \
-                              f"{retention_period} days"
-                    slack.report_issue(
-                        msg=comment,
-                        owner=owner,
-                        account_id=account_id,
-                        bu=bu, product=product,
-                    )
-                    # Updating ticket with remediation details.
-                    jira.update_issue(
-                        ticket_id=issue.jira_details.ticket,
-                        comment=comment
-                    )
-                    IssueOperations.set_status_notified(ddb_table, issue)
+
+                    if config.ebsVolume.remediation:
+                        comment = f"EBS unencrypted volume '{issue.issue_id}' issue is going to be remediated in " \
+                                  f"{retention_period} days"
+                        slack.report_issue(
+                            msg=comment,
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        # Updating ticket with remediation details.
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+                        IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':

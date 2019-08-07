@@ -107,19 +107,19 @@ class CreateTicketIamInactiveKeys:
                     )
 
                     IssueOperations.set_status_reported(ddb_table, issue)
-
-                    comment = f"Inactive access key '{key_id}' issue is going to be remediated in " \
-                              f"{retention_period} days"
-                    slack.report_issue(
-                        msg=comment,
-                        account_id=account_id
-                    )
-                    # Updating ticket with remediation details.
-                    jira.update_issue(
-                        ticket_id=issue.jira_details.ticket,
-                        comment=comment
-                    )
-                    IssueOperations.set_status_notified(ddb_table, issue)
+                    if config.iamUserInactiveKeys.remediation:
+                        comment = f"Inactive access key '{key_id}' issue is going to be remediated in " \
+                                  f"{retention_period} days"
+                        slack.report_issue(
+                            msg=comment,
+                            account_id=account_id
+                        )
+                        # Updating ticket with remediation details.
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+                        IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':

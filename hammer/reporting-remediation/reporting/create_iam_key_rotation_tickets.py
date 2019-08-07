@@ -106,18 +106,19 @@ class CreateTicketIamKeyRotation:
 
                     IssueOperations.set_status_reported(ddb_table, issue)
 
-                    comment = f"Stale access key '{key_id}' issue is going to be remediated in " \
+                    if config.iamUserKeysRotation.remediation:
+                        comment = f"Stale access key '{key_id}' issue is going to be remediated in " \
                               f"{retention_period} days"
-                    slack.report_issue(
-                        msg=comment,
-                        account_id=account_id
-                    )
+                        slack.report_issue(
+                            msg=comment,
+                            account_id=account_id
+                        )
 
-                    jira.update_issue(
-                        ticket_id=issue.jira_details.ticket,
-                        comment=comment
-                    )
-                    IssueOperations.set_status_notified(ddb_table, issue)
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+                        IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':
