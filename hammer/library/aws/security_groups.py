@@ -395,9 +395,7 @@ class SecurityGroup(object):
 
         :return: RestrictionStatus with check result
         """
-        is_known_ip = self.validate_ip_soource(cidr)
-        if is_known_ip:
-            status = RestrictionStatus.Restricted
+        is_known_ip = self.validate_known_ip_soource(cidr)
 
         status = RestrictionStatus.Restricted
         if cidr.endswith("/0"):
@@ -405,7 +403,7 @@ class SecurityGroup(object):
         elif ipaddress.ip_network(cidr).is_global:
             status = RestrictionStatus.OpenPartly
 
-        elif is_known_ip:
+        if is_known_ip:
             status = RestrictionStatus.SafeIP
 
         logging.debug(f"Checked '{cidr}' - '{status.value}'")
