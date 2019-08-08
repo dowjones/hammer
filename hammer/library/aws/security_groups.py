@@ -374,18 +374,22 @@ class SecurityGroup(object):
         perms = ", ".join([str(perm) for perm in self.permissions])
         return f"{self.__class__.__name__}(Name={self.name}, Id={self.id}, Permissions=[{perms}])"
 
-    def validate_known_ip_soource(self, cidr):
+    def validate_known_ip_soource(self, source_ip):
         """
         
-        :param cidr: ip address
+        :param source_ip: ip address
         :return: boolean
         """
         config = Config()
         known_ip_sources = config.sg.known_ip_sources
+        source_cidr = ipaddress.ip_network(source_ip)
 
-        for ip_address in known_ip_sources:
-            if ip_address in str(list(ipaddress.ip_network(cidr))):
+        for ip in known_ip_sources:
+            ip_cidr = ipaddress.ip_network(ip)
+
+            if (ip_cidr == source_cidr) or (source_cidr in str(list(ip_cidr))) or (source_cidr.subnet_of(ip_cidr)):
                 return True
+            
         return False
 
     def restriction_status(self, cidr):
