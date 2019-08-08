@@ -384,12 +384,17 @@ class SecurityGroup(object):
         known_ip_sources = config.sg.known_ip_sources
         source_cidr = ipaddress.ip_network(source_ip)
 
-        for ip in known_ip_sources:
-            ip_cidr = ipaddress.ip_network(ip)
-
-            if (ip_cidr == source_cidr) or (source_cidr in str(list(ip_cidr))) or (source_cidr.subnet_of(ip_cidr)):
+        for known_ip in known_ip_sources:
+            known_ip_cidr = ipaddress.ip_network(known_ip)
+            if known_ip_cidr == source_cidr:
                 return True
-            
+            elif source_ip.endswith("/32"):
+                for ip in known_ip_cidr:
+                    if str(source_cidr) == str(ipaddress.ip_network(ip)):
+                        return True
+            # ipaddress.subnet_of() function new to Python 3.7. Not available in 3.6
+            """elif source_cidr.subnet_of(known_ip_cidr):
+                return True"""
         return False
 
     def restriction_status(self, cidr):
