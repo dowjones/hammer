@@ -49,7 +49,7 @@ class Issue(object):
     """
     Base class for Hammer security issue. Python representation of DDB item.
     """
-    def __init__(self, account_id, issue_id):
+    def __init__(self, account_id, issue_id, issue_details=None):
         # account id where issue was found (HASH key)
         self.account_id = account_id
         # issue id, must be uniq in account (RANGE key)
@@ -71,7 +71,8 @@ class Issue(object):
         # issue status
         self.status = IssueStatus.Open
         # issue specific details
-        self.issue_details = Details({})
+        details = Details(issue_details) if issue_details else Details({})
+        self.issue_details = details
         # jira specific details
         self.jira_details = Details({})
 

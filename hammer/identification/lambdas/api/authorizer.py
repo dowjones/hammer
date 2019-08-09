@@ -35,6 +35,7 @@ def lambda_handler(event, context):
         policy.allowMethod(HttpVerb.GET, full_path)
     policy.allowMethod(HttpVerb.POST, '/identify')
     policy.allowMethod(HttpVerb.POST, '/remediate')
+    policy.allowMethod(HttpVerb.POST, '/import')
 
     authResponse = policy.build()
 
