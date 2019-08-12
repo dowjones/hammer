@@ -4,6 +4,7 @@ from botocore.exceptions import ClientError
 from library.utility import timeit
 from collections import namedtuple
 from library.aws.utility import convert_tags
+from library.config import Config
 
 # structure which describes EC2 instance
 ECSCluster_Details = namedtuple('ECSCluster_Details', [
@@ -103,6 +104,18 @@ class ECSChecker(object):
         self.account = account
         self.task_definitions = []
 
+    def validate_image_source(self, image):
+        config = Config()
+
+        is_external = True
+        safe_image_sources = config.ecs_external_image_source.safe_image_sources
+        for image_source in safe_image_sources:
+            if image_source in image:
+                is_external = False
+                break
+
+        return is_external
+
     def check(self, task_definitions=None):
         """
         Walk through clusters in the account/region and check them.
@@ -131,6 +144,7 @@ class ECSChecker(object):
                 container_image_details = []
                 disabled_logging_container_names = []
                 privileged_container_names = []
+                external_image = False
                 try:
                     task_definition = self.account.client("ecs").describe_task_definition(
                         taskDefinition=task_definition_name
@@ -147,9 +161,10 @@ class ECSChecker(object):
                                 privileged_container_names.append(container_name)
 
                             image = container_definition.get('image')
-                            image_details = {}
                             if image is not None:
-                                if image.split("/")[0].split(".")[-2:] != ['amazonaws', 'com']:
+                                external_image = self.validate_image_source(image)
+                                image_details = {}
+                                if external_image:
                                     image_details["container_name"] = container_name
                                     image_details["image_url"] = image
                                     container_image_details.append(image_details)
@@ -163,11 +178,6 @@ class ECSChecker(object):
                             is_privileged = True
                         else:
                             is_privileged = False
-
-                        if len(container_image_details) > 0:
-                            external_image = True
-                        else:
-                            external_image = False
 
                         if "Tags" in task_definition:
                             tags = task_definition["Tags"]
