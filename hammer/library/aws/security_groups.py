@@ -389,14 +389,8 @@ class SecurityGroup(object):
             if known_ip_cidr == source_cidr:
                 return True
             elif source_ip.endswith("/32"):
-                if source_cidr[-1] in known_ip_sources:
-                    logging.info(f"Source IP Testing: {source_cidr[-1]}")
+                if source_cidr[-1] in known_ip_cidr:
                     return True
-            """          
-            for ip in known_ip_cidr:
-                if str(source_cidr) == str(ipaddress.ip_network(ip)):
-                    return True
-            """
             # ipaddress.subnet_of() function new to Python 3.7. Not available in 3.6
             """elif source_cidr.subnet_of(known_ip_cidr):
                 return True"""
