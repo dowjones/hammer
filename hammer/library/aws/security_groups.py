@@ -383,15 +383,20 @@ class SecurityGroup(object):
         config = Config()
         known_ip_sources = config.sg.known_ip_sources
         source_cidr = ipaddress.ip_network(source_ip)
-        logging.debug("Source IP Testing: {source_cidr[-1]}")
+
         for known_ip in known_ip_sources:
             known_ip_cidr = ipaddress.ip_network(known_ip)
             if known_ip_cidr == source_cidr:
                 return True
             elif source_ip.endswith("/32"):
-                for ip in known_ip_cidr:
-                    if str(source_cidr) == str(ipaddress.ip_network(ip)):
-                        return True
+                if source_cidr[-1] in known_ip_sources:
+                    logging.info(f"Source IP Testing: {source_cidr[-1]}")
+                    return True
+            """          
+            for ip in known_ip_cidr:
+                if str(source_cidr) == str(ipaddress.ip_network(ip)):
+                    return True
+            """
             # ipaddress.subnet_of() function new to Python 3.7. Not available in 3.6
             """elif source_cidr.subnet_of(known_ip_cidr):
                 return True"""
