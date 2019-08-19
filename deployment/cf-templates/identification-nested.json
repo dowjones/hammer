@@ -69,6 +69,9 @@
         },
         "SNSIdentificationErrors": {
             "Type": "String"
+        },
+        "PythonVersion": {
+            "Type": "String"
         }
     },
     "Conditions": {
@@ -99,7 +102,7 @@
                 "MemorySize": 128,
                 "Timeout": "300",
                 "Role": { "Ref": "IdentificationIAMRole" },
-                "Runtime": "python3.6"
+                "Runtime": { "Ref": "PythonVersion" }
             }
         },
         "LogGroupLambdaInitiateEvaluation": {
@@ -148,7 +151,7 @@
                 "MemorySize": {"Ref":  "EvaluateLambdaMemorySize"},
                 "Timeout": "300",
                 "Role": { "Ref": "IdentificationIAMRole" },
-                "Runtime": "python3.6"
+                "Runtime": { "Ref": "PythonVersion" }
             }
         },
         "LogGroupLambdaEvaluate": {
