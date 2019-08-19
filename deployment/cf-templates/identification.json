@@ -753,8 +753,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameSecurityGroups", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -794,8 +793,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameCloudTrails", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -835,8 +833,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameS3ACL", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -876,8 +873,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameS3Policy", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -917,8 +913,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameIAMUserKeysRotation", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -958,8 +953,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameIAMUserInactiveKeys", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -999,8 +993,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameEBSVolumes", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1040,8 +1033,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameEBSSnapshots", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1081,8 +1073,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRDSSnapshots", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1122,8 +1113,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameSQSPublicPolicy", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1163,8 +1153,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                         { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameS3Encryption", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1204,8 +1193,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRDSEncryption", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1245,8 +1233,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameAMIPublicAccess", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1286,8 +1273,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftPublicAccess", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1328,8 +1314,7 @@
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftClusterEncryption", "value"] } ]
 
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1369,8 +1354,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameRedshiftLogging", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1410,8 +1394,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSPrivilegedAccess", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1451,8 +1434,7 @@
                     "SNSTopicName": {"Fn::Join": ["",[{"Ref": "ResourcesPrefix"},
                         {"Fn::FindInMap": ["NamingStandards","SNSTopicNameECSLogging","value"]}]
                     ]},
-                    "SNSIdentificationErrors": {"Ref": "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref": "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1492,8 +1474,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameECSExternalImageSource", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1533,8 +1514,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESEncryption", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.7"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1574,8 +1554,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESLogging", "value"] } ]
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         },
@@ -1615,8 +1594,7 @@
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
                                                   { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESPublicAccess", "value"] } ]               
                     ]},
-                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"},
-                    "PythonVersion" : "python3.6"
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }
             }
         }
