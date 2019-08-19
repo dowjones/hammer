@@ -68,6 +68,17 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                         )
                         IssueOperations.set_status_closed(ddb_table, issue)
                     # issue.status != IssueStatus.Closed (should be IssueStatus.Open)
+                    elif issue.timestamps.updated > issue.timestamps.reported:
+                        logging.error(f"TODO: update jira ticket with new data: {table_name}, {account_id}, {domain_name}")
+                        slack.report_issue(
+                            msg=f"Elasticsearch unencrypted domain '{domain_name}' issue is changed "
+                                f"in '{account_name} / {account_id}' account, '{region}' region"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_updated(ddb_table, issue)
                     else:
                         logging.debug(f"No changes for '{domain_name}'")
                 # issue has not been reported yet
