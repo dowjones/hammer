@@ -54,6 +54,7 @@ def lambda_handler(event, context):
         if checker.check():
             for sg in checker.groups:
                 logging.debug(f"Checking {sg.name} ({sg.id})")
+                logging.debug("SG status Testing::: {sg.status.value}" )
                 if not sg.restricted:
                     # TODO: move instances detection for security group from reporting to identification
                     #ec2_instances = EC2Operations.get_instance_details_of_sg_associated(account.client("ec2"), sg.id)

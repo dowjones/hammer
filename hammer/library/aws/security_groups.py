@@ -15,7 +15,7 @@ class RestrictionStatus(Enum):
     Restricted = "restricted"
     OpenCompletely = "open_completely"
     OpenPartly = "open_partly"
-    SafeIP = "safe_ips"
+    Safe = "safe"
 
 
 class SecurityGroupOperations:
@@ -383,7 +383,7 @@ class SecurityGroup(object):
         config = Config()
         known_ip_sources = config.sg.known_ip_sources
         source_cidr = ipaddress.ip_network(source_ip)
-
+        logging.debug("Source IP Testing: {source_cidr[-1]}")
         for known_ip in known_ip_sources:
             known_ip_cidr = ipaddress.ip_network(known_ip)
             if known_ip_cidr == source_cidr:
@@ -414,7 +414,7 @@ class SecurityGroup(object):
             status = RestrictionStatus.OpenPartly
 
         if is_known_ip:
-            status = RestrictionStatus.SafeIP
+            status = RestrictionStatus.Safe
 
         logging.debug(f"Checked '{cidr}' - '{status.value}'")
         return status
@@ -437,7 +437,7 @@ class SecurityGroup(object):
                 logging.debug(f"Checking '{perm.protocol}' '{perm.from_port}-{perm.to_port}' ports for {ip_range}")
                 # first condition - CIDR is Global/Public
                 status = self.restriction_status(ip_range.cidr)
-                if status in (RestrictionStatus.Restricted, RestrictionStatus.SafeIP):
+                if status in (RestrictionStatus.Restricted, RestrictionStatus.Safe):
                     logging.debug(f"Skipping restricted/safe IP address '{ip_range}'")
                     continue
                 # second - check if ports from `restricted_ports` list has intersection with ports from FromPort..
