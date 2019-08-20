@@ -1,19 +1,23 @@
 import json
 import logging
 import ipaddress
+import warnings
 
 from enum import Enum
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
+from ipwhois import IPWhois
 from library.utility import jsonDumps
 from library.aws.s3 import S3Operations
 from library.aws.utility import convert_tags
+from library.config import Config
 
 
 class RestrictionStatus(Enum):
     Restricted = "restricted"
     OpenCompletely = "open_completely"
     OpenPartly = "open_partly"
+    ExcludedRegistrant = 'owner'
 
 
 class SecurityGroupOperations:
@@ -372,6 +376,40 @@ class SecurityGroup(object):
         perms = ", ".join([str(perm) for perm in self.permissions])
         return f"{self.__class__.__name__}(Name={self.name}, Id={self.id}, Permissions=[{perms}])"
 
+    @staticmethod
+    def validate_trusted_registrant(cidr):
+        """
+        :param cidr:
+        :return:
+        """
+        config = Config()
+        trusted_registrants = config.sg.trusted_registrants
+
+        if not trusted_registrants:
+            return False
+
+        ip = cidr.split("/")[0]
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                whois = IPWhois(ip).lookup_rdap()
+            except Exception:
+                return False
+
+        registrant = ""
+
+        for obj in whois.get('objects', {}).values():
+            if obj.get('contact') is None:
+                continue
+            if 'registrant' in obj.get('roles', []):
+                registrant = obj['contact'].get('name')
+                break
+
+        if registrant and registrant in trusted_registrants:
+            return True
+        return False
+
     def restriction_status(self, cidr):
         """
         Check restriction status of cidr
@@ -381,7 +419,9 @@ class SecurityGroup(object):
         :return: RestrictionStatus with check result
         """
         status = RestrictionStatus.Restricted
-        if cidr.endswith("/0"):
+        if ipaddress.ip_network(cidr).is_global and self.validate_trusted_registrant(cidr):
+            status = RestrictionStatus.ExcludedRegistrant
+        elif cidr.endswith("/0"):
             status = RestrictionStatus.OpenCompletely
         elif ipaddress.ip_network(cidr).is_global:
             status = RestrictionStatus.OpenPartly
@@ -409,6 +449,9 @@ class SecurityGroup(object):
                 if status == RestrictionStatus.Restricted:
                     logging.debug(f"Skipping restricted '{ip_range}'")
                     continue
+                elif status == RestrictionStatus.ExcludedRegistrant:
+                    logging.debug(f"Skipping excluded '{ip_range}'")
+                    continue
                 # second - check if ports from `restricted_ports` list has intersection with ports from FromPort..ToPort range
                 if perm.from_port is None or perm.to_port is None:
                     logging.debug(f"Marking world-wide open all ports from '{ip_range}'")
@@ -432,6 +475,8 @@ class SecurityGroup(object):
         statuses = {perms.status for perms in self.permissions}
         if RestrictionStatus.OpenCompletely in statuses:
             return RestrictionStatus.OpenCompletely
+        elif RestrictionStatus.ExcludedRegistrant in statuses:
+            return RestrictionStatus.ExcludedRegistrant
         elif RestrictionStatus.OpenPartly in statuses:
             return RestrictionStatus.OpenPartly
         return RestrictionStatus.Restricted
