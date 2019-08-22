@@ -65,7 +65,7 @@ class SecurityGroupOperations:
         if objects is None:
             logging.error(f"Failed to find '{group_id}' rules backup in {account}")
             return
-        backup_objects = [ obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_") ]
+        backup_objects = [obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_")]
         # return most recent backup
         recent_backup = max(backup_objects)
         source = json.loads(S3Operations.get_object(s3_client, bucket, recent_backup))
@@ -99,8 +99,8 @@ class SecurityGroupOperations:
             from_port = ingress.get("FromPort", None)
             to_port = ingress.get("ToPort", None)
             ip_protocol = ingress["IpProtocol"]
-            cidrs = [ ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", []) ]
-            cidrs += [ ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", []) ]
+            cidrs = [ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", [])]
+            cidrs += [ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", [])]
             for cidr in cidrs:
                 cls.add_inbound_rule(ec2_client, group_id, ip_protocol, from_port, to_port, cidr)
 
@@ -117,12 +117,12 @@ class SecurityGroupOperations:
 
         :return: dict with `IpPermissions` element
         """
-        perms = { 'IpProtocol': ip_protocol }
+        perms = {'IpProtocol': ip_protocol}
         if from_port is not None and \
            to_port is not None:
             perms['FromPort'] = from_port
             perms['ToPort'] = to_port
-        ipv = ipaddress.ip_network(cidr).version
+        ipv = ipaddress.ip_network(cidr, False).version
         if ipv == 4:
             perms['IpRanges'] = [{'CidrIp': cidr}]
         else:
@@ -238,6 +238,7 @@ class IPRange(object):
     Basic class for security group CIDR range.
     Encapsulates CIDR and boolean marker if CIDR restricted or not.
     """
+
     def __init__(self, cidr):
         self.cidr = cidr
         # by default assume that CIDR is restricted,
@@ -261,6 +262,7 @@ class SecurityGroupPermission(object):
     Basic class for security group `IpPermissions`.
     Encapsulates `IpProtocol`/`FromPort`/`ToPort` and list of `IpRanges`.
     """
+
     def __init__(self, group, ingress):
         """
         :param group: `SecurityGroup` instance which contains this `IpPermissions` (to be able to perform operations against it)
@@ -348,6 +350,7 @@ class SecurityGroup(object):
     Basic class for security group.
     Encapsulates `GroupName`/`GroupId`/`Tags` and list of `IpPermissions`.
     """
+
     def __init__(self, account, source):
         """
         :param account: `Account` instance where security group is present
@@ -383,7 +386,7 @@ class SecurityGroup(object):
         status = RestrictionStatus.Restricted
         if cidr.endswith("/0"):
             status = RestrictionStatus.OpenCompletely
-        elif ipaddress.ip_network(cidr).is_global:
+        elif ipaddress.ip_network(cidr, False).is_global:
             status = RestrictionStatus.OpenPartly
         logging.debug(f"Checked '{cidr}' - '{status.value}'")
         return status
@@ -490,6 +493,7 @@ class SecurityGroupsChecker(object):
     Basic class for checking security group in account/region.
     Encapsulates check settings and discovered security groups.
     """
+
     def __init__(self,
                  account,
                  restricted_ports):
