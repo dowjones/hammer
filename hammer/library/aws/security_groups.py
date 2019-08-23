@@ -393,7 +393,7 @@ class SecurityGroup(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             try:
-                whois = IPWhois(ip).lookup_rdap()
+                whois = IPWhois(ip).lookup_rdap(asn_methods=['dns', 'whois', 'http'])
             except Exception:
                 return False
 
