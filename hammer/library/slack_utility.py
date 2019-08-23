@@ -52,8 +52,8 @@ class SlackNotification(object):
 
         # if owner is not set - try to find channel to send msg to based on msg body
         owner = owner if owner is not None else self.config.slack.find_channel(msg)
-        # open user channel if owner is not prefixed with #
-        channel = owner if owner.startswith("#") else self.open_user_channel(owner)
+        # get user id if owner is not prefixed with #
+        channel = owner if owner.startswith("#") else self.user_id(owner)
 
         if not channel:
             logging.debug(f"ignoring: '{msg}'")
