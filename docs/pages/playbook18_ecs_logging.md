@@ -57,6 +57,7 @@ To identify and report issues of this type, you should add the following paramet
 |`enabled`                     |Toggles issue detection for this issue |`true`|
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-ecs-logging` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`true`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-ecs-logging-lambda`|
 
 Sample **config.json** section:
 ```
@@ -66,7 +67,8 @@ Sample **config.json** section:
         "ddb.table_name": "hammer-ecs-logging",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "topic_name": "hammer-describe-ecs-logging-lambda"
     }
 ```
 
