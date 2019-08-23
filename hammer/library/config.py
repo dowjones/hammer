@@ -358,6 +358,10 @@ class SlackConfig(object):
         return self._config.get('notify_default_owner', True)
 
     @property
+    def remediation_warning_days(self):
+        return self._config.get('remediation_warning_days', [])
+
+    @property
     def enabled(self):
         return self._config.get('enabled', False)
 

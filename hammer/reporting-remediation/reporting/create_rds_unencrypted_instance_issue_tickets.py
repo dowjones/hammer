@@ -28,6 +28,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
+        retention_period = self.config.rdsEncrypt.retention_period
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -140,6 +141,19 @@ class CreateRDSUnencryptedInstanceTickets(object):
                     )
 
                     IssueOperations.set_status_reported(ddb_table, issue)
+                    if config.rdsEncrypt.remediation:
+                        comment = f"RDS unencrypted instance '{instance_name}' is going to be remediated in " \
+                                  f"{retention_period} days"
+                        slack.report_issue(
+                            msg=comment,
+                            account_id=account_id
+                        )
+                        # Updating ticket with remediation details.
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+                        IssueOperations.set_status_notified(ddb_table, issue)
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ Class for IAM User inactive access key updation.
 import sys
 import logging
 import argparse
+import dateutil.parser
 
 
 from library.logger import set_logging, add_cw_logging
@@ -29,6 +30,7 @@ class CleanIAMUserInactiveKeys:
         ddb_table = main_account.resource("dynamodb").Table(self.config.iamUserInactiveKeys.ddb_table_name)
 
         retention_period = self.config.iamUserInactiveKeys.remediation_retention_period
+        remediation_warning_days = self.config.slack.remediation_warning_days
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
@@ -64,7 +66,25 @@ class CleanIAMUserInactiveKeys:
                 updated_date = issue.timestamp_as_datetime
                 no_of_days_issue_created = (self.config.now - updated_date).days
 
-                if no_of_days_issue_created >= retention_period:
+                issue_remediation_days = retention_period - no_of_days_issue_created
+
+                issue.timestamps.slack_notified_date = dateutil.parser.parse(issue.timestamps.slack_notified_date)
+                if issue_remediation_days in remediation_warning_days \
+                        and (self.config.now - issue.timestamps.slack_notified_date).days > 0:
+
+                    comment = f"Inactive access key '{key_id}' issue is going to be remediated in " \
+                              f"{issue_remediation_days} days"
+                    slack.report_issue(
+                        msg=comment,
+                        account_id=account_id
+                    )
+                    # Updating ticket with remediation details.
+                    jira.update_issue(
+                        ticket_id=issue.jira_details.ticket,
+                        comment=comment
+                    )
+                    IssueOperations.set_status_notified(ddb_table, issue)
+                elif no_of_days_issue_created >= retention_period:
                     try:
                         if not batch and \
                            not confirm(f"Do you want to remediate inactive access key '{key_id} / {username}'", False):

@@ -4,7 +4,7 @@ Class to remediate S3 bucket unencrypted issues.
 import sys
 import logging
 import argparse
-
+import dateutil.parser
 
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
@@ -29,6 +29,7 @@ class CleanS3BucketUnencrypted:
         ddb_table = main_account.resource("dynamodb").Table(self.config.s3Encrypt.ddb_table_name)
 
         retention_period = self.config.s3Encrypt.remediation_retention_period
+        remediation_warning_days = self.config.slack.remediation_warning_days
 
         jira = JiraReporting(self.config)
         slack = SlackNotification(self.config)
@@ -66,11 +67,29 @@ class CleanS3BucketUnencrypted:
                 updated_date = issue.timestamp_as_datetime
                 no_of_days_issue_created = (self.config.now - updated_date).days
 
-                if no_of_days_issue_created >= retention_period:
-                    owner = issue.jira_details.owner
-                    bu = issue.jira_details.business_unit
-                    product = issue.jira_details.product
+                owner = issue.jira_details.owner
+                bu = issue.jira_details.business_unit
+                product = issue.jira_details.product
 
+                issue_remediation_days = retention_period - no_of_days_issue_created
+                issue.timestamps.slack_notified_date = dateutil.parser.parse(issue.timestamps.slack_notified_date)
+                if issue_remediation_days in remediation_warning_days \
+                        and (self.config.now - issue.timestamps.slack_notified_date).days > 0:
+                    comment = f"S3 bucket '{s3bucket.name}' unencrypted issue is going to be remediated in " \
+                              f"{issue_remediation_days} days"
+                    slack.report_issue(
+                        msg=comment,
+                        owner=owner,
+                        account_id=account_id,
+                        bu=bu, product=product,
+                    )
+                    # Updating ticket with remediation details.
+                    jira.update_issue(
+                        ticket_id=issue.jira_details.ticket,
+                        comment=comment
+                    )
+                    IssueOperations.set_status_notified(ddb_table, issue)
+                elif no_of_days_issue_created >= retention_period:
                     try:
                         if not batch and \
                            not confirm(f"Do you want to remediate '{bucket_name}' S3 bucket unencrypted", False):
