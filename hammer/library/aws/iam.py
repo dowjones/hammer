@@ -308,9 +308,12 @@ class IAMKeyChecker(object):
         :return: boolean. True - if check was successful,
                           False - otherwise
         """
+        users = []
         try:
             # get all users in account
-            users = self.account.client("iam").list_users()['Users']
+            paginator = self.account.client("iam").get_paginator("list_users")
+            for page in paginator.paginate():
+                users.extend(page['Users'])
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
