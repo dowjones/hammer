@@ -36,7 +36,8 @@
                         "SourceIdentificationECSExternalImageSource",
              						"SourceIdentificationElasticSearchLogging",
                         "SourceIdentificationElasticSearchEncryption",
-                        "SourceIdentificationElasticSearchPublicAccess"
+                        "SourceIdentificationElasticSearchPublicAccess",
+                        "SourceIdentificationTAChecks"
                     ]
                 },
                 {
@@ -127,7 +128,10 @@
                     "dafault": "Relative path to Unencrypted Elasticsearch domain sources"
                 },
                 "SourceIdentificationElasticSearchPublicAccess":{
-                    "dafault": "Relative path to Unencrypted Elasticsearch domain public access sources"          
+                    "dafault": "Relative path to Unencrypted Elasticsearch domain public access sources"
+                },
+                "SourceIdentificationTAChecks": {
+                    "default": "Relative path to trusted advisor check sources"
                 }
             }
         }
@@ -247,7 +251,7 @@
         },
         "SourceIdentificationECSExternalImageSource": {
             "Type": "String",
-            "Default": "ecs-image-source-issues-identification.zip"
+            "Default": "ecs-external-image-source-issues-identification.zip"
         },
         "SourceIdentificationElasticSearchLogging": {
             "Type": "String",
@@ -260,7 +264,11 @@
         "SourceIdentificationElasticSearchPublicAccess": {
             "Type": "String",
             "Default": "elasticsearch-public-access-domain-identification.zip"
-        }        
+        },
+        "SourceIdentificationTAChecks": {
+            "Type": "String",
+            "Default": "trusted-advisor-checks-identification.zip"
+        }
     },
     "Conditions": {
         "LambdaSubnetsEmpty": {
@@ -473,6 +481,12 @@
             "SNSTopicNameESPublicAccess": {
                 "value": "describe-es-public-access-lambda"
             },
+            "SNSDisplayNameTAChecks": {
+                "value": "describe-ta-checks-sns"
+            },
+            "SNSTopicNameTAChecks": {
+                "value": "describe-ta-checks-lambda"
+            },
             "LogsForwarderLambdaFunctionName": {
                 "value": "logs-forwarder"
             },
@@ -544,6 +558,9 @@
             },
             "ESPublicAccessLambdaFunctionName": {
                 "value": "elasticsearch-public-access"
+            },
+            "TAChecksLambdaFunctionName": {
+                "value": "ta-checks"
             }
         }
     },
@@ -1592,7 +1609,47 @@
                         { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameESPublicAccess", "value"] } ]
                     ]},
                     "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
-                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESPublicAccess", "value"] } ]               
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameESPublicAccess", "value"] } ]
+                    ]},
+                    "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
+                }
+            }
+        },
+        "StackEvaluateTAChecks": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {"Ref":  "NestedStackTemplate"},
+                "Parameters": {
+                    "SourceS3Bucket": { "Ref": "SourceS3Bucket" },
+                    "IdentificationIAMRole": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                    "IdentificationCheckRateExpression": {"Fn::Join": ["", [ "cron(", "40 ", { "Ref": "IdentificationCheckRateExpression" }, ")" ] ]},
+                    "LambdaSubnets": {"Ref":  "LambdaSubnets"},
+                    "LambdaSecurityGroups": {"Ref":  "LambdaSecurityGroups"},
+                    "IdentificationLambdaSource": { "Ref": "SourceIdentificationTAChecks" },
+                    "InitiateLambdaDescription": "Lambda function for initiate trusted advisor's checks.",
+                    "EvaluateLambdaDescription": "Lambda function to describe trusted advisor's checks.",
+                    "InitiateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "initiate-",
+                                                     { "Fn::FindInMap": ["NamingStandards", "TAChecksLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "EvaluateLambdaName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "describe-",
+                                                     { "Fn::FindInMap": ["NamingStandards", "TAChecksLambdaFunctionName", "value"] } ]
+                                              ]},
+                    "InitiateLambdaHandler": "initiate_to_desc_ta_checks.lambda_handler",
+                    "EvaluateLambdaHandler": "describe_ta_checks.lambda_handler",
+                    "EvaluateLambdaMemorySize": 256,
+                    "LambdaLogsForwarderArn": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] },
+                    "EventRuleDescription": "Hammer ScheduledRule to initiate Trusted Advisor Checks",
+                    "EventRuleName": {"Fn::Join" : ["", [{ "Ref": "ResourcesPrefix" }, "InitiateEvaluationTAChecks"] ] },
+                    "SNSDisplayName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                        { "Fn::FindInMap": ["NamingStandards", "SNSDisplayNameTAChecks", "value"] } ]
+                    ]},
+                    "SNSTopicName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                  { "Fn::FindInMap": ["NamingStandards", "SNSTopicNameTAChecks", "value"] } ]
                     ]},
                     "SNSIdentificationErrors": {"Ref":  "SNSIdentificationErrors"}
                 }

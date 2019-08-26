@@ -10,7 +10,7 @@
         "text_field_character_limit": 32767
     },
     "slack": {
-        "enabled": true,
+        "enabled": false,
         "notify_default_owner": true,
         "channels": {
             "#hammer-slave1": ["ERROR|WARNING|ALARM|Task timed out after|Access denied"]
@@ -168,7 +168,7 @@
         "ddb.table_name": "hammer-redshift-logging",
         "topic_name": "hammer-describe-redshift-logging-lambda",
         "reporting": true
-    },  
+    },
     "redshift_public_access": {
         "enabled": true,
         "ddb.table_name": "hammer-redshift-public-access",
@@ -203,7 +203,7 @@
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true,
         "safe_image_sources": ["amazonaws", "artifactory"]
-    },    
+    },
     "es_domain_logging": {
         "enabled": true,
         "ddb.table_name": "hammer-es-domain-logging",
@@ -217,7 +217,7 @@
         "ddb.table_name": "hammer-es-unencrypted-domain",
         "topic_name": "hammer-describe-es-encryption-lambda",
         "reporting": true
-    }, 
+    },
     "es_public_access_domain": {
         "enabled": true,
         "ddb.table_name": "hammer-es-public-access-domain",
@@ -225,5 +225,50 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
+    },
+    "trusted_advisor_recommendations": {
+        "enabled": true,
+        "refreshtimeoutinminutes": 8,
+        "checks": [
+            {
+                "category": "cost_optimizing",
+                "checkname": "Low Utilization Amazon EC2 Instances",
+	            "name": "trusted_advisor_recommendations_low_ec2_utilization",
+                "accounts": [
+                    "123456789012",
+                    "098765432109"
+                ],
+                "filters": [
+                    {
+                        "attribute": "Estimated Monthly Savings",
+                        "operator": "gt",
+                        "value": "500"
+                    },
+                    {
+                        "attribute": "Number of Days Low Utilization",
+                        "operator": "eq",
+                        "value": "14"
+                    }
+                ],
+                "ddb.table_name": "trusted-advisor-cost-optimizing-low-utilization-ec2-instances"
+            },
+            {
+                "category": "fault_tolerance",
+                "checkname": "Amazon EBS Snapshots",
+                "name": "trusted_advisor_recommendations_ebs_snapshots",
+                "accounts": [
+                    "123456789012",
+                    "098765432109"
+                ],
+                "filters": [
+                    {
+                        "attribute": "Status",
+                        "operator": "eq",
+                        "value": "Red"
+                    }
+                ],
+                "ddb.table_name": "trusted-advisor-fault-tolerance-ebs-snapshots"
+            }
+        ]
     }
 }

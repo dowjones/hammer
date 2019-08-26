@@ -217,6 +217,14 @@
                                     "Resource": {
                                         "Fn::Join": ["", ["arn:aws:iam::*:role/", { "Ref": "ResourcesPrefix" }, {"Ref": "IdentificationCrossAccountIAMRole"}]]
                                     }
+                                },
+                                {
+                                    "Sid": "HammerSupportPolicy",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "support:*"
+                                    ],
+                                    "Resource": "*"
                                 }
                             ]
                         }
