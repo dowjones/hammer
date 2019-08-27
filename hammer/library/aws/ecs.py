@@ -200,6 +200,5 @@ class ECSChecker(object):
                     else:
                         logging.exception(f"Failed to describe task definitions in {self.account} "
                                           f"for task {task_definition_name}")
-                    continue
 
         return True
