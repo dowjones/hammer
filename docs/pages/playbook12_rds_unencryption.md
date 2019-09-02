@@ -58,13 +58,15 @@ To identify and report issues of this type, you should add the following paramet
 |`enabled`                     |Toggles issue detection for this issue |`true`|
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-rds-unencrypted` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-rds-encryption-lambda`|
 
 Sample **config.json** section:
 ```
 "rds_encryption": {
     "enabled": true,
     "ddb.table_name": "hammer-rds-unencrypted",
-    "reporting": true
+    "reporting": true,
+    "topic_name": "hammer-describe-rds-encryption-lambda"
 }
 ```
 

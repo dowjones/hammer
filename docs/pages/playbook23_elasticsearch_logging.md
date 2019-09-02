@@ -79,6 +79,7 @@ To identify and report issues of this type, you should add the following paramet
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer remediation functionality for this issue type    |`false`|
 |`remediation_retention_period` |Toggle Dow Jones Hammer remediation retention period details for this issue type    |`21`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-es-logging-lambda`|
 
 Sample **config.json** section:
 ```
@@ -87,7 +88,8 @@ Sample **config.json** section:
         "ddb.table_name": "hammer-es-domain-logging",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "topic_name": "hammer-describe-es-logging-lambda"
     }
 ```
 

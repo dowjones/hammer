@@ -106,8 +106,11 @@ class EBSUnencryptedVolumesChecker(object):
                         {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
                     )
 
+        volume_details = []
         try:
-            volume_details = self.account.client("ec2").describe_volumes(**args)["Volumes"]
+            paginator = self.account.client("ec2").get_paginator('describe_volumes')
+            for page in paginator.paginate(**args):
+                volume_details.extend(page["Volumes"])
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "

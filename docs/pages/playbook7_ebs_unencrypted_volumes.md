@@ -64,6 +64,7 @@ To identify, report, and remediate issues of this type, you should add the follo
 |`ddb.table_name`|The name of the DynamoDB table to which Dow Jones Hammer would record detected issues of this type|`hammer-ebs-volumes-unencrypted` |
 |`accounts`      |*Optional* comma-separated list of accounts to limit check for                          |`aws.accounts` from `config.json`|
 |`reporting`     |Toggle Dow Jones Hammer reporting functionality for this issue                                    |`false`                          |
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-ebs-unencrypted-volumes-lambda`|
 
 Sample **config.json** section:
 ```
@@ -72,6 +73,7 @@ Sample **config.json** section:
     "ddb.table_name": "hammer-ebs-volumes-unencrypted",
     "accounts": ["210987654321"],
     "reporting": false,
+    "topic_name": "hammer-describe-ebs-unencrypted-volumes-lambda"
 }
 ```
 

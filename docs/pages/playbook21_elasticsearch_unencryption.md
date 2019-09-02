@@ -58,13 +58,15 @@ To identify and report issues of this type, you should add the following paramet
 |`enabled`                     |Toggles issue detection for this issue |`true`|
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-es-unencrypted-domain` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-es-encryption-lambda`|
 
 Sample **config.json** section:
 ```
 "es_unencrypted_domain": {
         "enabled": true,
         "ddb.table_name": "djif-hammer-es-unencrypted-domain",
-        "reporting": true
+        "reporting": true,
+        "topic_name": "hammer-describe-es-encryption-lambda"
     },
 ```
 
