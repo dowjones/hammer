@@ -1,5 +1,6 @@
 import os
 import json
+import warnings
 import xml
 import time
 import logging
@@ -8,9 +9,10 @@ import tracemalloc
 import tempfile
 import fcntl
 
-
 from datetime import datetime
 from decimal import Decimal
+from functools import lru_cache
+from ipwhois import IPWhois
 
 
 def jsonEncoder(obj):
@@ -118,6 +120,30 @@ def confirm(question, default=None):
             return valid[choice]
         else:
             print("Please respond with 'yes' or 'no'")
+
+
+@lru_cache(maxsize=128)
+def get_registrant(cidr):
+    ip = cidr.split("/")[0]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            whois = IPWhois(ip).lookup_rdap(asn_methods=['dns', 'whois', 'http'])
+        except Exception:
+            return ""
+
+    registrant = {}
+
+    for title, obj in whois.get('objects', {}).items():
+        if obj.get('contact') is None:
+            continue
+        if 'registrant' in obj.get('roles', []):
+            registrant['name'] = obj['contact'].get('name')
+            registrant['title'] = title
+            break
+
+    return registrant
 
 
 class SingletonInstanceException(BaseException):
