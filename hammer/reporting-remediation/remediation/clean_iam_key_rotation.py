@@ -30,8 +30,8 @@ class CleanIAMUserStaleKeys:
 
         retention_period = self.config.iamUserKeysRotation.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='iamUserKeysRotation')
+        slack = SlackNotification(self.config, module='iamUserKeysRotation')
 
         for account_id, account_name in self.config.iamUserKeysRotation.remediation_accounts.items():
             logging.debug("* Account Name:" + account_name + " :::Account ID:::" + account_id)

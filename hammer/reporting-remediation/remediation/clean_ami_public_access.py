@@ -28,8 +28,8 @@ class CleanAMIPublicAccess:
 
         retention_period = self.config.publicAMIs.remediation_retention_period
 
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='publicAMIs')
+        slack = SlackNotification(self.config, module='publicAMIs')
 
         for account_id, account_name in self.config.publicAMIs.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

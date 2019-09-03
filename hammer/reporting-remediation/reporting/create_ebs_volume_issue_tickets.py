@@ -74,8 +74,8 @@ class CreateEBSUnencryptedVolumeTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='ebsVolume')
+        slack = SlackNotification(self.config, module='ebsVolume')
 
         for account_id, account_name in self.config.ebsVolume.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -180,21 +180,21 @@ class CreateEBSUnencryptedVolumeTickets(object):
                     issue_summary = (f"EBS unencrypted volume '{volume_id}' "
                                      f" in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
-                    # try:
-                    #     response = jira.add_issue(
-                    #         issue_summary=issue_summary, issue_description=issue_description,
-                    #         priority="Major", labels=["unencrypted-ebs-volumes"],
-                    #         owner=owner,
-                    #         account_id=account_id,
-                    #         bu=bu, product=product,
-                    #     )
-                    # except Exception:
-                    #     logging.exception("Failed to create jira ticket")
-                    #     continue
-                    #
-                    # if response is not None:
-                    #     issue.jira_details.ticket = response.ticket_id
-                    #     issue.jira_details.ticket_assignee_id = response.ticket_assignee_id
+                    try:
+                        response = jira.add_issue(
+                            issue_summary=issue_summary, issue_description=issue_description,
+                            priority="Major",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                    except Exception:
+                        logging.exception("Failed to create jira ticket")
+                        continue
+                    
+                    if response is not None:
+                        issue.jira_details.ticket = response.ticket_id
+                        issue.jira_details.ticket_assignee_id = response.ticket_assignee_id
 
                     issue.jira_details.owner = owner
                     issue.jira_details.business_unit = bu

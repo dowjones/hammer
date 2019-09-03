@@ -29,8 +29,8 @@ class CreateS3BucketPolicyIssueTickets:
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
-        slack = SlackNotification(self.config)
+        jira = JiraReporting(self.config, module='s3policy')
+        slack = SlackNotification(self.config, module='s3policy')
 
         for account_id, account_name in self.config.s3policy.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
@@ -142,7 +142,7 @@ class CreateS3BucketPolicyIssueTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["publics3"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
