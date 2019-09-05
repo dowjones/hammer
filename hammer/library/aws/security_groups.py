@@ -1,16 +1,15 @@
 import json
 import logging
 import ipaddress
-import warnings
 
 from enum import Enum
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
-from ipwhois import IPWhois
 from library.utility import jsonDumps
 from library.aws.s3 import S3Operations
 from library.aws.utility import convert_tags
 from library.config import Config
+from library.utility import get_registrant
 
 
 class RestrictionStatus(Enum):
@@ -69,7 +68,7 @@ class SecurityGroupOperations:
         if objects is None:
             logging.error(f"Failed to find '{group_id}' rules backup in {account}")
             return
-        backup_objects = [ obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_") ]
+        backup_objects = [obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_")]
         # return most recent backup
         recent_backup = max(backup_objects)
         source = json.loads(S3Operations.get_object(s3_client, bucket, recent_backup))
@@ -103,8 +102,8 @@ class SecurityGroupOperations:
             from_port = ingress.get("FromPort", None)
             to_port = ingress.get("ToPort", None)
             ip_protocol = ingress["IpProtocol"]
-            cidrs = [ ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", []) ]
-            cidrs += [ ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", []) ]
+            cidrs = [ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", [])]
+            cidrs += [ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", [])]
             for cidr in cidrs:
                 cls.add_inbound_rule(ec2_client, group_id, ip_protocol, from_port, to_port, cidr)
 
@@ -121,9 +120,9 @@ class SecurityGroupOperations:
 
         :return: dict with `IpPermissions` element
         """
-        perms = { 'IpProtocol': ip_protocol }
+        perms = {'IpProtocol': ip_protocol}
         if from_port is not None and \
-           to_port is not None:
+                to_port is not None:
             perms['FromPort'] = from_port
             perms['ToPort'] = to_port
         ipv = ipaddress.ip_network(cidr).version
@@ -382,31 +381,15 @@ class SecurityGroup(object):
         :param cidr:
         :return:
         """
-        config = Config()
-        trusted_registrants = config.sg.trusted_registrants
+        trusted_registrants = Config().config.sg.trusted_registrants
 
         if not trusted_registrants:
             return False
 
-        ip = cidr.split("/")[0]
+        registrant = get_registrant(cidr)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                whois = IPWhois(ip).lookup_rdap(asn_methods=['dns', 'whois', 'http'])
-            except Exception:
-                return False
-
-        registrant = ""
-
-        for obj in whois.get('objects', {}).values():
-            if obj.get('contact') is None:
-                continue
-            if 'registrant' in obj.get('roles', []):
-                registrant = obj['contact'].get('name')
-                break
-
-        if registrant and registrant in trusted_registrants:
+        if registrant and (registrant['name'] in trusted_registrants
+                           or registrant['title'] in trusted_registrants):
             return True
         return False
 
@@ -574,8 +557,11 @@ class SecurityGroupsChecker(object):
                 args['Filters'].append(
                     {'Name': f"tag:{key}", 'Values': value if isinstance(value, list) else [value]},
                 )
+        secgroups = []
         try:
-            secgroups = self.account.client("ec2").describe_security_groups(**args)["SecurityGroups"]
+            paginator = self.account.client("ec2").get_paginator('describe_security_groups')
+            for page in paginator.paginate(**args):
+                secgroups.extend(page["SecurityGroups"])
         except ClientError as err:
             if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "

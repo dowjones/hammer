@@ -311,11 +311,11 @@ class ESDomainChecker:
                 domain_details = es_client.describe_elasticsearch_domains(DomainNames=ids)["DomainStatusList"]
 
         except ClientError as err:
-            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+            if err.response['Error']['Code'] in ["AccessDenied", "AccessDeniedException", "UnauthorizedOperation"]:
                 logging.error(f"Access denied in {self.account} "
                               f"(ec2:{err.operation_name})")
             else:
-                logging.exception(f"Failed to describe elasticsearch domains in {self.account}")
+                logging.error(f"Failed to describe elasticsearch domains in {self.account}")
             return False
 
         for domain_detail in domain_details:

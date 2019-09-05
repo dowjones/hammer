@@ -58,6 +58,7 @@ To identify and report issues of this type, you should add the following paramet
 |`enabled`                     |Toggles issue detection for this issue |`true`|
 |`ddb.table_name`              |Name of the DynamoDB table where Dow Jones Hammer will store the identified issues of this type| `hammer-ecs-external-image-source` |
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`true`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-ecs-external-image-source-lambda`|
 
 Sample **config.json** section:
 ```
@@ -66,7 +67,8 @@ Sample **config.json** section:
         "enabled": true,
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true,
-        "safe_image_sources": ["amazonaws", "artifactory"]
+        "safe_image_sources": ["amazonaws", "artifactory"],
+        "topic_name": "hammer-describe-ecs-external-image-source-lambda"
     }
 ```
 
