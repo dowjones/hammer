@@ -381,7 +381,7 @@ class SecurityGroup(object):
         :param cidr:
         :return:
         """
-        trusted_registrants = Config().config.sg.trusted_registrants
+        trusted_registrants = Config().sg.trusted_registrants
 
         if not trusted_registrants:
             return False
