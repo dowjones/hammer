@@ -28,7 +28,7 @@ class CreateTicketIamInactiveKeys:
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config, module='iamUserInactiveKeys')
-        slack = SlackNotification(self.config, module='iamUserInactiveKeys')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.iamUserInactiveKeys.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

@@ -30,7 +30,7 @@ class CreateSQSPolicyIssueTickets:
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
         jira = JiraReporting(self.config, module='sqspolicy')
-        slack = SlackNotification(self.config, module='sqspolicy')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.aws.accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

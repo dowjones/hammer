@@ -55,7 +55,7 @@
         "remediation": false,
         "remediation_retention_period": 0,
         "jira": true,
-        "labels": ["s3-public-acl"],
+        "labels": ["publics3"],
         "slack": true
     },
     "secgrp_unrestricted_access": {
@@ -93,7 +93,7 @@
         "remediation": false,
         "remediation_retention_period": 0,
         "jira": true,
-        "labels": ["iam-key-inactive"],
+        "labels": ["inactive-iam-keys"],
         "slack": true
     },
     "user_keysrotation": {
@@ -116,7 +116,7 @@
         "remediation": false,
         "remediation_retention_period": 7,
         "jira": true,
-        "labels": ["s3-public-policy"],
+        "labels": ["publics3"],
         "slack": true
     },
     "cloudtrails": {
@@ -125,7 +125,7 @@
         "topic_name": "hammer-describe-cloudtrails-lambda",
         "reporting": false,
         "jira": false,
-        "labels": ["cloudtrail-issue"],
+        "labels": ["cloud-trail-disabled"],
         "slack": false
     },
     "ebs_unencrypted_volume": {
@@ -135,7 +135,7 @@
         "accounts": ["123456789012", "210987654321"],
         "reporting": false,
         "jira": false,
-        "labels": ["ebs-unencrypted-volume"],
+        "labels": ["unencrypted-ebs-volumes"],
         "slack": false
     },
     "ebs_public_snapshot": {
@@ -146,7 +146,7 @@
         "remediation": false,
         "remediation_retention_period": 0,
         "jira": true,
-        "labels": ["ebs-public-snapshot"],
+        "labels": ["public_snapshots"],
         "slack": true
     },
     "rds_public_snapshot": {
@@ -157,7 +157,7 @@
         "remediation": false,
         "remediation_retention_period": 0,
         "jira": true,
-        "labels": ["rds-public-snapshot"],
+        "labels": ["rds-public-snapshots"],
         "slack": true
     },
     "ec2_public_ami": {
@@ -179,7 +179,7 @@
         "remediation": false,
         "remediation_retention_period": 0,
         "jira": true,
-        "labels": ["sqs-public-policy"],
+        "labels": ["publicsqs"],
         "slack": true
     },
     "s3_encryption": {
@@ -199,14 +199,15 @@
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true,
         "jira": true,
-        "labels": ["rds-unencrypted"],
+        "labels": ["rds-unencrypted-instances"],
         "slack": true
     },
     "redshift_logging": {
         "enabled": true,
         "ddb.table_name": "hammer-redshift-logging",
         "topic_name": "hammer-describe-redshift-logging-lambda",
-        "reporting": true
+        "reporting": true,
+        "labels": ["redshift-logging"]
     },
     "redshift_public_access": {
         "enabled": true,
@@ -214,7 +215,8 @@
         "topic_name": "hammer-describe-redshift-public-access-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "labels": ["redshift-public-access"]
     },
     "redshift_encryption": {
         "enabled": true,
@@ -222,26 +224,30 @@
         "topic_name": "hammer-describe-redshift-cluster-encryption-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "labels": ["redshift-unencrypted-clusters"]
     },
     "ecs_privileged_access": {
         "enabled": true,
         "ddb.table_name": "hammer-ecs-privileged-access",
         "topic_name": "hammer-describe-ecs-privileged-access-lambda",
-        "reporting": true
+        "reporting": true,
+        "labels": ["ecs-privileged-access"]
     },
     "ecs_logging": {
         "enabled": true,
         "ddb.table_name": "hammer-ecs-logging",
         "topic_name": "hammer-describe-ecs-logging-lambda",
-        "reporting": true
+        "reporting": true,
+        "labels": ["ecs-logging"]
     },
     "ecs_external_image_source": {
         "enabled": true,
         "topic_name": "hammer-describe-ecs-external-image-source-lambda",
         "ddb.table_name": "hammer-ecs-external-image-source",
         "reporting": true,
-        "safe_image_sources": ["amazonaws", "artifactory"]
+        "safe_image_sources": ["amazonaws", "artifactory"],
+        "labels": ["ecs-external-image"]
     },
     "es_domain_logging": {
         "enabled": true,
@@ -249,13 +255,15 @@
         "topic_name": "hammer-describe-es-logging-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "labels": ["es-domain-logging"],
     },
     "es_unencrypted_domain": {
         "enabled": true,
         "ddb.table_name": "hammer-es-unencrypted-domain",
         "topic_name": "hammer-describe-es-encryption-lambda",
-        "reporting": true
+        "reporting": true,
+        "labels": ["unencrypted-elasticsearch-domains"],
     },
     "es_public_access_domain": {
         "enabled": true,
@@ -263,6 +271,7 @@
         "topic_name": "hammer-describe-es-public-access-lambda",
         "reporting": true,
         "remediation": false,
-        "remediation_retention_period": 21
+        "remediation_retention_period": 21,
+        "labels": ["public-elasticsearch-domains"],
     }
 }
