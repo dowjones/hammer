@@ -62,6 +62,13 @@ class JiraReporting(object):
         self.jira_labels = JiraLabels(config, module)
         self.module_jira_labels = self.jira_labels.module_labels
 
+    def _jira_enabled(func):
+        def decorated(self, *args, **kwargs):
+            if self.config.jira.enabled:
+                return func(self, *args, **kwargs)
+        return decorated
+
+    @_jira_enabled
     def add_issue(self,
                   issue_summary, issue_description,
                   priority,
@@ -112,19 +119,23 @@ class JiraReporting(object):
         return NewIssue(ticket_id=ticket_id,
                         ticket_assignee_id=ticket_assignee_id)
 
+    @_jira_enabled
     def close_issue(self, ticket_id, comment):
         self.jira.add_comment(ticket_id, comment)
         self.jira.close_issue(ticket_id)
         logging.debug(f"Closed issue ({self.jira.ticket_url(ticket_id)})")
 
+    @_jira_enabled
     def update_issue(self, ticket_id, comment):
         # TODO: reopen ticket if closed
         self.jira.add_comment(ticket_id, comment)
         logging.debug(f"Updated issue {self.jira.ticket_url(ticket_id)}")
 
+    @_jira_enabled
     def add_attachment(self, ticket_id, filename, text):
         return self.jira.add_attachment(ticket_id, filename, text)
 
+    @_jira_enabled
     def remediate_issue(self, ticket_id, comment, reassign):
         if reassign:
             self.jira.assign_user(ticket_id, self.jira.current_user)
@@ -353,7 +364,7 @@ class JiraOperations(object):
     def add_watcher(self, ticket_id, user):
         """
         Adding jira ticket watcher.
-        
+
         :param ticket_id: jira ticket id 
         :param user: watcher user id
         :return: nothing
