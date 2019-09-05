@@ -31,7 +31,7 @@ class CleanPublicEBSSnapshots(object):
         retention_period = self.config.ebsSnapshot.remediation_retention_period
 
         jira = JiraReporting(self.config, module='ebsSnapshot')
-        slack = SlackNotification(self.config, module='ebsSnapshot')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.ebsSnapshot.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

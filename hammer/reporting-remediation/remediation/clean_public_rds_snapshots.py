@@ -32,7 +32,7 @@ class CleanPublicRDSSnapshots(object):
         retention_period = self.config.rdsSnapshot.remediation_retention_period
 
         jira = JiraReporting(self.config, module='rdsSnapshot')
-        slack = SlackNotification(self.config, module='rdsSnapshot')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.rdsSnapshot.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

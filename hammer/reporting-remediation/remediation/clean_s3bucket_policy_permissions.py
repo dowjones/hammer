@@ -32,7 +32,7 @@ class CleanS3BucketPolicyPermissions:
         retention_period = self.config.s3policy.remediation_retention_period
 
         jira = JiraReporting(self.config, module='s3policy')
-        slack = SlackNotification(self.config, module='s3policy')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.s3policy.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")

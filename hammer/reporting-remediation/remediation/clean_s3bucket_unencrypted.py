@@ -31,7 +31,7 @@ class CleanS3BucketUnencrypted:
         retention_period = self.config.s3Encrypt.remediation_retention_period
 
         jira = JiraReporting(self.config, module='s3Encrypt')
-        slack = SlackNotification(self.config, module='s3Encrypt')
+        slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.s3Encrypt.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
