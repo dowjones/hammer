@@ -198,7 +198,7 @@ class ECSChecker(object):
                         logging.error(f"Access denied in {self.account} "
                                       f"(ecs:{err.operation_name})")
                     else:
-                        logging.exception(f"Failed to describe task definitions in {self.account} "
+                        logging.error(f"Failed to describe task definitions in {self.account} "
                                           f"for task {task_definition_name}")
                     continue
 

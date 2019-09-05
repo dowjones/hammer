@@ -24,7 +24,7 @@
                     }
                 ],
                 "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "35",
+                    "ReadCapacityUnits": "50",
                     "WriteCapacityUnits": "2"
                 },
                 "SSESpecification": {
