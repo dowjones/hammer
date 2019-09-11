@@ -225,5 +225,50 @@
         "reporting": true,
         "remediation": false,
         "remediation_retention_period": 21
+    },
+    "trusted_advisor_recommendations": {
+        "enabled": true,
+        "refreshtimeoutinminutes": 8,
+        "checks": [
+            {
+                "category": "cost_optimizing",
+                "checkname": "Low Utilization Amazon EC2 Instances",
+	            "name": "trusted_advisor_recommendations_low_ec2_utilization",
+                "accounts": [
+                    "123456789012",
+                    "098765432109"
+                ],
+                "filters": [
+                    {
+                        "attribute": "Estimated Monthly Savings",
+                        "operator": "gt",
+                        "value": "500"
+                    },
+                    {
+                        "attribute": "Number of Days Low Utilization",
+                        "operator": "eq",
+                        "value": "14"
+                    }
+                ],
+                "ddb.table_name": "trusted-advisor-cost-optimizing-low-utilization-ec2-instances"
+            },
+            {
+                "category": "fault_tolerance",
+                "checkname": "Amazon EBS Snapshots",
+                "name": "trusted_advisor_recommendations_ebs_snapshots",
+                "accounts": [
+                    "123456789012",
+                    "098765432109"
+                ],
+                "filters": [
+                    {
+                        "attribute": "Status",
+                        "operator": "eq",
+                        "value": "Red"
+                    }
+                ],
+                "ddb.table_name": "trusted-advisor-fault-tolerance-ebs-snapshots"
+            }
+        ]
     }
 }
