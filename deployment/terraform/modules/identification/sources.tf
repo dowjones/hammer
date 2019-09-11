@@ -152,3 +152,9 @@ resource "aws_s3_bucket_object" "elasticsearch-public-access-domain-identificati
     source = "${path.module}/../../../packages/elasticsearch-public-access-domain-identification.zip"
 }
 
+resource "aws_s3_bucket_object" "trusted-advisor-checks-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("trusted-advisor-checks-identification-%s.zip", "${md5(file("${path.module}/../../../packages/trusted-advisor-checks-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/trusted-advisor-checks-identification.zip"
+}
+

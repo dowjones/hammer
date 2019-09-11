@@ -34,7 +34,7 @@
                         "SourceIdentificationECSPrivilegedAccess",
                         "SourceIdentificationECSLogging",
                         "SourceIdentificationECSExternalImageSource",
-             						"SourceIdentificationElasticSearchLogging",
+             			"SourceIdentificationElasticSearchLogging",
                         "SourceIdentificationElasticSearchEncryption",
                         "SourceIdentificationElasticSearchPublicAccess",
                         "SourceIdentificationTAChecks"
