@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from botocore.exceptions import ClientError
 from library.utility import jsonDumps
 from library.aws.s3 import S3Operations
+from library.aws.policy import PolicyOperations
 
 
 class SQSOperations(object):
@@ -66,7 +67,7 @@ class SQSQueue(object):
         """
         :return: boolean, True - if policy allows public access to SQS
         """
-        return S3Operations.public_policy(self._policy)
+        return PolicyOperations.public_policy(self._policy)
 
     def backup_policy_s3(self, s3_client, bucket):
         """
@@ -96,7 +97,7 @@ class SQSQueue(object):
         .. note:: This keeps self._policy unchanged.
                   You need to recheck SQS Queue policy to ensure that it was really restricted.
         """
-        restricted_policy = S3Operations.restrict_policy(self._policy)
+        restricted_policy = PolicyOperations.restrict_policy(self._policy)
         try:
             SQSOperations.put_queue_policy(self.account.client("sqs"), self.url, restricted_policy)
         except Exception:

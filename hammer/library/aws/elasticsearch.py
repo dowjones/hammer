@@ -9,6 +9,8 @@ from library.utility import timeit
 from library.utility import jsonDumps
 from library.aws.utility import convert_tags
 from library.aws.s3 import S3Operations
+from library.aws.policy import PolicyOperations
+
 
 # structure which describes Elastic search domains
 ElasticSearchDomain_Details = namedtuple('ElasticSearchDomain', [
@@ -150,7 +152,7 @@ class ElasticSearchOperations:
         """
         public_policy = False
         for statement in policy_details.get("Statement", []):
-            public_policy = S3Operations.public_statement(statement)
+            public_policy = PolicyOperations.public_statement(statement)
 
         return public_policy
 
