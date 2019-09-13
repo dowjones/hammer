@@ -29,7 +29,11 @@ def lambda_handler(event, context):
     account_and_checks = {}
 
     for config_check in config.trustedAdvisor.checks:
-        list_of_accounts_per_check = config_check["accounts"]
+        if "accounts" in config_check:
+            list_of_accounts_per_check = config_check["accounts"]
+        else:
+            list_of_accounts_per_check = config.aws.accounts
+        # list_of_accounts_per_check = config_check["accounts"]
         checkname = config_check["checkname"]
         ddb = config_check["ddb.table_name"]
         filters = config_check["filters"]
@@ -40,7 +44,7 @@ def lambda_handler(event, context):
 
             if (account_and_checks.get(account_id) is None):
 
-                client = Account(id=account_id, region="us-east-1").client("support")
+                client = Account(id=account_id, region="us-east-1", role_name=config.aws.role_name_identification).client("support")
                 account_and_checks.update({account_id: {"account_id" : account_id, "client": client, "checks_info": []}
                 })
 
