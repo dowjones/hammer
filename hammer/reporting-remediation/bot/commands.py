@@ -226,8 +226,7 @@ def parse_regions(response):
     for region in requested_regions:
         if region.strip() not in supported_regions:
             raise Exception(f'Wrong region {region}. Allowed values: \n ```{allowed_values}```')
-        else:
-            regions.append(region.strip())
+        regions.append(region.strip())
     return regions
 
 
@@ -241,8 +240,7 @@ def parse_security_features(response):
     for sec_feature in requested_security_features:
         if sec_feature.strip() not in supported_features:
             raise Exception(f"Unsupported security feature {sec_feature}. Allowed values: \n ```{allowed_values}```")
-        else:
-            security_features.append(sec_feature.strip())
+        security_features.append(sec_feature.strip())
     return security_features
 
 

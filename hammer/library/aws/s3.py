@@ -31,8 +31,7 @@ class S3Operations(object):
                 #   http://acs.amazonaws.com/groups/global/AuthenticatedUsers
                 #   http://acs.amazonaws.com/groups/global/AllUsers
                 who = grant["Grantee"]["URI"].split("/")[-1]
-                if who == "AllUsers" or \
-                   who == "AuthenticatedUsers":
+                if who in ("AllUsers", "AuthenticatedUsers"):
                     perm = grant["Permission"]
                     # group all permissions (READ(_ACP), WRITE(_ACP), FULL_CONTROL) by AWS predefined groups
                     public_acls.setdefault(who, []).append(perm)
@@ -259,7 +258,7 @@ class S3Operations(object):
         :return: nothing
         """
         if kms_master_key_id:
-           rules = [
+            rules = [
                 {
                     'ApplyServerSideEncryptionByDefault': {
                         'SSEAlgorithm': 'aws:kms',

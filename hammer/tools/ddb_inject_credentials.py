@@ -58,11 +58,11 @@ if __name__ == "__main__":
                 }
             }
 
-    if args.hammer_api_token != None:
+    if args.hammer_api_token is not None:
         # generate new secret if secret value is not set
         creds["api"] = {"token": secrets.token_hex() if args.hammer_api_token == -1 else args.hammer_api_token}
 
-    if args.hammer_api_url != None:
+    if args.hammer_api_url is not None:
         creds["api"]["url"] = args.hammer_api_url
 
     if not creds:
