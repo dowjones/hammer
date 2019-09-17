@@ -20,6 +20,8 @@ class IssueStatus(Enum):
     Resolved = "resolved"
     # set by reporting after closing ticket
     Closed = "closed"
+    # set by identification - issue still exists but was added to quarantine_list for future remediation
+    Quarantine = "quarantine"
 
 
 class Details(object):

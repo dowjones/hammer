@@ -21,18 +21,22 @@ class Config(object):
                  configIniFile="config.ini",
                  whitelistFile="whitelist.json",
                  fixnowFile="fixnow.json",
-                 ticketOwnersFile="ticket_owners.json"):
+                 ticketOwnersFile="ticket_owners.json",
+                 quarantinelistFile="quarantine_issues_list.json"):
         """
         :param configFile: local path to configuration file in json format
         :param configIniFile: local path to configuration file in ini format (is used in r&r EC2, build from EC2 userdata)
         :param whitelistFile: local path to whitelist file in json format
         :param fixnowFile: local path to fixnow file in json format
         :param ticketOwnersFile: local path to file with default ticket owners by bu/account in json format
+        :param quarantinelistFile: local path to list of quarantine issues file in json format
         """
 
         self._config = self.json_load_from_file(configFile)
         self._config['whitelist'] = self.json_load_from_file(whitelistFile, default={})
         self._config['fixnow'] = self.json_load_from_file(fixnowFile, default={})
+
+        self._config['quarantine'] = self.json_load_from_file(quarantinelistFile, default={})
 
         self.local = LocalConfig(configIniFile)
         self.owners = OwnersConfig(self.json_load_from_file(ticketOwnersFile, default={}))
@@ -480,6 +484,7 @@ class ModuleConfig(BaseConfig):
         super().__init__(config, section)
         self._whitelist = config["whitelist"].get(section, {})
         self._fixnow = config["fixnow"].get(section, {})
+        self._quarantine_list = config["quarantine"].get(section, {})
         # main accounts dict
         self._accounts = config["aws"]["accounts"]
         self.name = section
@@ -542,6 +547,17 @@ class ModuleConfig(BaseConfig):
         :return: boolean, if issue Id in whitelist
         """
         return issue in self._whitelist.get(account_id, [])
+
+    def in_quarantine_list(self, account_id, issue):
+        """
+        :param account_id: AWS account Id
+        :param issue: Issue id
+
+        :return: boolean, if issue Id in quarantine
+        """
+        return issue in self._quarantine_list.get(account_id, [])
+
+
 
     @property
     def ddb_table_name(self):
