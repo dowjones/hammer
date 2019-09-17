@@ -105,6 +105,8 @@ class Config(object):
         self.slack = SlackConfig(slack_config)
         # CSV configuration
         self.csv = CSVConfig(self._config, self.slack)
+        #Trusted Advisor Config
+        self.trustedAdvisor = TrustedAdvisorConfig(self._config, "trusted_advisor_recommendations")
 
         # API configuration
         self.api = ApiConfig({
@@ -587,3 +589,15 @@ class IAMUserKeysRotationConfig(ModuleConfig):
     def rotation_criteria_days(self):
         """ :return: `timedelta` object to compare and mark access keys as stale (created long time ago) """
         return timedelta(days=int(self._config["rotation_criteria_days"]))
+
+class TrustedAdvisorConfig(ModuleConfig):
+    """Extend ModuleConfig with TrustedAdvisor specific properties """
+    @property
+    def refreshtimeout(self):
+        """ return int of the max time to run function, default is 10 minutes"""
+        return int(self._config.get("refreshtimeoutinminutes", 10))
+    @property
+    def checks(self):
+        """ Return a list of check objects.
+        """
+        return self._config.get("checks", [])

@@ -252,7 +252,7 @@ class RedshiftPublicAccessIssue(Issue):
     def __init__(self, *args):
         super().__init__(*args)
 
-        
+
 class ECSLoggingIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
@@ -272,17 +272,21 @@ class ESEncryptionIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
 
-        
+
 class ESLoggingIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
 
-        
+
 class ESPublicAccessIssue(Issue):
    def __init__(self, *args):
-        super().__init__(*args)        
+        super().__init__(*args)
 
-        
+class TACheckIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class Operations(object):
     @staticmethod
     def find(ddb_table, issue):
