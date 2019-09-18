@@ -58,7 +58,9 @@ def lambda_handler(event, context):
                     issue.issue_details.tags = task_definition.tags
                     issue.issue_details.privileged_container_names = task_definition.privileged_container_names
                     issue.issue_details.region = task_definition.account.region
-                    if config.ecs_privileged_access.in_whitelist(account_id, task_definition.name):
+                    if config.ecs_privileged_access.in_quarantine_list(account_id, task_definition.name):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.ecs_privileged_access.in_whitelist(account_id, task_definition.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

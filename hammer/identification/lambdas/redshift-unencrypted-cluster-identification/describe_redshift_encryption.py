@@ -56,7 +56,10 @@ def lambda_handler(event, context):
                     issue = RedshiftEncryptionIssue(account_id, cluster.name)
                     issue.issue_details.tags = cluster.tags
                     issue.issue_details.region = cluster.account.region
-                    if config.redshiftEncrypt.in_whitelist(account_id, cluster.name):
+
+                    if config.redshiftEncrypt.in_quarantine_list(account_id, cluster.name):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.redshiftEncrypt.in_whitelist(account_id, cluster.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

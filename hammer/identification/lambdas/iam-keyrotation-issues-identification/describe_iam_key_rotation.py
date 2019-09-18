@@ -56,7 +56,12 @@ def lambda_handler(event, context):
                 issue = IAMKeyRotationIssue(account_id, key.id)
                 issue.issue_details.username = user.id
                 issue.issue_details.create_date = key.create_date.isoformat()
-                if config.iamUserKeysRotation.in_whitelist(account_id, key.id) or config.iamUserKeysRotation.in_whitelist(account_id, user.id):
+
+                if config.iamUserKeysRotation.in_quarantine_list(account_id, key.id) \
+                        or config.iamUserKeysRotation.in_quarantine_list(account_id, user.id):
+                    issue.status = IssueStatus.Quarantine
+                elif config.iamUserKeysRotation.in_whitelist(account_id, key.id) \
+                        or config.iamUserKeysRotation.in_whitelist(account_id, user.id):
                     issue.status = IssueStatus.Whitelisted
                 else:
                     issue.status = IssueStatus.Open

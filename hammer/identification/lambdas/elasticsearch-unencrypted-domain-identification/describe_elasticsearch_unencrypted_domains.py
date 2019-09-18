@@ -61,7 +61,9 @@ def lambda_handler(event, context):
                     issue.issue_details.encrypted_at_rest = domain.encrypted_at_rest
                     issue.issue_details.encrypted_at_transit = domain.encrypted_at_transit
 
-                    if config.esEncrypt.in_whitelist(account_id, domain.name):
+                    if config.esEncrypt.in_quarantine_list(account_id, domain.name):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.esEncrypt.in_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

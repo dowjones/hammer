@@ -60,7 +60,6 @@ class CreatePublicAMIIssueTickets:
                             account_id=account_id,
                             bu=bu, product=product,
                         )
-
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} AMI '{ami_id}' public access issue")
 

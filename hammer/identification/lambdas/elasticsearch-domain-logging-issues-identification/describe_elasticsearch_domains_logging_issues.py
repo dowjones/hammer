@@ -59,7 +59,9 @@ def lambda_handler(event, context):
                     issue.issue_details.arn = domain.arn
                     issue.issue_details.tags = domain.tags
 
-                    if config.esLogging.in_whitelist(account_id, domain.name):
+                    if config.esLogging.in_quarantine_list(account_id, domain.name):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.esLogging.in_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

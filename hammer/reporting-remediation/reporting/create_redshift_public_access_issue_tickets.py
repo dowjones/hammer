@@ -42,10 +42,31 @@ class CreateRedshiftPublicAccessTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} Redshift publicly accessible cluster  '{cluster_id}' issue")
+                    if issue.status in [IssueStatus.Quarantine]:
+                        logging.debug(f"Redshift publicly accessible cluster issue '{cluster_id}' "
+                                      f"is added to quarantine list. ")
 
-                        comment = (f"Closing {issue.status.value} Redshift publicly accessible cluster '{cluster_id}' issue "
+                        comment = (f"Redshift publicly accessible cluster '{cluster_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to quarantine list")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                        logging.debug(f"Closing {issue.status.value} Redshift publicly accessible "
+                                      f"cluster '{cluster_id}' issue")
+
+                        comment = (f"Closing {issue.status.value} Redshift publicly accessible cluster "
+                                   f"'{cluster_id}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.

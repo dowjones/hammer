@@ -41,6 +41,11 @@ class CleanSQSPolicyPermissions:
                 queue_region = issue.issue_details.region
 
                 in_whitelist = self.config.sqspolicy.in_whitelist(account_id, queue_url)
+                in_quarantine = self.config.sqspolicy.in_quarantine_list(account_id, issue.issue_id)
+                if in_quarantine:
+                    logging.debug(
+                        f"Skipping {issue.issue_id} (in quarantine list. Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {queue_name} (in whitelist)")

@@ -58,7 +58,10 @@ def lambda_handler(event, context):
                     issue.issue_details.tags = task_definition.tags
                     issue.issue_details.container_image_details = task_definition.container_image_details
                     issue.issue_details.region = task_definition.account.region
-                    if config.ecs_external_image_source.in_whitelist(account_id, task_definition.name):
+
+                    if config.ecs_external_image_source.in_quarantine_list(account_id, task_definition.name):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.ecs_external_image_source.in_whitelist(account_id, task_definition.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

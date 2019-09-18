@@ -59,7 +59,10 @@ def lambda_handler(event, context):
                 issue.issue_details.region = instance.account.region
                 issue.issue_details.engine = instance.engine
                 issue.issue_details.tags = instance.tags
-                if config.rdsEncrypt.in_whitelist(account_id, instance.id):
+
+                if config.rdsEncrypt.in_quarantine_list(account_id, instance.id):
+                    issue.status = IssueStatus.Quarantine
+                elif config.rdsEncrypt.in_whitelist(account_id, instance.id):
                     issue.status = IssueStatus.Whitelisted
                 else:
                     issue.status = IssueStatus.Open

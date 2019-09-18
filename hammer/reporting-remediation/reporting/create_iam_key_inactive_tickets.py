@@ -38,7 +38,23 @@ class CreateTicketIamInactiveKeys:
                 username = issue.issue_details.username
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if issue.status in [IssueStatus.Quarantine]:
+                        logging.debug(
+                            f"IAM Inactive access key issue '{key_id} / {username}' is added to quarantine list. ")
+
+                        comment = (f"IAM Inactive access key issue '{key_id} / {username}' "
+                                   f"in '{account_name} / {account_id}' account is added to quarantine list")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            account_id=account_id
+                        )
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} inactive access key '{key_id} / {username}' issue")
 
                         comment = (f"Closing {issue.status.value} inactive access key '{key_id} / {username}' issue "

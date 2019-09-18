@@ -68,7 +68,11 @@ def lambda_handler(event, context):
                         for ip_range in perm.ip_ranges:
                             if not ip_range.restricted:
                                 issue.add_perm(perm.protocol, perm.from_port, perm.to_port, ip_range.cidr, ip_range.status)
-                    if config.sg.in_whitelist(account_id, f"{sg.vpc_id}:{sg.name}") or \
+
+                    if config.sg.in_quarantine_list(account_id, f"{sg.vpc_id}:{sg.name}")or \
+                       config.sg.in_quarantine_list(account_id, sg.id):
+                        issue.status = IssueStatus.Quarantine
+                    elif config.sg.in_whitelist(account_id, f"{sg.vpc_id}:{sg.name}") or \
                        config.sg.in_whitelist(account_id, sg.id):
                         issue.status = IssueStatus.Whitelisted
                     else:

@@ -41,6 +41,10 @@ class CleanElasticSearchDomainLogging:
                 domain_name = issue.issue_id
 
                 in_whitelist = self.config.esLogging.in_whitelist(account_id, domain_name)
+                in_quarantine = self.config.esLogging.in_quarantine_list(account_id, domain_name)
+                if in_quarantine:
+                    logging.debug(f"Skipping {domain_name} (in quarantine list. Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {domain_name} (in whitelist)")

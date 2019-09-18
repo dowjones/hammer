@@ -55,7 +55,10 @@ def lambda_handler(event, context):
                 issue.issue_details.owner = bucket.owner
                 issue.issue_details.public_acls = bucket.get_public_acls()
                 issue.issue_details.tags = bucket.tags
-                if config.s3acl.in_whitelist(account_id, bucket.name):
+
+                if config.s3acl.in_quarantine_list(account_id, bucket.name):
+                    issue.status = IssueStatus.Quarantine
+                elif config.s3acl.in_whitelist(account_id, bucket.name):
                     issue.status = IssueStatus.Whitelisted
                 else:
                     issue.status = IssueStatus.Open

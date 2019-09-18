@@ -42,6 +42,12 @@ class CleanIAMUserInactiveKeys:
 
                 user_in_whitelist = self.config.iamUserInactiveKeys.in_whitelist(account_id, username)
                 key_in_whitelist = self.config.iamUserInactiveKeys.in_whitelist(account_id, key_id)
+                user_in_quarantine = self.config.iamUserInactiveKeys.in_quarantine_list(account_id, username)
+                key_in_quarantine = self.config.iamUserInactiveKeys.in_quarantine_list(account_id, key_id)
+                if user_in_quarantine or key_in_quarantine:
+                    logging.debug(
+                        f"Skipping {key_id} / {username} (in quarantine list. Will remediate this issue in future)")
+                    continue
 
                 if user_in_whitelist or key_in_whitelist:
                     logging.debug(f"Skipping '{key_id} / {username}' (in whitelist)")

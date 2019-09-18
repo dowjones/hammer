@@ -56,7 +56,23 @@ class CreateCloudTrailLoggingTickets:
                 region = issue.issue_id
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if issue.status in [IssueStatus.Quarantine]:
+                        logging.debug(f"CloudTrail logging issue with '{region}' "
+                                      f"is added to quarantine list. ")
+
+                        comment = (f"CloudTrail logging issue with '{region}' "
+                                   f"in '{account_name} / {account_id}' account is added to quarantine list")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            account_id=account_id
+                        )
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} '{region}' CloudTrail logging issue")
 
                         comment = (f"Closing {issue.status.value} issue with '{region}' CloudTrail logging in "

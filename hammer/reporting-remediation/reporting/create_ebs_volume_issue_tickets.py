@@ -90,7 +90,25 @@ class CreateEBSUnencryptedVolumeTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if issue.status in [IssueStatus.Quarantine]:
+                        logging.debug(f"EBS unencrypted volume '{volume_id}' is added to quarantine list. ")
+
+                        comment = (f"EBS unencrypted volume '{volume_id}' "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to quarantine list")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} EBS unencrypted volume '{volume_id}' issue")
 
                         comment = (f"Closing {issue.status.value} EBS unencrypted volume '{volume_id}' issue "

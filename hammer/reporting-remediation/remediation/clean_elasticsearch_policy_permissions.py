@@ -41,7 +41,11 @@ class CleanElasticSearchPolicyPermissions:
                 domain_name = issue.issue_id
 
                 in_whitelist = self.config.esPublicAccess.in_whitelist(account_id, domain_name)
-                #in_fixlist = self.config.esPublicAccess.in_fixnow(account_id, domain_name)
+                # in_fixlist = self.config.esPublicAccess.in_fixnow(account_id, domain_name)
+                in_quarantine = self.config.esPublicAccess.in_quarantine_list(account_id, domain_name)
+                if in_quarantine:
+                    logging.debug(f"Skipping {domain_name} (in quarantine list. Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {domain_name} (in whitelist)")

@@ -40,10 +40,8 @@ class CleanAMIPublicAccess:
                 in_whitelist = self.config.publicAMIs.in_whitelist(account_id, ami_id)
 
                 in_quarantine = self.config.publicAMIs.in_quarantine_list(account_id, ami_id)
-
                 if in_quarantine:
                     logging.debug(f"Skipping {ami_id} (in quarantine list. Will remediate this issue in future)")
-
                     continue
 
                 if in_whitelist:

@@ -42,6 +42,11 @@ class CleanS3BucketAclPermissions:
 
                 in_whitelist = self.config.s3acl.in_whitelist(account_id, bucket_name)
                 in_fixlist = True #self.config.s3acl.in_fixnow(account_id, bucket_name)
+                in_quarantine = self.config.s3acl.in_quarantine_list(account_id, issue.issue_id)
+                if in_quarantine:
+                    logging.debug(
+                        f"Skipping {issue.issue_id} (in quarantine list. Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")
