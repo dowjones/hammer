@@ -28,7 +28,7 @@ class CleanAMIPublicAccess:
 
         retention_period = self.config.publicAMIs.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='publicAMIs')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.publicAMIs.remediation_accounts.items():

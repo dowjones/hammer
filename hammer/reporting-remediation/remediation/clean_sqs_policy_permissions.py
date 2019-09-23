@@ -29,7 +29,7 @@ class CleanSQSPolicyPermissions:
 
         retention_period = self.config.sqspolicy.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='sqspolicy')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.sqspolicy.remediation_accounts.items():

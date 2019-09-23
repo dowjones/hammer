@@ -31,7 +31,7 @@ class CleanSecurityGroups(object):
 
         retention_period = self.config.sg.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='sg')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.sg.remediation_accounts.items():
