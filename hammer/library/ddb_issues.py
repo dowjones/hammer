@@ -20,7 +20,7 @@ class IssueStatus(Enum):
     Resolved = "resolved"
     # set by reporting after closing ticket
     Closed = "closed"
-    # set by identification - issue still exists but was added to tempwhitelist_list for future remediation
+    # set by identification - issue still exists but was added to temporary whitelist_list for future remediation
     Tempwhitelist = "tempwhitelist"
 
 
