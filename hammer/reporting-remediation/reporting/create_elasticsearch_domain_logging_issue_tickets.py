@@ -43,7 +43,7 @@ class CreateElasticSearchDomainLoggingIssueTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"Elasticsearch logging issue '{domain_name}' is added to temporary whitelist items.")
 
@@ -62,6 +62,7 @@ class CreateElasticSearchDomainLoggingIssueTickets(object):
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} Elasticsearch domain logging "
                                       f"'{domain_name}' issue")

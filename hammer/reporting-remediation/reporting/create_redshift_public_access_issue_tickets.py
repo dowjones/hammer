@@ -42,7 +42,7 @@ class CreateRedshiftPublicAccessTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"Redshift publicly accessible cluster issue '{cluster_id}' "
                                       f"is added to temporary whitelist items.")
 
@@ -61,6 +61,7 @@ class CreateRedshiftPublicAccessTickets(object):
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} Redshift publicly accessible "
                                       f"cluster '{cluster_id}' issue")

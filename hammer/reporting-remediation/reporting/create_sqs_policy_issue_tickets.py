@@ -47,7 +47,7 @@ class CreateSQSPolicyIssueTickets:
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"SQS queue public policy issue '{queue_name}' "
                                       f"is added to temporary whitelist items.")
 
@@ -66,6 +66,7 @@ class CreateSQSPolicyIssueTickets:
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} SQS queue '{queue_name}' public policy issue")
 

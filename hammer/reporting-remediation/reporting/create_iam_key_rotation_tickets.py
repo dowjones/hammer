@@ -38,7 +38,7 @@ class CreateTicketIamKeyRotation:
                 username = issue.issue_details.username
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"IAM stale access key issue '{key_id} / {username}' "
                             f"is added to temporary whitelist items.")
@@ -55,6 +55,7 @@ class CreateTicketIamKeyRotation:
                                 f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
                             account_id=account_id
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing stale access key {issue.status.value} '{key_id} / {username}' issue")
 

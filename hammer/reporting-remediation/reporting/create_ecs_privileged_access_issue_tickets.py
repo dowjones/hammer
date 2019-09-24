@@ -43,9 +43,10 @@ class CreateECSPrivilegedAccessIssueTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
-                            f"ECS privileged access issue '{task_definition_name}' is added to temporary whitelist items.")
+                            f"ECS privileged access issue '{task_definition_name}' "
+                            f"is added to temporary whitelist items.")
 
                         comment = (f"ECS privileged access issue '{task_definition_name}' "
                                    f"in '{account_name} / {account_id}' account, {region} "
@@ -62,6 +63,7 @@ class CreateECSPrivilegedAccessIssueTickets(object):
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} ECS privileged access disabled "
                                       f"'{task_definition_name}' issue")

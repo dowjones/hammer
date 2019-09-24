@@ -42,7 +42,7 @@ class CreateRDSPublicSnapshotTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"RDS public snapshot '{snapshot_id}' is added to temporary whitelist items.")
 
                         comment = (f"RDS public snapshot '{snapshot_id}' issue "
@@ -60,6 +60,7 @@ class CreateRDSPublicSnapshotTickets(object):
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} RDS public snapshot '{snapshot_id}' issue")
 

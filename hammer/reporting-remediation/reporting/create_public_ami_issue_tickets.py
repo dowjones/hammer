@@ -42,7 +42,7 @@ class CreatePublicAMIIssueTickets:
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"AMI '{ami_id}' is added to temporary whitelist items.")
 
                         comment = (f"AMI '{ami_id}' public access issue "
@@ -60,6 +60,7 @@ class CreatePublicAMIIssueTickets:
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} AMI '{ami_id}' public access issue")
 

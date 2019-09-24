@@ -45,7 +45,7 @@ class CreateS3BucketPolicyIssueTickets:
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist]:
+                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"S3 bucket public policy issue '{bucket_name}' "
                                       f"is added to temporary whitelist items.")
 
@@ -63,6 +63,7 @@ class CreateS3BucketPolicyIssueTickets:
                             account_id=account_id,
                             bu=bu, product=product,
                         )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
                     elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} S3 bucket '{bucket_name}' public policy issue")
 
