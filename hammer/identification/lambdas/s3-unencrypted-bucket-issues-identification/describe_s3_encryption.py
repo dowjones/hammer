@@ -55,8 +55,8 @@ def lambda_handler(event, context):
                 issue.issue_details.owner = bucket.owner
                 issue.issue_details.tags = bucket.tags
 
-                if config.s3Encrypt.in_quarantine_list(account_id, bucket.name):
-                    issue.status = IssueStatus.Quarantine
+                if config.s3Encrypt.in_temp_whitelist(account_id, bucket.name):
+                    issue.status = IssueStatus.Tempwhitelist
                 elif config.s3Encrypt.in_whitelist(account_id, bucket.name):
                     issue.status = IssueStatus.Whitelisted
                 else:

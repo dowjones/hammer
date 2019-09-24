@@ -47,11 +47,12 @@ class CleanSecurityGroups(object):
                 name_in_whitelist = self.config.sg.in_whitelist(account_id, f"{group_vpc_id}:{group_name}")
                 id_in_whitelist = self.config.sg.in_whitelist(account_id, group_id)
 
-                name_in_quarantine = self.config.sg.in_quarantine_list(account_id, f"{group_vpc_id}:{group_name}")
-                id_in_quarantine = self.config.sg.in_quarantine_list(account_id, group_id)
-                if name_in_quarantine or id_in_quarantine:
+                name_in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, f"{group_vpc_id}:{group_name}")
+                id_in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, group_id)
+                if name_in_temp_whitelist or id_in_temp_whitelist:
                     logging.debug(
-                        f"Skipping {group_name} / {group_id} (in quarantine list. Will remediate this issue in future)")
+                        f"Skipping '{group_name}' / '{group_id}' (in temporary whitelist items."
+                        f" Will remediate this issue in future)")
                     continue
 
                 if name_in_whitelist or id_in_whitelist:

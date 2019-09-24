@@ -38,12 +38,13 @@ class CreateTicketIamInactiveKeys:
                 username = issue.issue_details.username
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Quarantine]:
+                    if issue.status in [IssueStatus.Tempwhitelist]:
                         logging.debug(
-                            f"IAM Inactive access key issue '{key_id} / {username}' is added to quarantine list. ")
+                            f"IAM Inactive access key issue '{key_id} / {username}' is "
+                            f"added to temporary whitelist items.")
 
                         comment = (f"IAM Inactive access key issue '{key_id} / {username}' "
-                                   f"in '{account_name} / {account_id}' account is added to quarantine list")
+                                   f"in '{account_name} / {account_id}' account is added to temporary whitelist items.")
                         jira.update_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

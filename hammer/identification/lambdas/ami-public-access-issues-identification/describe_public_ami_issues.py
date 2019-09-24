@@ -59,8 +59,8 @@ def lambda_handler(event, context):
                     issue.issue_details.name = ami.name
                     issue.issue_details.region = region
 
-                    if config.publicAMIs.in_quarantine_list(account_id, ami.id):
-                        issue.status = IssueStatus.Quarantine
+                    if config.publicAMIs.in_temp_whitelist(account_id, ami.id):
+                        issue.status = IssueStatus.Tempwhitelist
                     elif config.publicAMIs.in_whitelist(account_id, ami.id):
                         issue.status = IssueStatus.Whitelisted
                     else:

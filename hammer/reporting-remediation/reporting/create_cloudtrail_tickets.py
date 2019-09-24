@@ -56,12 +56,12 @@ class CreateCloudTrailLoggingTickets:
                 region = issue.issue_id
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Quarantine]:
+                    if issue.status in [IssueStatus.Tempwhitelist]:
                         logging.debug(f"CloudTrail logging issue with '{region}' "
-                                      f"is added to quarantine list. ")
+                                      f"is added to temporary whitelist. ")
 
                         comment = (f"CloudTrail logging issue with '{region}' "
-                                   f"in '{account_name} / {account_id}' account is added to quarantine list")
+                                   f"in '{account_name} / {account_id}' account is added to temporary whitelist.")
                         jira.update_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

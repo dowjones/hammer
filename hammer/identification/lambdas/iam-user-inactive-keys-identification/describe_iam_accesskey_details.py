@@ -58,9 +58,9 @@ def lambda_handler(event, context):
                 issue.issue_details.last_used = key.last_used.isoformat()
                 issue.issue_details.create_date = key.create_date.isoformat()
 
-                if config.iamUserInactiveKeys.in_quarantine_list(account_id, key.id) \
-                        or config.iamUserInactiveKeys.in_quarantine_list(account_id, user.id):
-                    issue.status = IssueStatus.Quarantine
+                if config.iamUserInactiveKeys.in_temp_whitelist(account_id, key.id) \
+                        or config.iamUserInactiveKeys.in_temp_whitelist(account_id, user.id):
+                    issue.status = IssueStatus.Tempwhitelist
                 elif config.iamUserInactiveKeys.in_whitelist(account_id, key.id) \
                         or config.iamUserInactiveKeys.in_whitelist(account_id, user.id):
                     issue.status = IssueStatus.Whitelisted

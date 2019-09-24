@@ -60,8 +60,8 @@ def lambda_handler(event, context):
                     issue.issue_details.tags = domain.tags
                     issue.issue_details.policy = domain.policy
 
-                    if config.esPublicAccess.in_quarantine_list(account_id, domain.name):
-                        issue.status = IssueStatus.Quarantine
+                    if config.esPublicAccess.in_temp_whitelist(account_id, domain.name):
+                        issue.status = IssueStatus.Tempwhitelist
                     elif config.esPublicAccess.in_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Whitelisted
                     else:

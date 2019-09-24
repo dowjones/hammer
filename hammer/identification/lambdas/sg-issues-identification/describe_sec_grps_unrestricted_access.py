@@ -69,9 +69,9 @@ def lambda_handler(event, context):
                             if not ip_range.restricted:
                                 issue.add_perm(perm.protocol, perm.from_port, perm.to_port, ip_range.cidr, ip_range.status)
 
-                    if config.sg.in_quarantine_list(account_id, f"{sg.vpc_id}:{sg.name}")or \
-                       config.sg.in_quarantine_list(account_id, sg.id):
-                        issue.status = IssueStatus.Quarantine
+                    if config.sg.in_temp_whitelist(account_id, f"{sg.vpc_id}:{sg.name}")or \
+                       config.sg.in_temp_whitelist(account_id, sg.id):
+                        issue.status = IssueStatus.Tempwhitelist
                     elif config.sg.in_whitelist(account_id, f"{sg.vpc_id}:{sg.name}") or \
                        config.sg.in_whitelist(account_id, sg.id):
                         issue.status = IssueStatus.Whitelisted

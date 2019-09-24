@@ -42,10 +42,12 @@ class CleanIAMUserStaleKeys:
 
                 user_in_whitelist = self.config.iamUserKeysRotation.in_whitelist(account_id, username)
                 key_in_whitelist = self.config.iamUserKeysRotation.in_whitelist(account_id, key_id)
-                user_in_quarantine = self.config.iamUserKeysRotation.in_quarantine_list(account_id, username)
-                key_in_quarantine = self.config.iamUserKeysRotation.in_quarantine_list(account_id, key_id)
-                if user_in_quarantine or key_in_quarantine:
-                    logging.debug(f"Skipping {key_id} / {username} (in quarantine list. Will remediate this issue in future)")
+
+                user_in_temp_whitelist = self.config.iamUserKeysRotation.in_temp_whitelist(account_id, username)
+                key_in_temp_whitelist = self.config.iamUserKeysRotation.in_temp_whitelist(account_id, key_id)
+                if user_in_temp_whitelist or key_in_temp_whitelist:
+                    logging.debug(f"Skipping '{key_id} / {username}' (in temporary whitelist items. "
+                                  f"Will remediate this issue in future)")
                     continue
 
                 if user_in_whitelist or key_in_whitelist:

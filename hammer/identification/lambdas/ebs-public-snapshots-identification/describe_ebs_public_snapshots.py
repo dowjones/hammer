@@ -58,8 +58,8 @@ def lambda_handler(event, context):
                     issue.issue_details.volume_id = snapshot.volume_id
                     issue.issue_details.tags = snapshot.tags
 
-                    if config.ebsSnapshot.in_quarantine_list(account_id, snapshot.id):
-                        issue.status = IssueStatus.Quarantine
+                    if config.ebsSnapshot.in_temp_whitelist(account_id, snapshot.id):
+                        issue.status = IssueStatus.Tempwhitelist
                     elif config.ebsSnapshot.in_whitelist(account_id, snapshot.id):
                         issue.status = IssueStatus.Whitelisted
                     else:

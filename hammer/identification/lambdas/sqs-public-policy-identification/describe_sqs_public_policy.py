@@ -60,8 +60,8 @@ def lambda_handler(event, context):
                     issue.issue_details.region = queue.account.region
                     issue.issue_details.policy = queue.policy
 
-                    if config.sqspolicy.in_quarantine_list(account_id, queue.url):
-                        issue.status = IssueStatus.Quarantine
+                    if config.sqspolicy.in_temp_whitelist(account_id, queue.url):
+                        issue.status = IssueStatus.Tempwhitelist
                     elif config.sqspolicy.in_whitelist(account_id, queue.url):
                         issue.status = IssueStatus.Whitelisted
                     else:

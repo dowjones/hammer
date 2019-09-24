@@ -42,13 +42,13 @@ class CreateRedshiftPublicAccessTickets(object):
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Quarantine]:
+                    if issue.status in [IssueStatus.Tempwhitelist]:
                         logging.debug(f"Redshift publicly accessible cluster issue '{cluster_id}' "
-                                      f"is added to quarantine list. ")
+                                      f"is added to temporary whitelist items.")
 
                         comment = (f"Redshift publicly accessible cluster '{cluster_id}' issue "
                                    f"in '{account_name} / {account_id}' account, {region} "
-                                   f"region added to quarantine list")
+                                   f"region added to temporary whitelist items.")
                         jira.update_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment

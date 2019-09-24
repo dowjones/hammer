@@ -56,8 +56,8 @@ def lambda_handler(event, context):
                 issue.issue_details.tags = bucket.tags
                 issue.issue_details.policy = bucket.policy
 
-                if config.s3policy.in_quarantine_list(account_id, bucket.name):
-                    issue.status = IssueStatus.Quarantine
+                if config.s3policy.in_temp_whitelist(account_id, bucket.name):
+                    issue.status = IssueStatus.Tempwhitelist
                 elif config.s3policy.in_whitelist(account_id, bucket.name):
                     issue.status = IssueStatus.Whitelisted
                 else:

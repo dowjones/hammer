@@ -47,13 +47,13 @@ class CreateSQSPolicyIssueTickets:
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Quarantine]:
+                    if issue.status in [IssueStatus.Tempwhitelist]:
                         logging.debug(f"SQS queue public policy issue '{queue_name}' "
-                                      f"is added to quarantine list. ")
+                                      f"is added to temporary whitelist items.")
 
                         comment = (f"SQS queue public policy '{queue_name}' issue "
                                    f"in '{account_name} / {account_id}' account, {queue_region} "
-                                   f"region is added to quarantine list")
+                                   f"region is added to temporary whitelist items.")
                         jira.update_issue(
                             ticket_id=issue.jira_details.ticket,
                             comment=comment
