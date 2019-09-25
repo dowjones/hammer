@@ -31,7 +31,7 @@ class CleanElasticSearchPolicyPermissions:
 
         retention_period = self.config.esPublicAccess.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='esPublicAccessDomain')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.esPublicAccess.remediation_accounts.items():
