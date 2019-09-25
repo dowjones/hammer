@@ -30,7 +30,7 @@ class CleanRedshiftClusterUnencryption:
 
         retention_period = self.config.redshiftEncrypt.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='redshiftUnencrypted')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.aws.accounts.items():

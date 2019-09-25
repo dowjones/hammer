@@ -58,7 +58,7 @@ class JiraReporting(object):
     """ Base class for JIRA reporting """
     def __init__(self, config, module=''):
         self.config = config
-        self.jira = JiraOperations(self.config, module=module)
+        self.jira = JiraOperations(self.config)
         self.jira_labels = JiraLabels(config, module)
         self.module_jira_labels = self.jira_labels.module_labels
 
@@ -150,7 +150,7 @@ class JiraReporting(object):
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
-    def __init__(self, config, module=''):
+    def __init__(self, config):
         # do not print excess warnings
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         # JIRA configuration from config.json/DDB
