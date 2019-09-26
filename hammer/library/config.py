@@ -22,7 +22,7 @@ class Config(object):
                  whitelistFile="whitelist.json",
                  fixnowFile="fixnow.json",
                  ticketOwnersFile="ticket_owners.json",
-                 tempWhitelistFile="temp_whitelist_issues_list.json"):
+                 tempWhitelistFile="temp_whitelist_issues.json"):
         """
         :param configFile: local path to configuration file in json format
         :param configIniFile: local path to configuration file in ini format (is used in r&r EC2, build from EC2 userdata)
