@@ -285,7 +285,7 @@ class AMIAccess(object):
                 f")")
 
     def modify_image_attribute(self):
-        EC2Operations.modify_image_attribute(self.account.client("ec2"), self.id)
+        return EC2Operations.modify_image_attribute(self.account.client("ec2"), self.id)
 
 
 class PublicAMIChecker(object):
