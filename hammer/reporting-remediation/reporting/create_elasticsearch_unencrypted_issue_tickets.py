@@ -38,13 +38,15 @@ class CreateElasticSearchUnencryptedDomainTickets(object):
                 tags = issue.issue_details.tags
                 encrypted_at_rest = issue.issue_details.encrypted_at_rest
                 encrypted_at_transit = issue.issue_details.encrypted_at_transit
+
+                in_temp_whitelist = self.config.esEncrypt.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"Elasticsearch unencrypted domain issue '{domain_name}' "
                             f"is added to temporary whitelist items.")

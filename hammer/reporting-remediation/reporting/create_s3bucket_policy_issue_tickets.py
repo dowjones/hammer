@@ -39,13 +39,15 @@ class CreateS3BucketPolicyIssueTickets:
                 bucket_name = issue.issue_id
                 tags = issue.issue_details.tags
                 policy = issue.issue_details.policy
+
+                in_temp_whitelist = self.config.s3policy.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.issue_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (issue.status in [IssueStatus.Tempwhitelist] or in_temp_whitelist) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"S3 bucket public policy issue '{bucket_name}' "
                                       f"is added to temporary whitelist items.")
 
@@ -141,8 +143,10 @@ class CreateS3BucketPolicyIssueTickets:
                         f"*Bucket Owner*: {owner}\n"
                         f"\n")
 
-                    auto_remediation_date = (self.config.now + self.config.s3policy.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.s3policy.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.s3policy.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 

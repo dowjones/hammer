@@ -37,13 +37,15 @@ class CreateECSPrivilegedAccessIssueTickets(object):
                 privileged_container_names = issue.issue_details.privileged_container_names
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.ecs_privileged_access.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"ECS privileged access issue '{task_definition_name}' "
                             f"is added to temporary whitelist items.")

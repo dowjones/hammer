@@ -36,13 +36,16 @@ class CreatePublicAMIIssueTickets:
                 ami_id = issue.issue_id
                 ami_region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.publicAMIs.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.issue_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"AMI '{ami_id}' is added to temporary whitelist items.")
 
                         comment = (f"AMI '{ami_id}' public access issue "
@@ -131,8 +134,10 @@ class CreatePublicAMIIssueTickets:
                         f"*AMI Id*: {ami_id}\n"                        
                         f"\n")
 
-                    auto_remediation_date = (self.config.now + self.config.publicAMIs.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.publicAMIs.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.publicAMIs.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 

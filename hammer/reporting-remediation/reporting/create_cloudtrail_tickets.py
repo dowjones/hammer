@@ -54,9 +54,12 @@ class CreateCloudTrailLoggingTickets:
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, CloudTrailIssue)
             for issue in issues:
                 region = issue.issue_id
+
+                in_temp_whitelist = self.config.cloudtrails.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"CloudTrail logging issue with '{region}' "
                                       f"is added to temporary whitelist. ")
 

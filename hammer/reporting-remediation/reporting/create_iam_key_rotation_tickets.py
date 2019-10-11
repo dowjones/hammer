@@ -36,9 +36,11 @@ class CreateTicketIamKeyRotation:
             for issue in issues:
                 key_id = issue.issue_id
                 username = issue.issue_details.username
+
+                in_temp_whitelist = self.config.iamUserKeysRotation.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"IAM stale access key issue '{key_id} / {username}' "
                             f"is added to temporary whitelist items.")

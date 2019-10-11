@@ -37,13 +37,15 @@ class CreateElasticSearchDomainLoggingIssueTickets(object):
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
 
+                in_temp_whitelist = self.config.esLogging.in_temp_whitelist(account_id, issue.issue_id)
+
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"Elasticsearch logging issue '{domain_name}' is added to temporary whitelist items.")
 
@@ -108,7 +110,8 @@ class CreateElasticSearchDomainLoggingIssueTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    if self.config.esLogging.remediation:
+                    if self.config.esLogging.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.esLogging.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 

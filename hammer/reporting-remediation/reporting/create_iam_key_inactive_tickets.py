@@ -36,9 +36,11 @@ class CreateTicketIamInactiveKeys:
             for issue in issues:
                 key_id = issue.issue_id
                 username = issue.issue_details.username
+
+                in_temp_whitelist = self.config.iamUserInactiveKeys.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(
                             f"IAM Inactive access key issue '{key_id} / {username}' is "
                             f"added to temporary whitelist items.")
@@ -100,8 +102,10 @@ class CreateTicketIamInactiveKeys:
                         f"*Key last used*: {last_used}\n"
                         f"\n")
 
-                    auto_remediation_date = (self.config.now + self.config.iamUserInactiveKeys.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.iamUserInactiveKeys.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.iamUserInactiveKeys.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += f"*Recommendation*: Deactivate specified inactive user access key. "
 

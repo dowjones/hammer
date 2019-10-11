@@ -36,13 +36,15 @@ class CreateRedshiftLoggingIssueTickets(object):
                 cluster_id = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.redshift_logging.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Tempwhitelist] and issue.timestamps.temp_whitelisted is None:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
                         logging.debug(f"Redshift cluster logging '{cluster_id}' is added to temporary whitelist items.")
 
                         comment = (f"Redshift cluster logging '{cluster_id}' issue "
