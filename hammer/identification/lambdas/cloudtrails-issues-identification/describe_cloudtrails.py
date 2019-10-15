@@ -56,7 +56,10 @@ def lambda_handler(event, context):
                 issue.issue_details.disabled = checker.disabled
                 issue.issue_details.delivery_errors = checker.delivery_errors
                 issue.add_trails(checker.trails)
-                if config.cloudtrails.in_whitelist(account_id, region):
+
+                if config.cloudtrails.in_temp_whitelist(account_id, region):
+                    issue.status = IssueStatus.Tempwhitelist
+                elif config.cloudtrails.in_whitelist(account_id, region):
                     issue.status = IssueStatus.Whitelisted
                 else:
                     issue.status = IssueStatus.Open

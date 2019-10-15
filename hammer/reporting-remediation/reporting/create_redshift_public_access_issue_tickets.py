@@ -36,16 +36,40 @@ class CreateRedshiftPublicAccessTickets(object):
                 cluster_id = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.redshift_public_access.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} Redshift publicly accessible cluster  '{cluster_id}' issue")
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"Redshift publicly accessible cluster issue '{cluster_id}' "
+                                      f"is added to temporary whitelist items.")
 
-                        comment = (f"Closing {issue.status.value} Redshift publicly accessible cluster '{cluster_id}' issue "
+                        comment = (f"Redshift publicly accessible cluster '{cluster_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                        logging.debug(f"Closing {issue.status.value} Redshift publicly accessible "
+                                      f"cluster '{cluster_id}' issue")
+
+                        comment = (f"Closing {issue.status.value} Redshift publicly accessible cluster "
+                                   f"'{cluster_id}' issue "
                                    f"in '{account_name} / {account_id}' account, '{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
@@ -86,7 +110,8 @@ class CreateRedshiftPublicAccessTickets(object):
                         f"*Region*: {region}\n"
                         f"*Redshift Cluster ID*: {cluster_id}\n")
 
-                    if self.config.redshift_public_access.remediation:
+                    if self.config.redshift_public_access.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.redshift_public_access.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 

@@ -20,6 +20,8 @@ class IssueStatus(Enum):
     Resolved = "resolved"
     # set by reporting after closing ticket
     Closed = "closed"
+    # set by identification - issue still exists but was added to temporary whitelist_list for future remediation
+    Tempwhitelist = "tempwhitelist"
 
 
 class Details(object):
@@ -475,4 +477,17 @@ class Operations(object):
         :return: nothing
         """
         issue.timestamps.updated = issue.timestamps.reported
+        cls.put(ddb_table, issue)
+
+    @classmethod
+    def set_status_temp_whitelisted(cls, ddb_table, issue):
+        """
+        Put issue with closed status and updated closed timestamp
+
+        :param ddb_table: boto3 DDB table resource
+        :param issue: Issue instance
+
+        :return: nothing
+        """
+        issue.timestamps.temp_whitelisted = datetime.now(timezone.utc).isoformat()
         cls.put(ddb_table, issue)

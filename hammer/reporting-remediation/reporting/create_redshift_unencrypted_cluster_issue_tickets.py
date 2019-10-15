@@ -36,13 +36,36 @@ class CreateRedshiftUnencryptedInstanceTickets(object):
                 cluster_id = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.redshiftEncrypt.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist])\
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"Redshift unencrypted cluster issue '{cluster_id}' "
+                                      f"is added to temporary whitelist items.")
+
+                        comment = (f"Redshift unencrypted cluster '{cluster_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region is added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} Redshift unencrypted cluster  '{cluster_id}' issue")
 
                         comment = (f"Closing {issue.status.value} Redshift unencrypted cluster '{cluster_id}' issue "
@@ -88,7 +111,8 @@ class CreateRedshiftUnencryptedInstanceTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    if self.config.redshiftEncrypt.remediation:
+                    if self.config.redshiftEncrypt.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.redshiftEncrypt.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 

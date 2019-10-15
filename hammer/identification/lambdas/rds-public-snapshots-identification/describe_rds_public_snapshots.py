@@ -59,7 +59,10 @@ def lambda_handler(event, context):
                 issue.issue_details.region = snapshot.account.region
                 issue.issue_details.engine = snapshot.engine
                 issue.issue_details.tags = snapshot.tags
-                if config.rdsSnapshot.in_whitelist(account_id, snapshot.id):
+
+                if config.rdsSnapshot.in_temp_whitelist(account_id, snapshot.id):
+                    issue.status = IssueStatus.Tempwhitelist
+                elif config.rdsSnapshot.in_whitelist(account_id, snapshot.id):
                     issue.status = IssueStatus.Whitelisted
                 else:
                     issue.status = IssueStatus.Open

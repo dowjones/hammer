@@ -41,6 +41,12 @@ class CleanS3BucketUnencrypted:
 
                 in_whitelist = self.config.s3Encrypt.in_whitelist(account_id, bucket_name)
                 in_fixlist = True
+                in_temp_whitelist = self.config.s3Encrypt.in_temp_whitelist(account_id, issue.issue_id)
+                if in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{issue.issue_id}' (in temporary whitelist items. "
+                        f"Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")

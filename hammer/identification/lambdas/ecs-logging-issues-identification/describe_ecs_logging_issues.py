@@ -59,7 +59,9 @@ def lambda_handler(event, context):
                     issue.issue_details.disabled_logging_container_names = task_definition.disabled_logging_container_names
                     issue.issue_details.tags = task_definition.tags
 
-                    if config.ecs_logging.in_whitelist(account_id, task_definition.name):
+                    if config.ecs_logging.in_temp_whitelist(account_id, task_definition.name):
+                        issue.status = IssueStatus.Tempwhitelist
+                    elif config.ecs_logging.in_whitelist(account_id, task_definition.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

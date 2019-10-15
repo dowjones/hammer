@@ -59,7 +59,10 @@ def lambda_handler(event, context):
                     issue.issue_details.name = queue.name
                     issue.issue_details.region = queue.account.region
                     issue.issue_details.policy = queue.policy
-                    if config.sqspolicy.in_whitelist(account_id, queue.url):
+
+                    if config.sqspolicy.in_temp_whitelist(account_id, queue.url):
+                        issue.status = IssueStatus.Tempwhitelist
+                    elif config.sqspolicy.in_whitelist(account_id, queue.url):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

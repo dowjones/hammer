@@ -40,6 +40,12 @@ class CleanRedshiftPublicAccess:
                 cluster_id = issue.issue_id
 
                 in_whitelist = self.config.redshift_public_access.in_whitelist(account_id, cluster_id)
+                in_temp_whitelist = self.config.redshift_public_access.in_temp_whitelist(account_id, issue.issue_id)
+                if in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{issue.issue_id}' (in temporary whitelist items. "
+                        f"Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {cluster_id} (in whitelist)")
