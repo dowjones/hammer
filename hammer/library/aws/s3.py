@@ -248,6 +248,22 @@ class S3Operations(object):
         )
 
     @staticmethod
+    def update_bucket_acl(s3_client, bucket, acl):
+        """
+        Sets the permissions on a bucket using canned ACL.
+
+        :param s3_client: S3 boto3 client
+        :param bucket: S3 bucket name where to set ACL on
+        :param acl: updated access control policy with new grant.
+
+        :return: nothing
+        """
+        s3_client.put_bucket_acl(
+            Bucket=bucket,
+            AccessControlPolicy=acl
+        )
+
+    @staticmethod
     def set_bucket_encryption(s3_client, bucket, kms_master_key_id=None):
         """
         Sets the bucket encryption using Server side encryption.
