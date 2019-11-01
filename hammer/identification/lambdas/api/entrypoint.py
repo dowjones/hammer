@@ -8,7 +8,7 @@ import boto3
 
 from library.aws.utility import Account, DDB, Sns
 from library.config import Config
-from library.ddb_issues import Operations as IssueOperations
+from library.ddb_issues import Issue, Operations as IssueOperations
 from library.logger import set_logging
 from library import utility
 from responses import bad_request
@@ -168,6 +168,27 @@ def get_scan_results(request_id):
     }
 
 
+def check_resource(issue_type, account_id, issues_id):
+    config = Config()
+    main_account = Account(region=config.aws.region)
+    valid_issue_types = [module.section for module in config.modules]
+    if issue_type not in valid_issue_types:
+        return bad_request(f'Unknown issue type: {issue_type}')
+
+    issue_config = config.get_module_config_by_name(issue_type)
+    ddb_table = main_account.resource("dynamodb").Table(issue_config.ddb_table_name)
+    ddb_issue = Issue(account_id, issues_id)
+    issue = IssueOperations.find(ddb_table, ddb_issue)
+    if issue:
+        issue = issue.as_dict()
+    else:
+        issue = {}
+    return {
+        "statusCode": 200,
+        "body": json.dumps(issue, indent=4, default=utility.jsonEncoder)
+    }
+
+
 @logger
 def lambda_handler(event, context):
     try:
@@ -177,21 +198,25 @@ def lambda_handler(event, context):
         logging.exception("failed to parse payload")
         return bad_request(text="malformed payload")
 
-    account_id = payload.get("account_id", None)
-    regions = payload.get("regions", [])
-    security_features = payload.get("security_features", [])
-    tags = payload.get("tags", None)
-    ids = payload.get("ids", None)
-
     action = event.get("path", "")[1:]
     method = event.get("httpMethod")
     # do not forget to allow path in authorizer.py while extending this list
     if action.startswith('identify'):
+        account_id = payload.get("account_id", None)
+        regions = payload.get("regions", [])
+        security_features = payload.get("security_features", [])
+        tags = payload.get("tags", None)
+        ids = payload.get("ids", None)
         if method == "POST":
             return start_scan(account_id, regions, security_features, tags, ids)
         if method == "GET":
             # get request id from url path
             request_id = action.split('/')[1]
             return get_scan_results(request_id)
+    elif action.startswith('check'):
+        issue_type = payload.get('issue_type')
+        issue_id = payload.get('issue_id')
+        account_id = payload.get('account_id')
+        return check_resource(issue_type, account_id, issue_id)
     else:
         return bad_request(text="wrong action")

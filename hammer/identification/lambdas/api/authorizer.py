@@ -33,6 +33,7 @@ def lambda_handler(event, context):
     if len(apiGatewayArnTmp) == 5:
         full_path = '/identify/' + apiGatewayArnTmp[4]
         policy.allowMethod(HttpVerb.GET, full_path)
+    policy.allowMethod(HttpVerb.POST, '/check')
     policy.allowMethod(HttpVerb.POST, '/identify')
     policy.allowMethod(HttpVerb.POST, '/remediate')
 
