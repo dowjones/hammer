@@ -2,17 +2,23 @@ import io
 import logging
 import urllib3
 
-
 from collections import namedtuple
 from jira import JIRA
 from jira import JIRAError
 from library.utility import empty_converter
 
-
 NewIssue = namedtuple('NewIssue', [
     'ticket_id',
     'ticket_assignee_id'
-    ])
+])
+
+risk_priority_mapping = {
+    "Critical": "Blocker",
+    "High": "Critical",
+    "Medium": "Major",
+    "Low": "Minor",
+    "Info": "Trivial"
+}
 
 
 class JiraReporting(object):
@@ -23,7 +29,7 @@ class JiraReporting(object):
 
     def add_issue(self,
                   issue_summary, issue_description,
-                  priority, labels,
+                  risk, labels,
                   account_id,
                   owner=None,
                   bu=None, product=None,
@@ -42,9 +48,17 @@ class JiraReporting(object):
             "summary": issue_summary,
             "description": issue_description,
             "issuetype": {"name": self.config.jira.issue_type},
-            "priority": {"name": priority},
             "labels": labels
         }
+
+        if self.config.jira.risk_field_id:
+            issue_data[self.config.jira.risk_field_id] = {
+                self.config.jira.risk_field_param: risk
+            }
+            issue_data["priority"] = {"name": 'Major'}
+        else:
+            issue_data["priority"] = {"name": risk_priority_mapping[risk]}
+
         ticket_id = self.jira.create_ticket(issue_data)
 
         parent_ticket_id = self.config.owners.ticket_parent(
@@ -113,6 +127,7 @@ class JiraReporting(object):
 
     def add_label(self, ticket_id, label):
         self.jira.add_label(ticket_id, label)
+
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
@@ -330,8 +345,8 @@ class JiraOperations(object):
     def add_watcher(self, ticket_id, user):
         """
         Adding jira ticket watcher.
-        
-        :param ticket_id: jira ticket id 
+
+        :param ticket_id: jira ticket id
         :param user: watcher user id
         :return: nothing
         """

@@ -90,9 +90,10 @@ class CreateTicketIamKeyRotation:
                                      f"in '{account_name} / {account_id}' account")
 
                     create_date = dateutil.parser.parse(issue.issue_details.create_date).replace(tzinfo=None).isoformat(' ', 'minutes')
+                    issue_risk = "Low"
                     issue_description = (
                         f"IAM access key has not been rotated for {self.config.iamUserKeysRotation.rotation_criteria_days.days} days.\n\n"
-                        f"*Risk*: Low\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*User Name*: {username}\n"
@@ -112,7 +113,7 @@ class CreateTicketIamKeyRotation:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["iam-key-rotation"],
+                            risk=issue_risk, labels=["iam-key-rotation"],
                             account_id=account_id,
                         )
                     except Exception:

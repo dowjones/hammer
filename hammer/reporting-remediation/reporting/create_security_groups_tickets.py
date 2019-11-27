@@ -375,14 +375,7 @@ class CreateSecurityGroupsTickets(object):
 
                     open_port_details = self.build_open_ports_table_jira(issue.issue_details.perms)
 
-                    account_details = (f"*Risk*: High\n\n"
-                                       f"*Account Name*: {account_name}\n"
-                                       f"*Account ID*: {account_id}\n"
-                                       f"*SG Name*: {group_name}\n"
-                                       f"*SG ID*: {group_id}\n"
-                                       f"*Region*: {group_region}\n")
 
-                    account_details += f"*VPC*: {group_vpc_id}\n\n" if group_vpc_id else "\n"
 
                     account = Account(id=account_id,
                                       name=account_name,
@@ -405,6 +398,8 @@ class CreateSecurityGroupsTickets(object):
                     redshift_client = account.client("redshift") if account.session is not None else None
 
                     es_client = account.client("es") if account.session is not None else None
+
+                    issue_risk = "High"
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
@@ -476,7 +471,7 @@ class CreateSecurityGroupsTickets(object):
                         source_description = "allows access from some definite public ip addresses or networks"
 
                     if sg_public:
-                        priority = "Critical"
+                        issue_risk = 'Critical'
                         summary_status = "Internet"
                         issue_description = (f"Security group has EC2 instances in public subnets "
                                              f"with public IP address attached and "
@@ -495,7 +490,7 @@ class CreateSecurityGroupsTickets(object):
                             f"critical services.\n"
                         )
                     elif sg_blind_public:
-                        priority = "Critical"
+                        issue_risk = 'Critical'
                         summary_status = "Internet"
                         issue_description = (f"Security group has EC2 instances in private subnets "
                                              f"with public IP address attached and "
@@ -509,7 +504,7 @@ class CreateSecurityGroupsTickets(object):
                                   f"instances when someone is probing the public IP of the instances. "
                                   f"However, there will be no return traffic due to the lack of an IGW.\n")
                     elif not sg_in_use:
-                        priority = "Minor"
+                        issue_risk = 'Medium'
                         summary_status = "Unused"
                         issue_description = (f"Security group has no EC2 instances attached and "
                                              f"{source_description} "
@@ -520,7 +515,6 @@ class CreateSecurityGroupsTickets(object):
                                   f"opportunities for malicious activity (hacking, denial-of-service attacks, "
                                   f"loss of data).\n")
                     else:
-                        priority = "Major"
                         summary_status = "Intranet"
                         issue_description = (
                             f"Security group has EC2 instances in in private subnets and "
@@ -533,6 +527,15 @@ class CreateSecurityGroupsTickets(object):
                                   f"services within the network, thus providing lateral movement.\n")
 
                     tags_table = JiraOperations.build_tags_table(tags)
+
+                    account_details = (f"*Risk*: {issue_risk}\n\n"
+                                       f"*Account Name*: {account_name}\n"
+                                       f"*Account ID*: {account_id}\n"
+                                       f"*SG Name*: {group_name}\n"
+                                       f"*SG ID*: {group_id}\n"
+                                       f"*Region*: {group_region}\n")
+
+                    account_details += f"*VPC*: {group_vpc_id}\n\n" if group_vpc_id else "\n"
 
                     issue_description = (
                         f"{issue_description}"
@@ -579,7 +582,7 @@ class CreateSecurityGroupsTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority=priority, labels=["insecure-services"],
+                            risk=issue_risk, labels=["insecure-services"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

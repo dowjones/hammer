@@ -112,9 +112,11 @@ class CreateRDSPublicSnapshotTickets(object):
                     issue_summary = (f"RDS public snapshot '{snapshot_id}'"
                                      f"in '{account_name} / {account_id}' account{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"The RDS snapshot is marked as public.\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*Region*: {region}\n"
@@ -141,7 +143,7 @@ class CreateRDSPublicSnapshotTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["rds-public-snapshots"],
+                            risk=issue_risk, labels=["rds-public-snapshots"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

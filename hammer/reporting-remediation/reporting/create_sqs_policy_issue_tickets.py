@@ -137,11 +137,13 @@ class CreateSQSPolicyIssueTickets:
                                      f"in '{account_name} / {account_id}' account, '{queue_region}' region"
                                      f"{' [' + bu + ']' if bu else ''}")
 
+                    issue_risk = "High"
+
                     issue_description = (
                         f"Queue policy allows unrestricted public access.\n\n"
                         f"*Threat*: "
                         f"This creates potential security vulnerabilities by allowing anyone to add, modify, or remove items in a SQS.\n\n"
-                        f"*Risk*: High\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*SQS queue url*: {queue_url}\n"
@@ -170,7 +172,7 @@ class CreateSQSPolicyIssueTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["publicsqs"],
+                            risk=issue_risk, labels=["publicsqs"],
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

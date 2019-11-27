@@ -91,9 +91,10 @@ class CreateTicketIamInactiveKeys:
 
                     create_date = dateutil.parser.parse(issue.issue_details.create_date).replace(tzinfo=None).isoformat(' ', 'minutes')
                     last_used = dateutil.parser.parse(issue.issue_details.last_used).replace(tzinfo=None).isoformat(' ', 'minutes')
+                    issue_risk = "Low"
                     issue_description = (
                         f"IAM access key has not been used for {self.config.iamUserInactiveKeys.inactive_criteria_days.days} days.\n\n"
-                        f"*Risk*: Low\n\n"
+                        f"*Risk*: {issue_risk}\n\n"
                         f"*Account Name*: {account_name}\n"
                         f"*Account ID*: {account_id}\n"
                         f"*User Name*: {username}\n"
@@ -116,7 +117,7 @@ class CreateTicketIamInactiveKeys:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["inactive-iam-keys"],
+                            risk=issue_risk, labels=["inactive-iam-keys"],
                             account_id=account_id,
                         )
                     except Exception:

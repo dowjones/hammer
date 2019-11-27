@@ -300,6 +300,14 @@ class JiraConfig(object):
     def text_field_character_limit(self):
         return self._config.get("text_field_character_limit", 0)
 
+    @property
+    def risk_field_id(self):
+        return self._config.get("risk_field_id", "")
+
+    @property
+    def risk_field_param(self):
+        return self._config.get("risk_field_param", "")
+
     def __getattr__(self, key):
         """ Search for any attribute in config, if not found - raise exception """
         if key in self._config:
