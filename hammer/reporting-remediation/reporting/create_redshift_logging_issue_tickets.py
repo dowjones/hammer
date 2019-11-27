@@ -36,13 +36,34 @@ class CreateRedshiftLoggingIssueTickets(object):
                 cluster_id = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.redshift_logging.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"Redshift cluster logging '{cluster_id}' is added to temporary whitelist items.")
+
+                        comment = (f"Redshift cluster logging '{cluster_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} Redshift logging '{cluster_id}' issue")
 
                         comment = (f"Closing {issue.status.value} Redshift cluster logging '{cluster_id}' issue "

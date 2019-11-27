@@ -42,6 +42,13 @@ class CleanIAMUserInactiveKeys:
 
                 user_in_whitelist = self.config.iamUserInactiveKeys.in_whitelist(account_id, username)
                 key_in_whitelist = self.config.iamUserInactiveKeys.in_whitelist(account_id, key_id)
+                user_in_temp_whitelist = self.config.iamUserInactiveKeys.in_temp_whitelist(account_id, username)
+                key_in_temp_whitelist = self.config.iamUserInactiveKeys.in_temp_whitelist(account_id, key_id)
+                if user_in_temp_whitelist or key_in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{key_id} / {username}' (in temporary whitelist items. "
+                        f"Will remediate this issue in future)")
+                    continue
 
                 if user_in_whitelist or key_in_whitelist:
                     logging.debug(f"Skipping '{key_id} / {username}' (in whitelist)")

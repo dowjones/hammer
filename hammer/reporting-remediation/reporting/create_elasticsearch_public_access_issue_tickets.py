@@ -40,17 +40,42 @@ class CreateElasticSearchPublicAccessDomainTickets(object):
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 policy =  issue.issue_details.policy
+
+                in_temp_whitelist = self.config.esPublicAccess.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
-                        logging.debug(f"Closing {issue.status.value} Elasticsearch publicly accessible domain '{domain_name}' issue")
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(
+                            f"Elasticsearch publicly accessible domain issue '{domain_name}' "
+                            f"is added to temporary whitelist items.")
 
-                        comment = (f"Closing {issue.status.value} Elasticsearch publicly accessible domain '{domain_name}' issue "
-                                    f"in '{account_name} / {account_id}' account, '{region}' region")
+                        comment = (f"Elasticsearch publicly accessible domain issue '{domain_name}' "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                        logging.debug(f"Closing {issue.status.value} Elasticsearch publicly accessible domain '"
+                                      f"{domain_name}' issue")
+
+                        comment = (f"Closing {issue.status.value} Elasticsearch publicly accessible domain '"
+                                   f"{domain_name}' issue in '{account_name} / {account_id}' account,'{region}' region")
                         if issue.status == IssueStatus.Whitelisted:
                             # Adding label with "whitelisted" to jira ticket.
                             jira.add_label(
@@ -90,9 +115,11 @@ class CreateElasticSearchPublicAccessDomainTickets(object):
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
-                    if self.config.esPublicAccess.remediation:
+                    if self.config.esPublicAccess.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.esPublicAccess.issue_retention_date).date()
-                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}" \
+                                             f"{{color}}\n\n"
 
                     issue_description += (
                         f"*Recommendation*: "

@@ -1,5 +1,5 @@
 {
-	"__comment__": "Contains dictionary with security issues to whitelist (do not remediate automatically) grouped by issue type and accounts. Put your account id as a key for desired security issue type and put a list with issues to ignore as a value.",
+	"__comment__": "Contains dictionary with security issues to quarantine (list of issues skipped now and will remediate in future) grouped by issue type and accounts. Put your account id as a key for desired security issue type and put a list with issues to ignore as a value.",
 	"cloudtrails": {
 		"__comment__": "Detects issues with CloudTrail (logging disabled or has issues with permissions). Key - account id, values - AWS regions.",
 		"123456789012": ["eu-west-1", "us-east-2"]
@@ -37,14 +37,20 @@
 		"123456789012": ["arn:aws:rds:eu-central-1:123456789012:snapshot:public", "arn:aws:rds:eu-west-1:123456789012:snapshot:rds:snapshot1"]
 	},
 	"ec2_public_ami": {
+		"__comment__": "Detects public AMI issues (with 'all' in 'restore' attribute). Key - account id, values - AMI IDs.",
+		"123456789012": [""]
 	},
     "sqs_public_access":{
-		"__comment__": "Detects public SQS polices (with 'all' in 'restore' attribute). Key - account id, values - SQS ARNs.",
+		"__comment__": "Detects public SQS polices (with 'all' in 'restore' attribute). Key - account id, values - SQS names.",
 		"123456789012": [""]
 	},
     "s3_encryption": {
+		"__comment__": "Detects Unencrypted s3 buckets (with 'all' in 'restore' attribute). Key - account id, values - S3 bucket names.",
+		"123456789012": [""]
 	},
     "rds_encryption": {
+		"__comment__": "Detects unencrypted RDS instances (with 'all' in 'restore' attribute). Key - account id, values - Instance ARNs.",
+		"123456789012": [""]
 	},
 	"redshift_public_access":{
 		"__comment__": "Detects publicly accessible Redshift Clusters.",
@@ -66,20 +72,20 @@
 		"__comment__": "Detects ECS task definitions which are configured with external image source - task definitions ARNs.",
 		"1234567890123": ["arn:aws:ecs:us-east-1:1234567890123:task-definition/test-admin:2993"]
 	},
-  "redshift_logging": {
+    "redshift_logging": {
 		"__comment__": "Detects Redshift clusters which are audit logging is not enabled.",
 		"123456789012": ["test-cluster"]
-  },
-  "es_domain_logging": {
+    },
+    "es_domain_logging": {
       "__comment__": "Detects Elasticsearch domains which are not enabled logging - domain ARNs.",
 	    "1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
-  },
-  "es_unencrypted_domain": {
+    },
+    "es_unencrypted_domain": {
       "__comment__": "Detects Unencrypted Elasticsearch domains - domain ARNs.",
 		  "1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
-  },
-	"es_public_access_domain": {
+    },
+    "es_public_access_domain": {
       "__comment__": "Detects Unencrypted Elasticsearch publicly accessible domains - domain ARNs.",
 	  	"1234567890123": ["arn:aws:es:us-east-2:1234567890123:domain/new-domain"]
-  }
+    }
 }

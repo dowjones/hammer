@@ -36,13 +36,35 @@ class CreatePublicAMIIssueTickets:
                 ami_id = issue.issue_id
                 ami_region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.publicAMIs.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.issue_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"AMI '{ami_id}' is added to temporary whitelist items.")
+
+                        comment = (f"AMI '{ami_id}' public access issue "
+                                   f"in '{account_name} / {account_id}' account, {ami_region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} AMI '{ami_id}' public access issue")
 
                         comment = (f"Closing {issue.status.value} AMI '{ami_id}' public access issue "
@@ -112,8 +134,10 @@ class CreatePublicAMIIssueTickets:
                         f"*AMI Id*: {ami_id}\n"                        
                         f"\n")
 
-                    auto_remediation_date = (self.config.now + self.config.publicAMIs.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.publicAMIs.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.publicAMIs.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 

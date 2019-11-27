@@ -37,13 +37,35 @@ class CreateECSExternalImageSourceIssueTickets(object):
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
                 container_image_details = issue.issue_details.container_image_details
+
+                in_temp_whitelist = self.config.ecs_external_image_source.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"ECS external image source '{task_definition_name}' "
+                                      f"is added to temporary whitelist items. ")
+
+                        comment = (f"ECS external image source '{task_definition_name}' "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} ECS external image source '{task_definition_name}' issue")
 
                         comment = (f"Closing {issue.status.value} ECS external image source '{task_definition_name}' issue "
