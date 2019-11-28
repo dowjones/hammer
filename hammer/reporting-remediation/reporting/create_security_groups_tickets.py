@@ -268,13 +268,36 @@ class CreateSecurityGroupsTickets(object):
                 group_region = issue.issue_details.region
                 group_vpc_id = issue.issue_details.vpc_id
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"Insecure security group issue '{group_name} / {group_id}' "
+                                      f"is added to temporary whitelist items.")
+
+                        comment = (f"Insecure security group '{group_name} / {group_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {group_region} "
+                                   f"region is added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} security group '{group_name} / {group_id}' issue")
 
                         comment = (f"Closing {issue.status.value} security group '{group_name} / {group_id}' issue "
@@ -498,7 +521,8 @@ class CreateSecurityGroupsTickets(object):
                         f"{threat}"
                         f"{account_details}")
 
-                    if status == RestrictionStatus.OpenCompletely:
+                    if (status == RestrictionStatus.OpenCompletely) \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 

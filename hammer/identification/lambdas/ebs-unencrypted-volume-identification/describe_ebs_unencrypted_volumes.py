@@ -59,7 +59,10 @@ def lambda_handler(event, context):
                     issue.issue_details.state = volume.state
                     issue.issue_details.attachments = volume.attachments
                     issue.issue_details.tags = volume.tags
-                    if config.ebsVolume.in_whitelist(account_id, volume.id):
+
+                    if config.ebsVolume.in_temp_whitelist(account_id, volume.id):
+                        issue.status = IssueStatus.Tempwhitelist
+                    elif config.ebsVolume.in_whitelist(account_id, volume.id):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open

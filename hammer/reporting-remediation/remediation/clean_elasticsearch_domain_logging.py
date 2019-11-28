@@ -41,6 +41,11 @@ class CleanElasticSearchDomainLogging:
                 domain_name = issue.issue_id
 
                 in_whitelist = self.config.esLogging.in_whitelist(account_id, domain_name)
+                in_temp_whitelist = self.config.esLogging.in_temp_whitelist(account_id, domain_name)
+                if in_temp_whitelist:
+                    logging.debug(f"Skipping '{domain_name}' (in temporary whitelist items. "
+                                  f"Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {domain_name} (in whitelist)")

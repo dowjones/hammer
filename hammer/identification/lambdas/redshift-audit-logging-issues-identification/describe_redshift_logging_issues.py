@@ -56,7 +56,10 @@ def lambda_handler(event, context):
                     issue = RedshiftLoggingIssue(account_id, cluster.name)
                     issue.issue_details.tags = cluster.tags
                     issue.issue_details.region = cluster.account.region
-                    if config.redshift_logging.in_whitelist(account_id, cluster.name):
+
+                    if config.redshift_logging.in_temp_whitelist(account_id, cluster.name):
+                        issue.status = IssueStatus.Tempwhitelist
+                    elif config.redshift_logging.in_whitelist(account_id, cluster.name):
                         issue.status = IssueStatus.Whitelisted
                     else:
                         issue.status = IssueStatus.Open
