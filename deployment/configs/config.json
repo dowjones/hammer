@@ -161,5 +161,9 @@
         "ddb.table_name": "hammer-rds-unencrypted",
         "topic_name": "hammer-describe-rds-encryption-lambda",
         "reporting": true
-    }
+    },
+    "whitelist_ddb": {
+       "enabled":true,
+       "ddb.table_name": "prod-hammer-whitelist"
+   }
 }

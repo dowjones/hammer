@@ -8,6 +8,7 @@ from library.aws.iam import IAMKeyChecker
 from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, IAMKeyInactiveIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -57,10 +58,7 @@ def lambda_handler(event, context):
                 issue.issue_details.username = user.id
                 issue.issue_details.last_used = key.last_used.isoformat()
                 issue.issue_details.create_date = key.create_date.isoformat()
-                if config.iamUserInactiveKeys.in_whitelist(account_id, key.id) or config.iamUserInactiveKeys.in_whitelist(account_id, user.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
+                issue.status = whitelist(account_id, "iamUserInactiveKeys", key.id, user.id).is_whitelisted()
                 logging.debug(f"Setting {key.id}/{user.id} status {issue.status}")
                 IssueOperations.update(ddb_table, issue)
                 # remove issue id from open_issues (if exists)

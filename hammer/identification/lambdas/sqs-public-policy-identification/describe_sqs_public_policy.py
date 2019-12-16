@@ -8,6 +8,7 @@ from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, SQSPolicyIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.aws.utility import DDB, Sns
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -59,10 +60,7 @@ def lambda_handler(event, context):
                     issue.issue_details.name = queue.name
                     issue.issue_details.region = queue.account.region
                     issue.issue_details.policy = queue.policy
-                    if config.sqspolicy.in_whitelist(account_id, queue.url):
-                        issue.status = IssueStatus.Whitelisted
-                    else:
-                        issue.status = IssueStatus.Open
+                    issue.status = whitelist(account_id, "sqspolicy", queue.url).is_whitelisted()
                     logging.debug(f"Setting {queue.name} status {issue.status}")
                     IssueOperations.update(ddb_table, issue)
                     # remove issue id from issues_list_from_db (if exists)

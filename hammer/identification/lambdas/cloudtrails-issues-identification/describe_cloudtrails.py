@@ -9,6 +9,7 @@ from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, CloudTrailIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.aws.utility import DDB, Sns
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -56,10 +57,7 @@ def lambda_handler(event, context):
                 issue.issue_details.disabled = checker.disabled
                 issue.issue_details.delivery_errors = checker.delivery_errors
                 issue.add_trails(checker.trails)
-                if config.cloudtrails.in_whitelist(account_id, region):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
+                issue.status = whitelist(account_id, "cloudtrails", region).is_whitelisted()
                 logging.debug(f"Setting {region} status {issue.status}")
                 IssueOperations.update(ddb_table, issue)
             # issue exists in ddb and was fixed

@@ -8,6 +8,7 @@ from library.aws.iam import IAMKeyChecker
 from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, IAMKeyRotationIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -56,10 +57,7 @@ def lambda_handler(event, context):
                 issue = IAMKeyRotationIssue(account_id, key.id)
                 issue.issue_details.username = user.id
                 issue.issue_details.create_date = key.create_date.isoformat()
-                if config.iamUserKeysRotation.in_whitelist(account_id, key.id) or config.iamUserKeysRotation.in_whitelist(account_id, user.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
+                issue.status = whitelist(account_id, "iamUserKeysRotation", key.id, user.id).is_whitelisted()
                 logging.debug(f"Setting {key.id}/{user.id} status {issue.status}")
                 IssueOperations.update(ddb_table, issue)
                 # remove issue id from issues_list_from_db (if exists)

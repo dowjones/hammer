@@ -62,7 +62,8 @@ class Config(object):
         self.s3Encrypt = ModuleConfig(self._config, "s3_encryption")
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
-
+         # Whitelist DDB config
+        self.whitelistDDB = ModuleConfig(self._config, "whitelist_ddb")
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
 
