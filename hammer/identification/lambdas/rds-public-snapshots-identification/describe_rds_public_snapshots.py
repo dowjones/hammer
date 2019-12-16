@@ -9,6 +9,7 @@ from library.aws.utility import Account
 from library.ddb_issues import IssueStatus, RdsPublicSnapshotIssue
 from library.ddb_issues import Operations as IssueOperations
 from library.aws.utility import DDB, Sns
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -59,10 +60,7 @@ def lambda_handler(event, context):
                 issue.issue_details.region = snapshot.account.region
                 issue.issue_details.engine = snapshot.engine
                 issue.issue_details.tags = snapshot.tags
-                if config.rdsSnapshot.in_whitelist(account_id, snapshot.id):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
+                issue.status = whitelist(account_id, "rdsSnapshot", snapshot.id).is_whitelisted()
                 logging.debug(f"Setting {snapshot.id} status {issue.status}")
                 IssueOperations.update(ddb_table, issue)
                 # remove issue id from issues_list_from_db (if exists)

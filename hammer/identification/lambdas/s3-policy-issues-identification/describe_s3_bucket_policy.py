@@ -7,6 +7,7 @@ from library.aws.s3 import S3BucketsPolicyChecker
 from library.aws.utility import Account, DDB
 from library.ddb_issues import IssueStatus, S3PolicyIssue
 from library.ddb_issues import Operations as IssueOperations
+from library.aws.whitelist import ddb_whitelist as whitelist
 
 
 def lambda_handler(event, context):
@@ -54,11 +55,8 @@ def lambda_handler(event, context):
                 issue = S3PolicyIssue(account_id, bucket.name)
                 issue.issue_details.owner = bucket.owner
                 issue.issue_details.tags = bucket.tags
-                issue.issue_details.policy = bucket.policy
-                if config.s3policy.in_whitelist(account_id, bucket.name):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
+                issue.issue_details.policy = bucket.
+                issue.status = whitelist(account_id, "s3policy", bucket.name).is_whitelisted()
                 logging.debug(f"Setting {bucket.name} status {issue.status}")
                 IssueOperations.update(ddb_table, issue)
                 # remove issue id from issues_list_from_db (if exists)
