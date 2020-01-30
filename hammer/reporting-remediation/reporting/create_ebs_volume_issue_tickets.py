@@ -74,7 +74,7 @@ class CreateEBSUnencryptedVolumeTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='ebsVolume')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.ebsVolume.accounts.items():
@@ -205,7 +205,7 @@ class CreateEBSUnencryptedVolumeTickets(object):
                     # try:
                     #     response = jira.add_issue(
                     #         issue_summary=issue_summary, issue_description=issue_description,
-                    #         priority="Major", labels=["unencrypted-ebs-volumes"],
+                    #         priority="Major",
                     #         owner=owner,
                     #         account_id=account_id,
                     #         bu=bu, product=product,

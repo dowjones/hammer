@@ -31,7 +31,7 @@ class CleanElasticSearchDomainLogging:
 
         retention_period = self.config.esLogging.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='esDomainLogging')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.esLogging.remediation_accounts.items():

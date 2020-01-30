@@ -30,7 +30,7 @@ class CleanRedshiftPublicAccess:
 
         retention_period = self.config.redshift_public_access.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='redshiftPublicAccess')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.aws.accounts.items():

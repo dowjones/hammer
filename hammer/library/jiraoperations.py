@@ -2,35 +2,80 @@ import io
 import logging
 import urllib3
 
-
 from collections import namedtuple
 from jira import JIRA
 from jira import JIRAError
 from library.utility import empty_converter
 
-
 NewIssue = namedtuple('NewIssue', [
     'ticket_id',
     'ticket_assignee_id'
-    ])
+])
+
+
+class JiraLabels(object):
+    """ Base class for JIRA tickets labeling """
+    DEFAULT_LABELS = {
+        'cloudtrails': ['cloudtrail-issue'],
+        'ebsSnapshot': ['ebs-public-snapshot'],
+        'ebsVolume': ['ebs-unencrypted-volume'],
+        'ecsExternalImageSource': ['ecs-external-image'],
+        'ecsLogging': ['ecs-logging'],
+        'ecsPrivilegedAccess': ['ecs-privileged-access'],
+        'esDomainLogging': ['es-domain-logging'],
+        'esPublicAccessDomain': ['es-public-access-domain'],
+        'esUnencryptedDomain': ['es-unencrypted-domain'],
+        'iamUserInactiveKeys': ['iam-key-inactive'],
+        'iamUserKeysRotation': ['iam-key-rotation'],
+        'publicAMIs': ['public-ami'],
+        'rdsSnapshot': ['rds-public-snapshot'],
+        'rdsEncrypt': ['rds-unencrypted'],
+        'redshiftLogging': ['redshift-logging'],
+        'redshiftPublicAccess': ['redshift-public-access'],
+        'redshiftUnencrypted': ['redshift-encryption'],
+        's3Encrypt': ['s3-unencrypted'],
+        's3acl': ['s3-public-acl'],
+        's3policy': ['s3-public-policy'],
+        'sg': ['insecure-services'],
+        'sqspolicy': ['sqs-public-policy']
+    }
+
+    def __init__(self, config, module=''):
+        self.config = config
+        self.module = module
+        self.module_jira = getattr(config, module) if hasattr(config, module) else False
+        self.module_jira_labels = self.module_jira.labels if hasattr(self.module_jira, 'labels') else False
+
+    @property
+    def module_labels(self):
+        if self.module_jira_labels:
+            return self.module_jira_labels
+        else:
+            return self.DEFAULT_LABELS.get(self.module, '')
 
 
 class JiraReporting(object):
     """ Base class for JIRA reporting """
-    def __init__(self, config):
+    def __init__(self, config, module=''):
         self.config = config
         self.jira = JiraOperations(self.config)
+        self.jira_labels = JiraLabels(config, module)
+        self.module_jira_labels = self.jira_labels.module_labels
 
+    def _jira_enabled(func):
+        def decorated(self, *args, **kwargs):
+            if self.config.jira.enabled:
+                return func(self, *args, **kwargs)
+        return decorated
+
+    @_jira_enabled
     def add_issue(self,
                   issue_summary, issue_description,
-                  priority, labels,
+                  priority,
                   account_id,
                   owner=None,
                   bu=None, product=None,
                   ):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return None
 
         project = self.config.owners.ticket_project(
             bu=bu, product=product,
@@ -43,7 +88,7 @@ class JiraReporting(object):
             "description": issue_description,
             "issuetype": {"name": self.config.jira.issue_type},
             "priority": {"name": priority},
-            "labels": labels
+            "labels": self.module_jira_labels
         }
         ticket_id = self.jira.create_ticket(issue_data)
 
@@ -74,36 +119,24 @@ class JiraReporting(object):
         return NewIssue(ticket_id=ticket_id,
                         ticket_assignee_id=ticket_assignee_id)
 
+    @_jira_enabled
     def close_issue(self, ticket_id, comment):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         self.jira.add_comment(ticket_id, comment)
         self.jira.close_issue(ticket_id)
         logging.debug(f"Closed issue ({self.jira.ticket_url(ticket_id)})")
 
+    @_jira_enabled
     def update_issue(self, ticket_id, comment):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         # TODO: reopen ticket if closed
         self.jira.add_comment(ticket_id, comment)
         logging.debug(f"Updated issue {self.jira.ticket_url(ticket_id)}")
 
+    @_jira_enabled
     def add_attachment(self, ticket_id, filename, text):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         return self.jira.add_attachment(ticket_id, filename, text)
 
+    @_jira_enabled
     def remediate_issue(self, ticket_id, comment, reassign):
-        # TODO: move to decorator
-        if not self.config.jira.enabled:
-            return
-
         if reassign:
             self.jira.assign_user(ticket_id, self.jira.current_user)
         self.jira.add_comment(ticket_id, comment)
@@ -113,6 +146,7 @@ class JiraReporting(object):
 
     def add_label(self, ticket_id, label):
         self.jira.add_label(ticket_id, label)
+
 
 class JiraOperations(object):
     """ Base class for interaction with JIRA """
@@ -330,7 +364,7 @@ class JiraOperations(object):
     def add_watcher(self, ticket_id, user):
         """
         Adding jira ticket watcher.
-        
+
         :param ticket_id: jira ticket id 
         :param user: watcher user id
         :return: nothing

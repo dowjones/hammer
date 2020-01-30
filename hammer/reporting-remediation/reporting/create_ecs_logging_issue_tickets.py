@@ -26,7 +26,7 @@ class CreateECSLoggingIssueTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='ecsLogging')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.ecs_logging.accounts.items():
@@ -132,7 +132,7 @@ class CreateECSLoggingIssueTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["ecs-logging"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

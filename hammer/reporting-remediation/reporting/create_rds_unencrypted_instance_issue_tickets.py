@@ -26,7 +26,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='rdsEncrypt')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.aws.accounts.items():
@@ -137,7 +137,7 @@ class CreateRDSUnencryptedInstanceTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["rds-unencrypted-instances"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,
