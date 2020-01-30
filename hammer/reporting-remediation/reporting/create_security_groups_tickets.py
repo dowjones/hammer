@@ -3,10 +3,7 @@ Class to create jira tickets for security group issues.
 """
 import sys
 import logging
-import warnings
 
-from functools import lru_cache
-from ipwhois import IPWhois
 from collections import Counter
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
@@ -24,6 +21,7 @@ from library.aws.ecs import ECSClusterOperations
 from library.aws.redshift import RedshiftClusterOperations
 from library.aws.elasticsearch import ElasticSearchOperations
 from library.utility import SingletonInstance, SingletonInstanceException
+from library.utility import get_registrant
 
 
 class CreateSecurityGroupsTickets(object):
@@ -33,26 +31,9 @@ class CreateSecurityGroupsTickets(object):
         self.config = config
 
     @staticmethod
-    @lru_cache(maxsize=128)
     def get_registrant(cidr):
-        ip = cidr.split("/")[0]
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                whois = IPWhois(ip).lookup_rdap()
-            except Exception:
-                return ""
-
-        registrants = []
-        for title, obj in whois.get('objects', {}).items():
-            if obj.get('contact') is None:
-                continue
-            if 'registrant' in obj.get('roles', []):
-                registrants.append(f"{obj['contact'].get('name')} ({title})")
-                break
-
-        return ', '.join(registrants)
+        registrant = get_registrant(cidr)
+        return f"{registrant['name']} ({registrant['title']})" if registrant else ""
 
     def build_open_ports_table_jira(self, perms):
         open_partly = any([perm['status'] == 'open_partly' for perm in perms])

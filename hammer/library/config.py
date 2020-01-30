@@ -588,6 +588,11 @@ class ModuleConfig(BaseConfig):
         """ :return: `timedelta` object before performing auto remediation """
         return timedelta(days=self.remediation_retention_period)
 
+    @property
+    def trusted_registrants(self):
+        """ :return: list of trusted registrants"""
+        return self._config.get('trusted_registrants', [])
+
 
 class IAMUserInactiveKeysConfig(ModuleConfig):
     """ Extend ModuleConfig with IAM inactive keys specific details """

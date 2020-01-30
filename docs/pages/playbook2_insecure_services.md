@@ -90,7 +90,7 @@ To identify, report, and remediate issues of this type, you should add the follo
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
 |`remediation_retention_period`|The amount of days to pass between issue detection and its automatic remediation. The value `0` denotes that Dow Jones Hammer will remediate the issue at the next remediation job run.|`21`|
 |`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-security-groups-lambda`|
-
+|`trusted_registrants`         |*Optional*. List of registrants of public IPs that should be excluded from the report. |`[]`|
 
 Sample **secgrp_unrestricted_access** section of the **config.json** file:
 

@@ -8,12 +8,15 @@ from botocore.exceptions import ClientError
 from library.utility import jsonDumps
 from library.aws.s3 import S3Operations
 from library.aws.utility import convert_tags
+from library.config import Config
+from library.utility import get_registrant
 
 
 class RestrictionStatus(Enum):
     Restricted = "restricted"
     OpenCompletely = "open_completely"
     OpenPartly = "open_partly"
+    ExcludedRegistrant = 'owner'
 
 
 class SecurityGroupOperations:
@@ -65,7 +68,7 @@ class SecurityGroupOperations:
         if objects is None:
             logging.error(f"Failed to find '{group_id}' rules backup in {account}")
             return
-        backup_objects = [ obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_") ]
+        backup_objects = [obj["Key"] for obj in objects if obj.get("Key", "").startswith(f"{prefix}{group_id}_")]
         # return most recent backup
         recent_backup = max(backup_objects)
         source = json.loads(S3Operations.get_object(s3_client, bucket, recent_backup))
@@ -99,8 +102,8 @@ class SecurityGroupOperations:
             from_port = ingress.get("FromPort", None)
             to_port = ingress.get("ToPort", None)
             ip_protocol = ingress["IpProtocol"]
-            cidrs = [ ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", []) ]
-            cidrs += [ ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", []) ]
+            cidrs = [ipv6_range["CidrIpv6"] for ipv6_range in ingress.get("Ipv6Ranges", [])]
+            cidrs += [ip_range["CidrIp"] for ip_range in ingress.get("IpRanges", [])]
             for cidr in cidrs:
                 cls.add_inbound_rule(ec2_client, group_id, ip_protocol, from_port, to_port, cidr)
 
@@ -117,9 +120,9 @@ class SecurityGroupOperations:
 
         :return: dict with `IpPermissions` element
         """
-        perms = { 'IpProtocol': ip_protocol }
+        perms = {'IpProtocol': ip_protocol}
         if from_port is not None and \
-           to_port is not None:
+                to_port is not None:
             perms['FromPort'] = from_port
             perms['ToPort'] = to_port
         ipv = ipaddress.ip_network(cidr).version
@@ -372,6 +375,24 @@ class SecurityGroup(object):
         perms = ", ".join([str(perm) for perm in self.permissions])
         return f"{self.__class__.__name__}(Name={self.name}, Id={self.id}, Permissions=[{perms}])"
 
+    @staticmethod
+    def validate_trusted_registrant(cidr):
+        """
+        :param cidr:
+        :return:
+        """
+        trusted_registrants = Config().sg.trusted_registrants
+
+        if not trusted_registrants:
+            return False
+
+        registrant = get_registrant(cidr)
+
+        if registrant and (registrant['name'] in trusted_registrants
+                           or registrant['title'] in trusted_registrants):
+            return True
+        return False
+
     def restriction_status(self, cidr):
         """
         Check restriction status of cidr
@@ -381,7 +402,9 @@ class SecurityGroup(object):
         :return: RestrictionStatus with check result
         """
         status = RestrictionStatus.Restricted
-        if cidr.endswith("/0"):
+        if ipaddress.ip_network(cidr).is_global and self.validate_trusted_registrant(cidr):
+            status = RestrictionStatus.ExcludedRegistrant
+        elif cidr.endswith("/0"):
             status = RestrictionStatus.OpenCompletely
         elif ipaddress.ip_network(cidr).is_global:
             status = RestrictionStatus.OpenPartly
@@ -409,6 +432,9 @@ class SecurityGroup(object):
                 if status == RestrictionStatus.Restricted:
                     logging.debug(f"Skipping restricted '{ip_range}'")
                     continue
+                elif status == RestrictionStatus.ExcludedRegistrant:
+                    logging.debug(f"Skipping excluded '{ip_range}'")
+                    continue
                 # second - check if ports from `restricted_ports` list has intersection with ports from FromPort..ToPort range
                 if perm.from_port is None or perm.to_port is None:
                     logging.debug(f"Marking world-wide open all ports from '{ip_range}'")
@@ -432,6 +458,8 @@ class SecurityGroup(object):
         statuses = {perms.status for perms in self.permissions}
         if RestrictionStatus.OpenCompletely in statuses:
             return RestrictionStatus.OpenCompletely
+        elif RestrictionStatus.ExcludedRegistrant in statuses:
+            return RestrictionStatus.ExcludedRegistrant
         elif RestrictionStatus.OpenPartly in statuses:
             return RestrictionStatus.OpenPartly
         return RestrictionStatus.Restricted
