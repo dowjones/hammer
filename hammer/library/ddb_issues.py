@@ -135,6 +135,8 @@ class Issue(object):
     def contains_tags(self, tags):
         if not tags:
             return True
+        if not self.issue_details.tags:
+            return False
         for k in tags:
             if k not in self.issue_details.tags:
                 return False
