@@ -360,13 +360,14 @@ class Operations(object):
             cls.put(ddb_table, issue)
 
     @staticmethod
-    def get_account_open_issues(ddb_table, account_id, issue_class=None):
+    def get_account_open_issues(ddb_table, account_id, issue_class=None, issue_id=None):
         """
         Search for account open issues. Search uses filter expressions - may be not efficient enough.
 
         :param ddb_table: boto3 DDB table resource to search in
         :param account_id: AWS account id to search issues for
         :param issue_class: one of Issue class children (issue type to construct)
+        :param issue_id: filter for one issue to return, used for realtime scanning (issue type to construct)
 
         :return: all account open issue
         """
@@ -374,7 +375,11 @@ class Operations(object):
         response = ddb_table.query(KeyConditionExpression=Key('account_id').eq(account_id),
                                    FilterExpression=Attr('status').eq(IssueStatus.Open.value))
         for item in response['Items']:
-            issues.append(Issue.from_dict(item, issue_class))
+            if issue_id:
+                if item['issue_id'] == issue_id:
+                    issues.append(Issue.from_dict(item, issue_class))
+            else:
+                issues.append(Issue.from_dict(item, issue_class))
         return issues
 
     @staticmethod

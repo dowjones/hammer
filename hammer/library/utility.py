@@ -14,6 +14,99 @@ from decimal import Decimal
 from functools import lru_cache
 from ipwhois import IPWhois
 
+class CloudTrailParser(object):
+    """
+    Creates a CloudTrail parser
+    """
+
+    def __init__(self, message):
+        self.resourceTypes = [
+                            'queueUrl',
+                            'queueName',
+                            'groupId',
+                            'bucketName',
+                            'dBInstanceIdentifier',
+                            'userName',
+                            'snapshotId'
+                            ]
+
+        self.objectKey = None
+        self.message = json.dumps(message)
+        self.accountID = self.getAccountID(message)
+        self.region = self.getRegion(message)
+        self.userArn = self.getUserARN(message)
+        self.event = self.getCloudWatchEvent(message)
+        self.eventTime = self.getEventTime(message)
+        self.resource = self.getResource(message)
+
+    def getAccountID(self, message):
+        try:
+            if 'accountId' in message['detail']['userIdentity']:
+                account_id = message['detail']['userIdentity']['accountId']
+            else:
+               account_id = message['account']
+            return account_id
+        except:
+            logging.exception(f'No account ID found... Cannot perform scan {message}')
+
+    def getRegion(self, message):
+        regions = None
+        try:
+            if 'awsRegion' in message['detail']:
+                regions = message['detail']['awsRegion']
+            else:
+                regions = message['region']
+        except:
+            logging.debug("No region... Will scan all regions")
+        return regions
+
+    def getUserARN(self, message):
+        user_id = None
+        try:
+            user_id = message['detail']['userIdentity']['arn']
+        except:
+            logging.debug("No principalId found in message.")
+        return user_id
+
+    def getCloudWatchEvent(self, message):
+        try:
+            cloudwatch_event =  message['detail']['eventName']
+            return cloudwatch_event
+        except:
+            logging.exception(f'Missing Cloudwatch event... {message}')
+
+    def getResource(self, message):
+        resource = None
+        try:
+            request_parameters =  message['detail']['requestParameters']
+            for key in request_parameters:
+                if key in self.resourceTypes:
+
+                    # Object level cloud trails have an objectkey
+                    if key == 'bucketName':
+                        try:
+                            self.objectKey = request_parameters['key']
+                        except:
+                            logging.debug("Not an object level CT...")
+
+                    # The CloudTrail for CreateQueue is different than all the other Cloudtrail formatting
+                    if key == 'queueName':
+                        resource = message['detail']['responseElements']['queueUrl']
+                    else:
+                        resource  = request_parameters[key]
+                    break
+
+        except:
+            logging.debug(f'Missing resource field in cloudtrail message: {message}')
+        return resource
+
+    def getEventTime(self, message):
+        timestamp = None
+        try:
+            timestamp = message['detail']['eventTime']
+        except:
+            logging.debug("No principalId found in message.")
+        return timestamp
 
 def jsonEncoder(obj):
     if isinstance(obj, datetime):

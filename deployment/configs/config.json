@@ -41,7 +41,12 @@
         }
     },
     "api": {
-        "ddb.table_name": "hammer-api-requests"
+        "ddb.table_name": "hammer-api-requests",
+        "accounts": {
+            "123456789012": "master",
+            "210987654321": "slave1",
+            "654321210987": "slave2"
+        }
     },
     "whitelisting_procedure_url": "",
     "credentials": {

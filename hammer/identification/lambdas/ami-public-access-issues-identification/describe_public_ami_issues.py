@@ -23,6 +23,8 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -58,7 +60,7 @@ def lambda_handler(event, context):
                     issue.issue_details.tags = ami.tags
                     issue.issue_details.name = ami.name
                     issue.issue_details.region = region
-
+                    issue.issue_details.cloudtrail = cloudtrail
                     if config.publicAMIs.in_temp_whitelist(account_id, ami.id):
                         issue.status = IssueStatus.Tempwhitelist
                     elif config.publicAMIs.in_whitelist(account_id, ami.id):

@@ -23,6 +23,7 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -53,6 +54,7 @@ def lambda_handler(event, context):
         if checker.check():
             if checker.disabled or checker.delivery_errors:
                 issue = CloudTrailIssue(account_id, region)
+                issue.issue_details.cloudtrail = cloudtrail
                 issue.issue_details.disabled = checker.disabled
                 issue.issue_details.delivery_errors = checker.delivery_errors
                 issue.add_trails(checker.trails)

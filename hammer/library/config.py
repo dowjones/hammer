@@ -115,7 +115,8 @@ class Config(object):
             'credentials':  self.json_load_from_ddb(self._config["credentials"]["ddb.table_name"],
                                                     self.aws.region,
                                                     "api"),
-            'table': self._config["api"]["ddb.table_name"]
+            'table': self._config["api"]["ddb.table_name"],
+            'accounts': self._config["api"]["accounts"]
         })
 
     def get_bu_by_name(self, name):
@@ -322,6 +323,10 @@ class ApiConfig(object):
     @property
     def ddb_table_name(self):
         return self._config['table']
+
+        @property
+    def accounts(self):
+        return self._config["accounts"]
 
 
 class SlackConfig(object):

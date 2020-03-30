@@ -17,8 +17,17 @@ def lambda_handler(event, context):
         payload = json.loads(event["Records"][0]["Sns"]["Message"])
         account_id = payload['account_id']
         account_name = payload['account_name']
-        # if request_id is present in payload then this lambda was called from the API
+        
+        # if request_id is present in payload, it means this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+        issue_id = None
+        if cloudtrail:
+            try:
+                issue_id = cloudtrail['resource']
+            except:
+                logging.debug(f"No bucketName found in tags for message {cloudtrail}")
+
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -38,35 +47,35 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for public S3 ACLs in {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3AclIssue)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3AclIssue, issue_id)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues}
         logging.debug(f"S3 in DDB:\n{open_issues.keys()}")
 
         checker = S3BucketsAclChecker(account=account)
-        if not checker.check():
-            return
+        issue_ids_to_check = None if issue_id is None else [issue_id]
 
-        for bucket in checker.buckets:
-            logging.debug(f"Checking {bucket.name}")
-            if bucket.public:
-                issue = S3AclIssue(account_id, bucket.name)
-                issue.issue_details.owner = bucket.owner
-                issue.issue_details.public_acls = bucket.get_public_acls()
-                issue.issue_details.tags = bucket.tags
-
-                if config.s3acl.in_temp_whitelist(account_id, bucket.name):
-                    issue.status = IssueStatus.Tempwhitelist
-                elif config.s3acl.in_whitelist(account_id, bucket.name):
-                    issue.status = IssueStatus.Whitelisted
-                else:
-                    issue.status = IssueStatus.Open
-                logging.debug(f"Setting {bucket.name} status {issue.status}")
-                IssueOperations.update(ddb_table, issue)
-                # remove issue id from issues_list_from_db (if exists)
-                # as we already checked it
-                open_issues.pop(bucket.name, None)
+        if checker.check(bucket=issue_ids_to_check):
+            for bucket in checker.buckets:
+                logging.debug(f"Checking {bucket.name}")
+                if bucket.public:
+                    issue = S3AclIssue(account_id, bucket.name)
+                    issue.issue_details.owner = bucket.owner
+                    issue.issue_details.public_acls = bucket.get_public_acls()
+                    issue.issue_details.tags = bucket.tags
+                    issue.issue_details.cloudtrail = cloudtrail
+                    if config.s3acl.in_temp_whitelist(account_id, bucket.name):
+                        issue.status = IssueStatus.Tempwhitelist
+                    elif config.s3acl.in_whitelist(account_id, bucket.name):
+                        issue.status = IssueStatus.Whitelisted
+                    else:
+                        issue.status = IssueStatus.Open
+                    logging.debug(f"Setting {bucket.name} status {issue.status}")
+                    IssueOperations.update(ddb_table, issue)
+                    # remove issue id from issues_list_from_db (if exists)
+                    # as we already checked it
+                    open_issues.pop(bucket.name, None)
 
         logging.debug(f"S3 in DDB:\n{open_issues.keys()}")
         # all other unresolved issues in DDB are for removed/remediated buckets
