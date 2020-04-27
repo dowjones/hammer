@@ -322,10 +322,16 @@ class Operations(object):
         :return: all account open issue
         """
         issues = []
-        response = ddb_table.query(KeyConditionExpression=Key('account_id').eq(account_id),
-                                   FilterExpression=Attr('status').eq(IssueStatus.Open.value))
-        for item in response['Items']:
-            issues.append(Issue.from_dict(item, issue_class))
+        first_iteration = True
+        response = None
+        while first_iteration == True or 'LastEvaluatedKey' in response:
+            response = ddb_table.query(KeyConditionExpression=Key('account_id').eq(account_id),
+                                    FilterExpression=Attr('status').eq(IssueStatus.Open.value))
+            for item in response['Items']:
+                issues.append(Issue.from_dict(item, issue_class))
+
+            if first_iteration == True:
+                first_iteration = False
         return issues
 
     @staticmethod
