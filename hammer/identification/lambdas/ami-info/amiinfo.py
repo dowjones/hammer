@@ -54,10 +54,11 @@ def lambda_handler(event, context):
             config=botocore.config.Config(retries={'max_attempts': 3})
         )
         images = ec2.describe_images(
-            Filters = [{
+            Filters=[{
                 "Name": "product-code",
                 "Values": [PRODUCT_CODE]
-            }]
+            }],
+            Owners=['aws-marketplace']
         )['Images']
     except Exception:
         logging.exception("Failed to describe images")
