@@ -18,6 +18,7 @@
                         "SourceS3Bucket",
                         "SourceLogsForwarder",
                         "SourceBackupDDB",
+                        "SourceRealtimeScanner",
                         "SourceIdentificationSG",
                         "SourceIdentificationCloudTrails",
                         "SourceIdentificationS3ACL",
@@ -71,6 +72,9 @@
                 },
                 "SourceBackupDDB": {
                     "default": "Relative path to BackupDDB lambda sources"
+                },
+                "SourceRealtimeScanner": {
+                    "default": "Relative path to Realtime Scanning lambda sources"
                 },
                 "SourceIdentificationSG": {
                     "default": "Relative path to Insecure services lambda sources"
@@ -172,6 +176,10 @@
         "SourceBackupDDB": {
             "Type": "String",
             "Default": "ddb-tables-backup.zip"
+        },
+        "SourceRealtimeScanner": {
+            "Type": "String",
+            "Default": "realtime-hammer-scanner.zip"
         },
         "SourceIdentificationSG": {
             "Type": "String",
@@ -350,6 +358,9 @@
             "SNSDisplayNameCloudTrails": {
                 "value": "describe-cloudtrails-sns"
             },
+            "SNSTopicyNameRealtimeIssueUpdate": {
+                "value": "issue-realtime-notification-sns"
+            },
             "SNSTopicNameCloudTrails": {
                 "value": "describe-cloudtrails-lambda"
             },
@@ -479,6 +490,9 @@
             "BackupDDBLambdaFunctionName": {
                 "value": "backup-ddb"
             },
+            "RealtimeScannerLambdaFunctionName": {
+                "value": "realtime-scanner"
+            },
             "SecurityGroupLambdaFunctionName": {
                 "value": "security-groups"
             },
@@ -582,6 +596,128 @@
                                                                         "value"]
                                                     } ] ] },
                 "RetentionInDays": "7"
+            }
+        },
+        "LambdaRealtimeScanner": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaRealtimeScanner"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceRealtimeScanner" }
+                },
+                "Description": "Lambda function for realtime scanning",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "RealtimeScannerLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "realtime_hammer_scanner.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "900",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
+            }
+        },
+        "LogGroupLambdaRealtimeScanner": {
+            "Type" : "AWS::Logs::LogGroup",
+            "Properties" : {
+                "LogGroupName": {"Fn::Join": ["", [ "/aws/lambda/",
+                                                    { "Ref": "ResourcesPrefix" },
+                                                    { "Fn::FindInMap": ["NamingStandards",
+                                                                        "RealtimeScannerLambdaFunctionName",
+                                                                        "value"]
+                                                    } ] ] },
+                "RetentionInDays": "7"
+            }
+        },
+        "LambdaEventSourceMappingRealtimeScanner": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "DependsOn": ["LambdaRealtimeScanner", "SQSRealtimeScanner"],
+            "Properties": {
+              "BatchSize": 10,
+              "Enabled": true,
+              "EventSourceArn": { "Fn::GetAtt" : [ "SQSRealtimeScanner", "Arn" ] },
+              "FunctionName": { "Fn::GetAtt" : [ "LambdaRealtimeScanner", "Arn" ] }
+            }
+        },
+        "SQSRealtimeScanner": {
+            "Type": "AWS::SQS::Queue",
+            "DependsOn": ["LambdaRealtimeScanner"],
+            "Properties": {
+                "VisibilityTimeout": 3600,
+                "QueueName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                    { "Fn::FindInMap": ["NamingStandards", "RealtimeScannerLambdaFunctionName", "value"] }, "-sqs" ]
+                ]}
+            }
+        },
+        "SQSNotifcationFromCloudTrail": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "DependsOn": "SQSRealtimeScanner",
+            "Properties": {
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Id": "SQSRealtimeScannerPolicy",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "sqs:SendMessage",
+                    "Resource": { "Fn::GetAtt" : [ "SQSRealtimeScanner", "Arn" ] },
+                    "Condition": {
+                      "ArnEquals": {
+                        "aws:SourceArn": {
+                            "Fn::Join": [
+                              "", [
+                               "arn:aws:sns:*:",
+                               {
+                                 "Ref": "AWS::AccountId"
+                               },
+                               ":",
+                               {
+                                 "Ref": "ResourcesPrefix"
+                               },
+                               "*"
+                             ]
+                           ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "Queues": [
+                {
+                  "Ref": "SQSRealtimeScanner"
+                }
+              ]
+            }
+        },
+        "LambdaBackupDDB": {
+            "Type": "AWS::Lambda::Function",
+            "DependsOn": ["LogGroupLambdaBackupDDB"],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Ref": "SourceS3Bucket" },
+                    "S3Key": { "Ref": "SourceBackupDDB" }
+                },
+                "Description": "Lambda function for backup hammer DDB tables",
+                "FunctionName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },
+                                                     { "Fn::FindInMap": ["NamingStandards", "BackupDDBLambdaFunctionName", "value"] } ]
+                                              ]},
+                "Handler": "ddb_tables_backup.lambda_handler",
+                "MemorySize": 256,
+                "Timeout": "900",
+                "Role": {"Fn::Join" : ["", [ "arn:aws:iam::",
+                                             { "Ref": "AWS::AccountId" },
+                                             ":role/",
+                                             { "Ref": "ResourcesPrefix" },
+                                             { "Ref": "IdentificationIAMRole" }
+                                           ] ]},
+                "Runtime": "python3.6"
             }
         },
         "LambdaBackupDDB": {
@@ -1600,6 +1736,8 @@
         }
     },
     "Outputs": {
-        "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }}
+        "LambdaLogsForwarderArn": {"Value": { "Fn::GetAtt": ["LambdaLogsForwarder", "Arn"] }},
+        "SQSRealtimeScannerArn": {"Value": { "Fn::GetAtt": ["SQSRealtimeScanner", "Arn"] }}
+
     }
 }

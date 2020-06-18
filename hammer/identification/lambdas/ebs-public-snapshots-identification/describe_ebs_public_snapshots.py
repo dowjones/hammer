@@ -23,6 +23,18 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+
+        # if request_id is present in payload, it means this lambda was called from the API
+        request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+        issue_id = None
+        if cloudtrail:
+            try:
+                issue_id = cloudtrail['resource']
+            except:
+                logging.debug(f"No snapshotId found in tags for message {cloudtrail}")
+
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -43,20 +55,22 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for public EBS snapshots in {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, EBSPublicSnapshotIssue)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, EBSPublicSnapshotIssue, issue_id)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
         logging.debug(f"Public EBS snapshots in DDB:\n{open_issues.keys()}")
+        issue_ids_to_check = None if issue_id is None else [issue_id]
 
         checker = EBSPublicSnapshotsChecker(account=account)
-        if checker.check():
+        if checker.check(ids=issue_ids_to_check):
             for snapshot in checker.snapshots:
                 if snapshot.public:
                     issue = EBSPublicSnapshotIssue(account_id, snapshot.id)
                     issue.issue_details.region = snapshot.account.region
                     issue.issue_details.volume_id = snapshot.volume_id
                     issue.issue_details.tags = snapshot.tags
+                    issue.issue_details.cloudtrail = cloudtrail
 
                     if config.ebsSnapshot.in_temp_whitelist(account_id, snapshot.id):
                         issue.status = IssueStatus.Tempwhitelist

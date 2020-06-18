@@ -21,8 +21,15 @@ def lambda_handler(event, context):
         account_name = payload['account_name']
         # get the last region from the list to process
         region = payload['regions'].pop()
-        # if request_id is present in payload then this lambda was called from the API
+        # if request_id is present in payload, it means this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+        issue_id = None
+        if cloudtrail:
+            try:
+                issue_id = [cloudtrail['resource']]
+            except:
+                logging.debug(f"No dBInstanceIdentifier found in tags for message {cloudtrail}")
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -43,7 +50,7 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for RDS encryption in {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, RdsEncryptionIssue)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, RdsEncryptionIssue, issue_id)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
@@ -59,7 +66,7 @@ def lambda_handler(event, context):
                 issue.issue_details.region = instance.account.region
                 issue.issue_details.engine = instance.engine
                 issue.issue_details.tags = instance.tags
-
+                issue.issue_details.cloudtrail = cloudtrail
                 if config.rdsEncrypt.in_temp_whitelist(account_id, instance.id):
                     issue.status = IssueStatus.Tempwhitelist
                 elif config.rdsEncrypt.in_whitelist(account_id, instance.id):

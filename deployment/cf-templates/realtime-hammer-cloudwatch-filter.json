@@ -1,0 +1,208 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Hammer Realtime Cloudwatch Cloudformation Stack",
+
+  "Parameters": {
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "prod-hammer-"
+        },
+        "SQSRealtimeScannerArn": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "SNSRealtimeScanner": {
+          "Type": "AWS::SNS::Topic",
+          "Properties": {
+            "DisplayName": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ResourcesPrefix"
+                  },
+                  "realtime-scanner-",
+                  {
+                    "Ref": "AWS::Region"
+                  }
+                ]
+              ]
+            },
+            "TopicName": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ResourcesPrefix"
+                  },
+                  "realtime-scanner-",
+                  {
+                    "Ref": "AWS::Region"
+                  }
+                ]
+              ]
+            }
+          }
+        },
+        "S3NotificationTopicSubscription": {
+          "Type": "AWS::SNS::Subscription",
+          "Properties": {
+            "Endpoint": {
+              "Ref": "SQSRealtimeScannerArn"
+            },
+            "Protocol": "sqs",
+            "RawMessageDelivery": true,
+            "TopicArn": {
+              "Ref": "SNSRealtimeScanner"
+            }
+          }
+        },
+        "PermissionToInvokeSNS": {
+          "DependsOn": [
+            "SNSRealtimeScanner",
+            "CloudWatchEventRealtimeScanner"
+          ],
+          "Type": "AWS::SNS::TopicPolicy",
+          "Properties": {
+            "PolicyDocument": {
+              "Id": "PermissionToInvokeSNSPolicy",
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "PermissionToInvokeSNSPolicyId",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "events.amazonaws.com"
+                  },
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "Topics": [
+              {
+                "Ref": "SNSRealtimeScanner"
+              }
+            ]
+          }
+        },
+        "CloudWatchEventRealtimeScanner": {
+          "Type": "AWS::Events::Rule",
+          "Properties": {
+            "Description": "Cloud Watch Event to filter for Hammer specific Events",
+            "Name": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" },"Realtime-Monitoring-CloudWatch-Event-Trigger"]
+            ]},
+            "State": "ENABLED",
+            "Targets": [
+              {
+                "Arn": {"Ref" : "SNSRealtimeScanner"},
+                "Id": "SNSRealtimeScanner"
+              }
+            ],
+            "EventPattern": {
+              "detail-type": [
+                "AWS API Call via CloudTrail"
+              ],
+              "detail": {
+                "eventName": [
+                  "CreateSecurityGroup",
+                  "DeleteSecurityGroup",
+                  "UpdateSecurityGroupRuleDescriptionsEgress",
+                  "AuthorizeSecurityGroupEgress",
+                  "AuthorizeSecurityGroupIngress",
+                  "RevokeSecurityGroupEgress",
+                  "RevokeSecurityGroupIngress",
+                  "UpdateSecurityGroupRuleDescriptionsIngress",
+                  "CopySnapshot",
+                  "CreateSnapshot",
+                  "CreateSnapshots",
+                  "DeleteSnapshot",
+                  "ModifySnapshotAttribute",
+                  "ResetSnapshotAttribute",
+                  "DisableEbsEncryptionByDefault",
+                  "EnableEbsEncryptionByDefault",
+                  "ModifyEbsDefaultKmsKeyId",
+                  "ResetEbsDefaultKmsKeyId",
+                  "AttachVolume",
+                  "CreateVolume",
+                  "DeleteVolume",
+                  "DetachVolume",
+                  "ModifyVolume",
+                  "ModifyVolumeAttribute",
+                  "AddRoleToInstanceProfile",
+                  "AddUserToGroup",
+                  "AttachGroupPolicy",
+                  "AttachRolePolicy",
+                  "AttachUserPolicy",
+                  "ChangePassword",
+                  "CreateAccessKey",
+                  "CreateUser",
+                  "CreateVirtualMFADevice",
+                  "CreatePolicy",
+                  "CreateRole",
+                  "DeactivateMFADevice",
+                  "DeleteAccessKey",
+                  "DeleteAccountPasswordPolicy",
+                  "DeleteGroup",
+                  "DeleteGroupPolicy",
+                  "DeleteLoginProfile",
+                  "DeletePolicy",
+                  "DeleteRole",
+                  "DeleteRolePolicy",
+                  "DeleteUser",
+                  "DeleteUserPolicy",
+                  "DeleteVirtualMFADevice",
+                  "DetachGroupPolicy",
+                  "DetachRolePolicy",
+                  "DetachUserPolicy",
+                  "user_withpassword",
+                  "PutGroupPolicy",
+                  "PutRolePolicy",
+                  "PutUserPolicy",
+                  "ResyncMFADevice",
+                  "UpdateAccessKey",
+                  "UpdateAccountPasswordPolicy",
+                  "UpdateAssumeRolePolicy",
+                  "UpdateGroup",
+                  "UpdateLoginProfile",
+                  "UpdateUser",
+                  "CreateBucket",
+                  "DeleteBucket",
+                  "DeleteBucketPolicy",
+                  "DeleteBucketTagging",
+                  "PutBucketAcl",
+                  "PutBucketPolicy",
+                  "PutBucketReplication",
+                  "PutBucketTagging",
+                  "DeleteBucketEncryption",
+                  "DeletePublicAccessBlock",
+                  "PutBucketEncryption",
+                  "PutPublicAccessBlock",
+                  "AddPermission",
+                  "CreateQueue",
+                  "SetQueueAttributes",
+                  "RemovePermission",
+                  "DeleteQueue",
+                  "CopyDBSnapshot",
+                  "CreateDBInstance",
+                  "CreateDBSnapshot",
+                  "DeleteDBInstance",
+                  "DeleteDBSnapshot",
+                  "ModifyDBInstance",
+                  "ModifyDBSnapshot",
+                  "RestoreDBInstanceFromDBSnapshot",
+                  "RestoreDBInstanceFromS3",
+                  "RestoreDBInstanceToPointInTime",
+                  "StartDBInstance",
+                  "StopDBInstance"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

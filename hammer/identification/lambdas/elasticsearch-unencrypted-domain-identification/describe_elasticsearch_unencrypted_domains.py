@@ -23,6 +23,7 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -60,7 +61,7 @@ def lambda_handler(event, context):
                     issue.issue_details.tags = domain.tags
                     issue.issue_details.encrypted_at_rest = domain.encrypted_at_rest
                     issue.issue_details.encrypted_at_transit = domain.encrypted_at_transit
-
+                    issue.issue_details.cloudtrail = cloudtrail
                     if config.esEncrypt.in_temp_whitelist(account_id, domain.name):
                         issue.status = IssueStatus.Tempwhitelist
                     elif config.esEncrypt.in_whitelist(account_id, domain.name):

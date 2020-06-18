@@ -1,0 +1,56 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Hammer Realtime Alerting Cloudwatch Cloudformation Stack",
+    "Parameters": {
+        "ResourcesPrefix": {
+            "Type": "String",
+            "MinLength": "3",
+            "Default": "hammer-"
+        },
+        "MasterAccountID": {
+            "Type": "String",
+            "MinLength": "12"
+        },
+        "IdentificationCrossAccountIAMRole": {
+            "Type": "String",
+            "Default": "cloudsec-crossact-id"
+        }
+    },
+    "Resources": {
+      "HammerRealtimeCrossAccountEventBusRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": {"Fn::Join" : ["", [ { "Ref": "ResourcesPrefix" }, "realtime-eventbus-forwarding-role"]
+                                          ]},
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["events.amazonaws.com"] },
+                        "Action": "sts:AssumeRole"
+                    }]
+                },
+                "Path": "/",
+                "Policies": [{
+                    "PolicyName": "HammerCrossAccountIdentificationPolicy",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Sid": "EventBusForwarding",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "events:PutEvents"
+                                ],
+                                "Resource": [
+                                    {"Fn::Join": [ "", ["arn:aws:events:*:", {"Ref": "MasterAccountID"}, ":event-bus/default"] ] }
+                                ]
+                            }
+                        ]
+                    }
+                }]
+            }
+        }
+
+    }
+}

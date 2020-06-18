@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 import time
+import hashlib
 
 import boto3
 
@@ -32,8 +33,20 @@ def get_sns_topic_arn(config, topic_name):
     return f"arn:aws:sns:{region}:{account_id}:{topic_name}"
 
 
-GLOBAL_SECURITY_FEATURES = ['s3_bucket_acl', 'user_inactivekeys', 'user_keysrotation', 's3_bucket_policy',
-                            's3_encryption']
+GLOBAL_SECURITY_FEATURES = [
+                            'ec2_public_ami', 
+                            'ebs_unencrypted_volume', 
+                            'ebs_public_snapshot',
+                            'user_inactivekeys', 
+                            'user_keysrotation',
+                            'rds_encryption',
+                            'rds_public_snapshot',
+                            's3_bucket_acl', 
+                            's3_bucket_policy',
+                            's3_encryption',
+                            'secgrp_unrestricted_access',
+                            'sqs_public_access'
+                            ]
 
 
 def start_scan(account_id, regions, security_features, tags, ids):
@@ -87,7 +100,19 @@ def start_scan(account_id, regions, security_features, tags, ids):
         "security_features": to_scan,
         "tags": tags
     }
-    request_id = uuid.uuid4().hex
+    
+    ### Make UUID a hash of the account_id, regions, security_feature, invocation_reason, request_parameters to not have duplicate requests per realtime scan
+    request_id = hashlib.sha256(json.dumps(request_params).encode("utf-8")).hexdigest()
+
+    ### Then Read DDB to see if we already have that request
+    request_info = DDB.get_request_data(api_table, request_id)
+    if request_info is not None and 'progress' in request_info and 'total' in request_info:
+        if request_info['progress'] != request_info['total']:
+            logging.info("A current scan on this resource is already running... Not going to perform dumplicate scan...")
+            return {
+                "statusCode": 200,
+                "body": "A current scan on this resource is already running... Not going to perform dumplicate scan..."
+            }
 
     DDB.add_request(api_table, request_id, request_params, total)
 
@@ -99,7 +124,8 @@ def start_scan(account_id, regions, security_features, tags, ids):
             "account_name": account_name,
             "regions": regions,
             "sns_arn": topic_arn,
-            "request_id": request_id
+            "request_id": request_id,
+            "tags": tags
         }
         Sns.publish(topic_arn, payload)
 

@@ -22,6 +22,7 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -56,7 +57,7 @@ def lambda_handler(event, context):
                     issue = RedshiftEncryptionIssue(account_id, cluster.name)
                     issue.issue_details.tags = cluster.tags
                     issue.issue_details.region = cluster.account.region
-
+                    issue.issue_details.cloudtrail = cloudtrail
                     if config.redshiftEncrypt.in_temp_whitelist(account_id, cluster.name):
                         issue.status = IssueStatus.Tempwhitelist
                     elif config.redshiftEncrypt.in_whitelist(account_id, cluster.name):

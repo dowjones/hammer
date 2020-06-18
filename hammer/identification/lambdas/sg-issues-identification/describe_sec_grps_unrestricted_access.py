@@ -23,6 +23,13 @@ def lambda_handler(event, context):
         region = payload['regions'].pop()
         # if request_id is present in payload then this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+        issue_id = None
+        if cloudtrail:
+            try:
+                issue_id = cloudtrail['resource']
+            except:
+                logging.debug(f"No groupId found in tags for message {cloudtrail}")
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -43,7 +50,7 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for insecure services in {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, SecurityGroupIssue)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, SecurityGroupIssue,issue_id)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues if issue.issue_details.region == region}
@@ -51,7 +58,9 @@ def lambda_handler(event, context):
 
         checker = SecurityGroupsChecker(account=account,
                                         restricted_ports=config.sg.restricted_ports)
-        if checker.check():
+        issue_ids_to_check = None if issue_id is None else [issue_id]
+
+        if checker.check(ids=issue_ids_to_check):
             for sg in checker.groups:
                 logging.debug(f"Checking {sg.name} ({sg.id})")
                 if not sg.restricted:
@@ -64,6 +73,7 @@ def lambda_handler(event, context):
                     issue.issue_details.region = sg.account.region
                     issue.issue_details.tags = sg.tags
                     issue.issue_details.status = sg.status.value
+                    issue.issue_details.cloudtrail = cloudtrail
                     for perm in sg.permissions:
                         for ip_range in perm.ip_ranges:
                             if not ip_range.restricted:

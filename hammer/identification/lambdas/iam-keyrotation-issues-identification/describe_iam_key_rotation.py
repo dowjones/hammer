@@ -18,8 +18,15 @@ def lambda_handler(event, context):
         payload = json.loads(event["Records"][0]["Sns"]["Message"])
         account_id = payload['account_id']
         account_name = payload['account_name']
-        # if request_id is present in payload then this lambda was called from the API
+        # if request_id is present in payload, it means this lambda was called from the API
         request_id = payload.get('request_id', None)
+        cloudtrail = payload.get('tags', None)
+        issue_id = None
+        if cloudtrail:
+            try:
+                issue_id = cloudtrail['resource']
+            except:
+                logging.debug(f"No userName found in tags for message {cloudtrail}")
     except Exception:
         logging.exception(f"Failed to parse event\n{event}")
         return
@@ -39,7 +46,7 @@ def lambda_handler(event, context):
         logging.debug(f"Checking for IAM user keys rotation for {account}")
 
         # existing open issues for account to check if resolved
-        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, IAMKeyRotationIssue)
+        open_issues = IssueOperations.get_account_open_issues(ddb_table, account_id, IAMKeyRotationIssue, issue_id)
         # make dictionary for fast search by id
         # and filter by current region
         open_issues = {issue.issue_id: issue for issue in open_issues}
@@ -48,7 +55,8 @@ def lambda_handler(event, context):
         checker = IAMKeyChecker(account=account,
                                 now=config.now,
                                 rotation_criteria_days=config.iamUserKeysRotation.rotation_criteria_days)
-        if not checker.check(last_used_check_enabled=False):
+        issue_ids_to_check = None if issue_id is None else [issue_id]
+        if not checker.check(users_to_check=issue_ids_to_check, last_used_check_enabled=False):
             return
 
         for user in checker.users:
@@ -56,7 +64,7 @@ def lambda_handler(event, context):
                 issue = IAMKeyRotationIssue(account_id, key.id)
                 issue.issue_details.username = user.id
                 issue.issue_details.create_date = key.create_date.isoformat()
-
+                issue.issue_details.cloudtrail = cloudtrail
                 if config.iamUserKeysRotation.in_temp_whitelist(account_id, key.id) \
                         or config.iamUserKeysRotation.in_temp_whitelist(account_id, user.id):
                     issue.status = IssueStatus.Tempwhitelist
