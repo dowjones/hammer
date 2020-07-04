@@ -125,7 +125,7 @@ class SecurityGroupOperations:
                 to_port is not None:
             perms['FromPort'] = from_port
             perms['ToPort'] = to_port
-        ipv = ipaddress.ip_network(cidr).version
+        ipv = ipaddress.ip_network(cidr, False).version
         if ipv == 4:
             perms['IpRanges'] = [{'CidrIp': cidr}]
         else:
@@ -241,6 +241,7 @@ class IPRange(object):
     Basic class for security group CIDR range.
     Encapsulates CIDR and boolean marker if CIDR restricted or not.
     """
+
     def __init__(self, cidr):
         self.cidr = cidr
         # by default assume that CIDR is restricted,
@@ -264,6 +265,7 @@ class SecurityGroupPermission(object):
     Basic class for security group `IpPermissions`.
     Encapsulates `IpProtocol`/`FromPort`/`ToPort` and list of `IpRanges`.
     """
+
     def __init__(self, group, ingress):
         """
         :param group: `SecurityGroup` instance which contains this `IpPermissions` (to be able to perform operations against it)
@@ -351,6 +353,7 @@ class SecurityGroup(object):
     Basic class for security group.
     Encapsulates `GroupName`/`GroupId`/`Tags` and list of `IpPermissions`.
     """
+
     def __init__(self, account, source):
         """
         :param account: `Account` instance where security group is present
@@ -406,7 +409,7 @@ class SecurityGroup(object):
             status = RestrictionStatus.ExcludedRegistrant
         elif cidr.endswith("/0"):
             status = RestrictionStatus.OpenCompletely
-        elif ipaddress.ip_network(cidr).is_global:
+        elif ipaddress.ip_network(cidr, False).is_global:
             status = RestrictionStatus.OpenPartly
         logging.debug(f"Checked '{cidr}' - '{status.value}'")
         return status
@@ -518,6 +521,7 @@ class SecurityGroupsChecker(object):
     Basic class for checking security group in account/region.
     Encapsulates check settings and discovered security groups.
     """
+
     def __init__(self,
                  account,
                  restricted_ports):
