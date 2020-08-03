@@ -60,7 +60,7 @@ class CSVReport(object):
                     # Adding row data to Execl sheet with DynamoDB table field values.
                     AddRecordsToSheet.add_records(worksheet, sheet_name, account_id, account_name, issue, row_number)
 
-    def generate(self):
+    def generate(self, message=None):
         main_account_session = AssumeRole.get_session(region=self.config.aws.region)
         issues = [
             (self.config.sg.ddb_table_name, "Insecure Services", SecurityGroupIssue),
@@ -126,6 +126,8 @@ class CSVReport(object):
 
         if self.config.slack.enabled:
             channel = self.config.csv.slack_channel
+            if message is not None:
+                channel = message.body['channel']
             slack_obj = SlackNotification(config=self.config)
             logging.debug(f"Uploading CSV report to slack ({channel})")
             slack_obj.send_file_notification(
