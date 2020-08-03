@@ -345,6 +345,44 @@ class SecurityGroupPermission(object):
                 processed += 1
         return processed
 
+    @staticmethod
+    def build_open_ports_table(account, sg_id):
+        args = {'DryRun': False}
+        if sg_id:
+            args['GroupIds'] = [sg_id]
+        try:
+            secgroups = account.client("ec2").describe_security_groups(**args)["SecurityGroups"]
+        except ClientError as err:
+            if err.response['Error']['Code'] in ["AccessDenied", "UnauthorizedOperation"]:
+                logging.error(f"Access denied in {account} "
+                              f"(ec2:{err.operation_name})")
+            elif err.response['Error']['Code'] == "InvalidGroup.NotFound":
+                logging.error(err.response['Error']['Message'])
+                return False
+            else:
+                logging.exception(f"Failed to describe security groups in {account}")
+            return False
+
+        port_details = "||From Port||To Port||Protocol||CIDR||\n"
+
+        for security_group in secgroups:
+            permissions_source = security_group["IpPermissions"]
+            for ingress in permissions_source:
+                protocol = ingress["IpProtocol"]
+                if protocol == "-1" or protocol not in ["tcp", "udp", "icmp", "icmpv6", "58"]:
+                    from_port = None
+                    to_port = None
+                else:
+                    from_port = ingress.get("FromPort", 0)
+                    to_port = ingress.get("ToPort", 65535)
+                ip_ranges = [ip_range["CidrIp"] for ip_range in ingress["IpRanges"]]
+                ip_ranges += [ip_range["CidrIpv6"] for ip_range in ingress.get("Ipv6Ranges", [])]
+
+                for ip_range in ip_ranges:
+                    port_details += f"|{from_port}|{to_port}|{protocol}|{ip_range}|"
+                    port_details += "\n"
+        return port_details
+
 
 class SecurityGroup(object):
     """

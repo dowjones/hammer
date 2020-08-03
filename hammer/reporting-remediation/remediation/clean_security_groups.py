@@ -5,12 +5,12 @@ import sys
 import logging
 import argparse
 
-
+from botocore.exceptions import ClientError
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
 from library.jiraoperations import JiraReporting
 from library.slack_utility import SlackNotification
-from library.aws.security_groups import SecurityGroupsChecker, RestrictionStatus
+from library.aws.security_groups import SecurityGroupsChecker, RestrictionStatus, SecurityGroupPermission
 from library.aws.utility import Account
 from library.ddb_issues import Operations as IssueOperations
 from library.ddb_issues import IssueStatus, SecurityGroupIssue
@@ -122,7 +122,10 @@ class CleanSecurityGroups(object):
                                            f"[{backup_path}|https://s3.console.aws.amazon.com/s3/object/{backup_bucket}/{backup_path}]. "
                                            f"Security group '{group_name} / {group_id}' `{RestrictionStatus.OpenCompletely.value}` issue "
                                            f"in '{account_name} / {account_id}' account, '{group_region}' region "
-                                           f"was remediated by hammer")
+                                           f"was remediated by hammer.")
+
+                                comment += "\n\n After remediation, Security Group has access to following ports: \n"
+                                comment += SecurityGroupPermission.build_open_ports_table(account, group_id)
 
                             if comment is not None:
                                 jira.remediate_issue(
