@@ -11,12 +11,6 @@ if __name__ == "__main__":
     parser.add_argument("--table",
                         dest="table", default=None,
                         help="credentials DDB table name")
-    parser.add_argument("--hammer-api-token",
-                        dest="hammer_api_token", nargs='?', const=-1, type=str,
-                        help="Hammer API token")
-    parser.add_argument("--hammer-api-url",
-                        dest="hammer_api_url", nargs='?', const=-1, type=str,
-                        help="Hammer API url")
     parser.add_argument("--slack-api-token",
                         dest="slack_api_token", default=None,
                         help="Slack API token")
@@ -32,6 +26,9 @@ if __name__ == "__main__":
     parser.add_argument("--jira-access-token-secret",
                         dest="jira_access_token_secret", default=None,
                         help="JIRA access token_secret")
+    parser.add_argument("--hammer-api-url",
+                        dest="hammer_api_url", nargs='?', const=-1, type=str,
+                        help="Hammer API url")
 
     args = parser.parse_args()
 
@@ -58,11 +55,8 @@ if __name__ == "__main__":
                 }
             }
 
-    if args.hammer_api_token != None:
-        # generate new secret if secret value is not set
-        creds["api"] = {"token": secrets.token_hex() if args.hammer_api_token == -1 else args.hammer_api_token}
-
-    if args.hammer_api_url != None:
+    if args.hammer_api_url is not None:
+        creds['api'] = {}
         creds["api"]["url"] = args.hammer_api_url
 
     if not creds:
