@@ -47,7 +47,7 @@
                                     "ec2:DescribeInstances",
                                     "ec2:DescribeRouteTables",
                                     "ec2:DescribeSubnets",
-                                    "ec2:DescribeImages",
+                                    "ec2:DescribeImages"
                                 ],
                                 "Resource": "*"
                             },
@@ -60,6 +60,18 @@
                                     "s3:GetBucketPolicy",
                                     "s3:GetBucketTagging",
                                     "s3:GetEncryptionConfiguration"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Sid": "RedshiftIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "redshift:DescribeClusterSecurityGroups",
+                                    "redshift:DescribeClusterParameterGroups",
+                                    "redshift:DescribeLoggingStatus",
+                                    "redshift:GetClusterCredentials",
+                                    "redshift:DescribeClusters"
                                 ],
                                 "Resource": "*"
                             },
@@ -113,6 +125,39 @@
                                     "sqs:GetQueueUrl",
                                     "sqs:GetQueueAttributes",
                                     "sqs:ListQueueTags"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Sid": "ECSIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ecs:Describe*",
+                                    "ecs:List*"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Sid": "RedshiftIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                  "redshift:DescribeClusterSecurityGroups",
+                                  "redshift:DescribeClusterParameterGroups",
+                                  "redshift:DescribeLoggingStatus",
+                                  "redshift:GetClusterCredentials",
+                                  "redshift:DescribeClusters"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Sid": "ESIssues",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "es:ListDomainNames",
+                                    "es:DescribeElasticsearchDomain",
+                                    "es:DescribeElasticsearchDomainConfig",
+                                    "es:DescribeElasticsearchDomains",
+                                    "es:ListTags"
                                 ],
                                 "Resource": "*"
                             }

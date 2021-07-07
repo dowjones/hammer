@@ -31,7 +31,7 @@ class CleanSecurityGroups(object):
 
         retention_period = self.config.sg.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='sg')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.sg.remediation_accounts.items():
@@ -46,6 +46,14 @@ class CleanSecurityGroups(object):
 
                 name_in_whitelist = self.config.sg.in_whitelist(account_id, f"{group_vpc_id}:{group_name}")
                 id_in_whitelist = self.config.sg.in_whitelist(account_id, group_id)
+
+                name_in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, f"{group_vpc_id}:{group_name}")
+                id_in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, group_id)
+                if name_in_temp_whitelist or id_in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{group_name}' / '{group_id}' (in temporary whitelist items."
+                        f" Will remediate this issue in future)")
+                    continue
 
                 if name_in_whitelist or id_in_whitelist:
                     logging.debug(f"Skipping '{group_name} / {group_id}' (in whitelist)")

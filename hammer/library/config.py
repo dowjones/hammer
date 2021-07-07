@@ -21,18 +21,22 @@ class Config(object):
                  configIniFile="config.ini",
                  whitelistFile="whitelist.json",
                  fixnowFile="fixnow.json",
-                 ticketOwnersFile="ticket_owners.json"):
+                 ticketOwnersFile="ticket_owners.json",
+                 tempWhitelistFile="temp_whitelist_issues.json"):
         """
         :param configFile: local path to configuration file in json format
         :param configIniFile: local path to configuration file in ini format (is used in r&r EC2, build from EC2 userdata)
         :param whitelistFile: local path to whitelist file in json format
         :param fixnowFile: local path to fixnow file in json format
         :param ticketOwnersFile: local path to file with default ticket owners by bu/account in json format
+        :param tempWhitelistFile: local path to list of temporary whitelist issues file in json format
         """
 
         self._config = self.json_load_from_file(configFile)
         self._config['whitelist'] = self.json_load_from_file(whitelistFile, default={})
         self._config['fixnow'] = self.json_load_from_file(fixnowFile, default={})
+
+        self._config['tempwhitelist'] = self.json_load_from_file(tempWhitelistFile, default={})
 
         self.local = LocalConfig(configIniFile)
         self.owners = OwnersConfig(self.json_load_from_file(ticketOwnersFile, default={}))
@@ -63,8 +67,28 @@ class Config(object):
         # RDS encryption issue config
         self.rdsEncrypt = ModuleConfig(self._config, "rds_encryption")
 
+        self.redshift_public_access = ModuleConfig(self._config, "redshift_public_access")
+        self.redshiftEncrypt = ModuleConfig(self._config, "redshift_encryption")
+        self.redshift_logging = ModuleConfig(self._config, "redshift_logging")
         # AMI public access issue config
         self.publicAMIs = ModuleConfig(self._config, "ec2_public_ami")
+        # ECS logging issue config
+        self.ecs_logging = ModuleConfig(self._config, "ecs_logging")
+
+        # ECS access issue config
+        self.ecs_privileged_access = ModuleConfig(self._config, "ecs_privileged_access")
+
+        # ECS image source issue config
+        self.ecs_external_image_source = ModuleConfig(self._config, "ecs_external_image_source")
+
+        # Elasticsearch domain logging issue config
+        self.esLogging = ModuleConfig(self._config, "es_domain_logging")
+
+        # Elasticsearch unencrypted domain issue config
+        self.esEncrypt = ModuleConfig(self._config, "es_unencrypted_domain")
+
+        # Elasticsearch publicly accessed domain issue config
+        self.esPublicAccess = ModuleConfig(self._config, "es_public_access_domain")
 
         self.bu_list = self._config.get("bu_list", [])
         self.whitelisting_procedure_url = self._config.get("whitelisting_procedure_url", None)
@@ -460,6 +484,7 @@ class ModuleConfig(BaseConfig):
         super().__init__(config, section)
         self._whitelist = config["whitelist"].get(section, {})
         self._fixnow = config["fixnow"].get(section, {})
+        self._tempwhitelist_list = config["tempwhitelist"].get(section, {})
         # main accounts dict
         self._accounts = config["aws"]["accounts"]
         self.name = section
@@ -473,12 +498,13 @@ class ModuleConfig(BaseConfig):
         :return: dict with AWS accounts to identify/remediate {'account id': 'account name', ...}
         """
         module_accounts = self._config.get(option, None)
-        if module_accounts is None:
+        if module_accounts is None or len(module_accounts) == 0:
             accounts = self._accounts
         else:
             # construct dict similar to main accounts dict
             accounts = {account: self._accounts.get(account, "") for account in module_accounts}
         # exclude 'ignore_accounts' from resulting dict
+
         return {k: v for k, v in accounts.items() if k not in self._config.get("ignore_accounts", [])}
 
     @property
@@ -522,6 +548,17 @@ class ModuleConfig(BaseConfig):
         """
         return issue in self._whitelist.get(account_id, [])
 
+    def in_temp_whitelist(self, account_id, issue):
+        """
+        :param account_id: AWS account Id
+        :param issue: Issue id
+
+        :return: boolean, if issue Id in temp whitelist file
+        """
+        return issue in self._tempwhitelist_list.get(account_id, [])
+
+
+
     @property
     def ddb_table_name(self):
         """ :return: DDB table name to use for storing issue details """
@@ -550,6 +587,11 @@ class ModuleConfig(BaseConfig):
     def issue_retention_date(self):
         """ :return: `timedelta` object before performing auto remediation """
         return timedelta(days=self.remediation_retention_period)
+
+    @property
+    def trusted_registrants(self):
+        """ :return: list of trusted registrants"""
+        return self._config.get('trusted_registrants', [])
 
 
 class IAMUserInactiveKeysConfig(ModuleConfig):

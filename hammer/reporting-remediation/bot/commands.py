@@ -81,7 +81,15 @@ def status(message):
         else:
             response += f"`disabled`"
         response += "\n"
-    message.reply(response)
+    # FIXME this is workaround to issues "lost websocket connection, try to reconnect now" that
+    # happens after we send accounts' statuses to slack. The message is long, however slack should handle
+    # this case and truncate the message without closing connection. I limited the size of message to 15000
+    # which seems to work.
+    msg_length = 15000
+    msg_start = 0
+    while msg_start < len(response):
+        message.reply(response[msg_start:msg_start + msg_length])
+        msg_start = msg_start + msg_length
 
 
 @respond_to('^(?P<section>.*) config$', re.IGNORECASE)

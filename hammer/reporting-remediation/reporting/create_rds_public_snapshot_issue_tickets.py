@@ -26,7 +26,7 @@ class CreateRDSPublicSnapshotTickets(object):
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='rdsSnapshot')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.rdsSnapshot.accounts.items():
@@ -36,13 +36,35 @@ class CreateRDSPublicSnapshotTickets(object):
                 snapshot_id = issue.issue_id
                 region = issue.issue_details.region
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.rdsSnapshot.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"RDS public snapshot '{snapshot_id}' is added to temporary whitelist items.")
+
+                        comment = (f"RDS public snapshot '{snapshot_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {region} "
+                                   f"region added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} RDS public snapshot '{snapshot_id}' issue")
 
                         comment = (f"Closing {issue.status.value} RDS public snapshot '{snapshot_id}' issue "
@@ -98,8 +120,10 @@ class CreateRDSPublicSnapshotTickets(object):
                         f"*Region*: {region}\n"
                         f"*RDS Snapshot ID*: {snapshot_id}\n")
 
-                    auto_remediation_date = (self.config.now + self.config.rdsSnapshot.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.rdsSnapshot.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.rdsSnapshot.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
@@ -117,7 +141,7 @@ class CreateRDSPublicSnapshotTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["rds-public-snapshots"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

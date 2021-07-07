@@ -30,10 +30,10 @@ class CleanS3BucketUnencrypted:
 
         retention_period = self.config.s3Encrypt.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='s3Encrypt')
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.s3Encrypt.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, S3EncryptionIssue)
             for issue in issues:
@@ -41,6 +41,12 @@ class CleanS3BucketUnencrypted:
 
                 in_whitelist = self.config.s3Encrypt.in_whitelist(account_id, bucket_name)
                 in_fixlist = True
+                in_temp_whitelist = self.config.s3Encrypt.in_temp_whitelist(account_id, issue.issue_id)
+                if in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{issue.issue_id}' (in temporary whitelist items. "
+                        f"Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {bucket_name} (in whitelist)")

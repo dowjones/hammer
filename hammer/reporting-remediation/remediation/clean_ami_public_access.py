@@ -28,16 +28,22 @@ class CleanAMIPublicAccess:
 
         retention_period = self.config.publicAMIs.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='publicAMIs')
         slack = SlackNotification(self.config)
 
-        for account_id, account_name in self.config.aws.accounts.items():
+        for account_id, account_name in self.config.publicAMIs.remediation_accounts.items():
             logging.debug(f"Checking '{account_name} / {account_id}'")
             issues = IssueOperations.get_account_open_issues(ddb_table, account_id, PublicAMIIssue)
             for issue in issues:
                 ami_id = issue.issue_id
 
                 in_whitelist = self.config.publicAMIs.in_whitelist(account_id, ami_id)
+
+                in_temp_whitelist = self.config.publicAMIs.in_temp_whitelist(account_id, ami_id)
+                if in_temp_whitelist:
+                    logging.debug(f"Skipping '{ami_id}' (in temporary whitelist items. "
+                                  f"Will remediate this issue in future)")
+                    continue
 
                 if in_whitelist:
                     logging.debug(f"Skipping {ami_id} (in whitelist)")

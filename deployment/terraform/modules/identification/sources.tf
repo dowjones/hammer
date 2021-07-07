@@ -85,6 +85,7 @@ resource "aws_s3_bucket_object" "sqs-public-policy-identification" {
     key    = "lambda/${format("sqs-public-policy-identification-%s.zip", "${md5(file("${path.module}/../../../packages/sqs-public-policy-identification.zip"))}")}"
     source = "${path.module}/../../../packages/sqs-public-policy-identification.zip"
 }
+
 resource "aws_s3_bucket_object" "s3-unencrypted-bucket-issues-identification" {
     bucket = "${var.s3bucket}"
     key    = "lambda/${format("s3-unencrypted-bucket-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/s3-unencrypted-bucket-issues-identification.zip"))}")}"
@@ -96,3 +97,58 @@ resource "aws_s3_bucket_object" "rds-unencrypted-instance-identification" {
     key    = "lambda/${format("rds-unencrypted-instance-identification-%s.zip", "${md5(file("${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"))}")}"
     source = "${path.module}/../../../packages/rds-unencrypted-instance-identification.zip"
 }
+
+resource "aws_s3_bucket_object" "elasticsearch-unencrypted-domain-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("elasticsearch-unencrypted-domain-identification-%s.zip", "${md5(file("${path.module}/../../../packages/elasticsearch-unencrypted-domain-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/elasticsearch-unencrypted-domain-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "redshift-cluster-public-access-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-cluster-public-access-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-cluster-public-access-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "redshift-unencrypted-cluster-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-unencrypted-cluster-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-unencrypted-cluster-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "redshift-audit-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("redshift-audit-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/redshift-audit-logging-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "ecs-privileged-access-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-privileged-access-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-privileged-access-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-privileged-access-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "ecs-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-logging-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "ecs-external-image-source-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("ecs-external-image-source-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/ecs-external-image-source-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/ecs-external-image-source-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "elasticsearch-domain-logging-issues-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("elasticsearch-domain-logging-issues-identification-%s.zip", "${md5(file("${path.module}/../../../packages/elasticsearch-domain-logging-issues-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/elasticsearch-domain-logging-issues-identification.zip"
+}
+
+resource "aws_s3_bucket_object" "elasticsearch-public-access-domain-identification" {
+    bucket = "${var.s3bucket}"
+    key    = "lambda/${format("elasticsearch-public-access-domain-identification-%s.zip", "${md5(file("${path.module}/../../../packages/elasticsearch-public-access-domain-identification.zip"))}")}"
+    source = "${path.module}/../../../packages/elasticsearch-public-access-domain-identification.zip"
+}
+

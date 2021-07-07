@@ -170,7 +170,7 @@
                                 "yum -y install openssl-devel\n",
                                 "# remove for following install to not fail\n",
                                 "yum -y remove ius-release\n",
-                                "yum -y install https://centos7.iuscommunity.org/ius-release.rpm\n",
+                                "yum -y install https://repo.ius.io/ius-release-el7.rpm --nogpgcheck\n",
                                 "yum -y install python36u python36u-pip python36u-devel\n",
                                 "pip3.6 install awscli\n",
                                 "rm -rf /hammer-correlation-engine\n",

@@ -36,8 +36,11 @@ class RDSOperations:
         rds_instances = []
 
         # this will include both DB and Cluster instances
-        rds_response = rds_client.describe_db_instances()
-        for db_instance in rds_response["DBInstances"]:
+        rds_response = []
+        paginator = rds_client.get_paginator('describe_db_instances')
+        for page in paginator.paginate(**args):
+            rds_response.extend(page["DBInstances"])
+        for db_instance in rds_response:
             active_security_groups = [ sg["VpcSecurityGroupId"] for sg in db_instance['VpcSecurityGroups'] if sg["Status"] == "active" ]
             if group_id in active_security_groups:
                 rds_instances.append(RDSInstance(

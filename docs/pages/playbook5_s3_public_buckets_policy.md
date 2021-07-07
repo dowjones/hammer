@@ -92,6 +92,7 @@ To identify, report, and remediate issues of this type, you should add the follo
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
 |`remediation_retention_period`|The amount of days to pass between issue detection and its automatic remediation. The value `0` denotes that Dow Jones Hammer will remediate the issue at the next remediation job run.|`7`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-s3-policy-lambda`|
 
 Sample **config.json** section:
 ```
@@ -100,7 +101,8 @@ Sample **config.json** section:
     "ddb.table_name": "hammer-s3-public-bucket-policy",
     "reporting": false,
     "remediation": false
-    "remediation_retention_period": 7
+    "remediation_retention_period": 7,
+    "topic_name": "hammer-describe-s3-policy-lambda"
 }
 ```
 

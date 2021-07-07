@@ -31,7 +31,7 @@ class CleanPublicRDSSnapshots(object):
 
         retention_period = self.config.rdsSnapshot.remediation_retention_period
 
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='rdsSnapshot')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.rdsSnapshot.remediation_accounts.items():
@@ -43,6 +43,13 @@ class CleanPublicRDSSnapshots(object):
                     continue
 
                 in_whitelist = self.config.rdsSnapshot.in_whitelist(account_id, issue.issue_id)
+                in_temp_whitelist = self.config.rdsSnapshot.in_temp_whitelist(account_id, issue.issue_id)
+                if in_temp_whitelist:
+                    logging.debug(
+                        f"Skipping '{issue.issue_id}' (in temporary whitelist items. "
+                        f"Will remediate this issue in future)")
+                    continue
+
                 if in_whitelist:
                     logging.debug(f"Skipping '{issue.issue_id}' (in whitelist)")
 

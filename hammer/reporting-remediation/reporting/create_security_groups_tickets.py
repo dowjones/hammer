@@ -3,11 +3,7 @@ Class to create jira tickets for security group issues.
 """
 import sys
 import logging
-import warnings
 
-
-from functools import lru_cache
-from ipwhois import IPWhois
 from collections import Counter
 from library.logger import set_logging, add_cw_logging
 from library.config import Config
@@ -21,35 +17,23 @@ from library.utility import empty_converter, list_converter, bool_converter
 from library.aws.utility import Account
 from library.aws.security_groups import RestrictionStatus
 from library.aws.rds import RDSOperations
+from library.aws.ecs import ECSClusterOperations
+from library.aws.redshift import RedshiftClusterOperations
+from library.aws.elasticsearch import ElasticSearchOperations
 from library.utility import SingletonInstance, SingletonInstanceException
+from library.utility import get_registrant
 
 
 class CreateSecurityGroupsTickets(object):
     """ Class to create jira tickets for security group issues """
+
     def __init__(self, config):
         self.config = config
 
     @staticmethod
-    @lru_cache(maxsize=128)
     def get_registrant(cidr):
-        ip = cidr.split("/")[0]
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                whois = IPWhois(ip).lookup_rdap()
-            except Exception:
-                return ""
-
-        registrants = []
-        for title, obj in whois.get('objects', {}).items():
-            if obj.get('contact') is None:
-                continue
-            if 'registrant' in obj.get('roles', []):
-                registrants.append(f"{obj['contact'].get('name')} ({title})")
-                break
-
-        return ', '.join(registrants)
+        registrant = get_registrant(cidr)
+        return f"{registrant['name']} ({registrant['title']})" if registrant else ""
 
     def build_open_ports_table_jira(self, perms):
         open_partly = any([perm['status'] == 'open_partly' for perm in perms])
@@ -123,7 +107,7 @@ class CreateSecurityGroupsTickets(object):
                 product = ec2_instance.tags.get('product')
                 component = ec2_instance.tags.get('component')
                 if self.config.jira.text_field_character_limit == 0 or \
-                   len(instance_details) < (self.config.jira.text_field_character_limit * 0.5):
+                                len(instance_details) < (self.config.jira.text_field_character_limit * 0.5):
                     instance_details += (
                         f"|{ec2_instance.id}|{ec2_instance.state}"
                         f"|{list_converter(ec2_instance.private_ips)}"
@@ -138,7 +122,8 @@ class CreateSecurityGroupsTickets(object):
                     instance_profile_id = ec2_instance.iam_profile_id
                     if instance_profile_id is not None:
                         try:
-                            public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client, instance_profile_id)
+                            public_role_policies = IAMOperations.get_instance_profile_policy_details(iam_client,
+                                                                                                     instance_profile_id)
                         except Exception:
                             logging.exception("Failed to get instance profile policy details")
                             public_role_policies = []
@@ -170,9 +155,9 @@ class CreateSecurityGroupsTickets(object):
 
         if len(instance_profile_details) > 0:
             instance_profile_details = (
-                f"\n*Instance Role Unsafe Policies:*\n"
-                f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
-            ) + "".join(instance_profile_details) + "\n"
+                                           f"\n*Instance Role Unsafe Policies:*\n"
+                                           f"||Instance Id||Role Name||Policy Name||Unsafe actions||\n"
+                                       ) + "".join(instance_profile_details) + "\n"
 
         return instance_details, instance_profile_details, in_use, public, blind_public, owner, bu, product
 
@@ -214,13 +199,64 @@ class CreateSecurityGroupsTickets(object):
 
         return elb_instance_details, in_use
 
+    @staticmethod
+    def build_ecs_clusters_table(ecs_clusters):
+        cluster_details = ""
+        in_use = False
+
+        if len(ecs_clusters) > 0:
+            in_use = True
+            cluster_details += (
+                f"\n*ECS Clustes:*\n"
+                f"||ECS Cluster ID||ECS Instance ARN||\n")
+            for cluster in ecs_clusters:
+                cluster_details += (
+                    f"|{cluster.cluster_arn}|{cluster.cluster_instance_arn}|\n"
+                )
+
+        return cluster_details, in_use
+
+    @staticmethod
+    def build_redshift_clusters_table(redshift_clusters):
+        cluster_details = ""
+        in_use = False
+
+        if len(redshift_clusters) > 0:
+            in_use = True
+            cluster_details += (
+                f"\n*Redshift Clustes:*\n"
+                f"||Redshift Cluster ID||Subnet_Group_Name||\n")
+            for cluster in redshift_clusters:
+                cluster_details += (
+                    f"|{cluster.id}|{cluster.subnet_group_name}|\n"
+                )
+
+        return cluster_details, in_use
+
+    @staticmethod
+    def build_es_domains_table(es_domains):
+        domain_details = ""
+        in_use = False
+
+        if len(es_domains) > 0:
+            in_use = True
+            domain_details += (
+                f"\n*Elasticsearch Domains:*\n"
+                f"||Domain Name||Domain Arn||\n")
+            for domain in es_domains:
+                domain_details += (
+                    f"|{domain.domain_name}|{domain.domain_arn}|\n"
+                )
+
+        return domain_details, in_use
+
     def create_tickets_securitygroups(self):
         """ Class function to create jira tickets """
         table_name = self.config.sg.ddb_table_name
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='sg')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.sg.accounts.items():
@@ -232,13 +268,36 @@ class CreateSecurityGroupsTickets(object):
                 group_region = issue.issue_details.region
                 group_vpc_id = issue.issue_details.vpc_id
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.sg.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.jira_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"Insecure security group issue '{group_name} / {group_id}' "
+                                      f"is added to temporary whitelist items.")
+
+                        comment = (f"Insecure security group '{group_name} / {group_id}' issue "
+                                   f"in '{account_name} / {account_id}' account, {group_region} "
+                                   f"region is added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} security group '{group_name} / {group_id}' issue")
 
                         comment = (f"Closing {issue.status.value} security group '{group_name} / {group_id}' issue "
@@ -313,7 +372,7 @@ class CreateSecurityGroupsTickets(object):
                     ec2_client = account.client("ec2") if account.session is not None else None
 
                     sg_instance_details = ec2_owner = ec2_bu = ec2_product = None
-                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = None
+                    sg_in_use = sg_in_use_ec2 = sg_in_use_elb = sg_in_use_rds = sg_in_use_ecs = sg_in_use_redshift = sg_in_use_es = None
                     sg_public = sg_blind_public = False
 
                     rds_client = account.client("rds") if account.session is not None else None
@@ -322,29 +381,67 @@ class CreateSecurityGroupsTickets(object):
 
                     iam_client = account.client("iam") if account.session is not None else None
 
-                    rds_instance_details = elb_instance_details = None
+                    ecs_client = account.client("ecs") if account.session is not None else None
+                    rds_instance_details = elb_instance_details = sg_redshift_details = sg_ecs_details = sg_es_details = None
+                    redshift_client = account.client("redshift") if account.session is not None else None
+
+                    es_client = account.client("es") if account.session is not None else None
 
                     if ec2_client is not None:
                         ec2_instances = EC2Operations.get_instance_details_of_sg_associated(ec2_client, group_id)
-                        sg_instance_details, instance_profile_details,\
-                            sg_in_use_ec2, sg_public, sg_blind_public, \
-                            ec2_owner, ec2_bu, ec2_product = self.build_instances_table(iam_client, ec2_instances)
+                        sg_instance_details, instance_profile_details, \
+                        sg_in_use_ec2, sg_public, sg_blind_public, \
+                        ec2_owner, ec2_bu, ec2_product = self.build_instances_table(iam_client, ec2_instances)
 
                     if elb_client is not None and elbv2_client is not None:
                         try:
-                            elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client, group_id)
+                            elb_instances = EC2Operations.get_elb_details_of_sg_associated(elb_client, elbv2_client,
+                                                                                           group_id)
                             elb_instance_details, sg_in_use_elb = self.build_elb_instances_table(elb_instances)
                         except Exception:
-                            logging.exception(f"Failed to build ELB details for '{group_name} / {group_id}' in {account}")
+                            logging.exception(
+                                f"Failed to build ELB details for '{group_name} / {group_id}' in {account}")
 
                     if rds_client is not None:
                         try:
-                            rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client, group_id)
+                            rds_instances = RDSOperations.get_rds_instance_details_of_sg_associated(rds_client,
+                                                                                                    group_id)
                             rds_instance_details, sg_in_use_rds = self.build_rds_instances_table(rds_instances)
                         except Exception:
-                            logging.exception(f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
+                            logging.exception(
+                                f"Failed to build RDS details for '{group_name} / {group_id}' in {account}")
 
-                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds
+                    if ecs_client is not None:
+                        try:
+                            ecs_instances = ECSClusterOperations.get_ecs_instance_security_groups(ec2_client,
+                                                                                                  ecs_client, group_id)
+                            sg_ecs_details, sg_in_use_ecs = self.build_ecs_clusters_table(ecs_instances)
+
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build ECS Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    if redshift_client is not None:
+                        try:
+                            redshift_clusters = RedshiftClusterOperations.get_redshift_vpc_security_groups(
+                                redshift_client, group_id)
+                            sg_redshift_details, sg_in_use_redshift = self.build_redshift_clusters_table(
+                                redshift_clusters)
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    if es_client is not None:
+                        try:
+                            es_domains = ElasticSearchOperations.get_elasticsearch_details_of_sg_associated(
+                                es_client, group_id)
+                            sg_es_details, sg_in_use_es = self.build_es_domains_table(
+                                es_domains)
+                        except Exception:
+                            logging.exception(
+                                f"Failed to build Redshift Cluster details for '{group_name} / {group_id}' in {account}")
+
+                    sg_in_use = sg_in_use_ec2 or sg_in_use_elb or sg_in_use_rds or sg_in_use_redshift or sg_in_use_ecs or sg_in_use_es
 
                     owner = group_owner if group_owner is not None else ec2_owner
                     bu = group_bu if group_bu is not None else ec2_bu
@@ -424,7 +521,8 @@ class CreateSecurityGroupsTickets(object):
                         f"{threat}"
                         f"{account_details}")
 
-                    if status == RestrictionStatus.OpenCompletely:
+                    if (status == RestrictionStatus.OpenCompletely) \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
                         auto_remediation_date = (self.config.now + self.config.sg.issue_retention_date).date()
                         issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
@@ -438,14 +536,21 @@ class CreateSecurityGroupsTickets(object):
 
                     issue_description += f"{instance_profile_details if instance_profile_details else ''}"
 
+                    issue_description += f"{sg_ecs_details if sg_ecs_details else ''}"
+
+                    issue_description += f"{sg_redshift_details if sg_redshift_details else ''}"
+
+                    issue_description += f"{sg_es_details if sg_es_details else ''}"
+
                     issue_description += (
                         f"*Recommendation*: "
                         f"Allow access only for a minimum set of required ip addresses/ranges from [RFC1918|https://tools.ietf.org/html/rfc1918]. "
                     )
 
                     if self.config.whitelisting_procedure_url:
-                        issue_description += (f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
-                                              f"and provide a strong business reasoning. ")
+                        issue_description += (
+                        f"For any other exceptions, please follow the [whitelisting procedure|{self.config.whitelisting_procedure_url}] "
+                        f"and provide a strong business reasoning. ")
 
                     issue_description += f"Be sure to delete overly permissive rules after creating rules that are more restrictive.\n"
 
@@ -455,7 +560,7 @@ class CreateSecurityGroupsTickets(object):
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority=priority, labels=["insecure-services"],
+                            priority=priority,
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

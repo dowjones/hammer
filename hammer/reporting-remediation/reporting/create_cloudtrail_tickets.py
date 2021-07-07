@@ -46,7 +46,7 @@ class CreateCloudTrailLoggingTickets:
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='cloudtrails')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.cloudtrails.accounts.items():
@@ -54,9 +54,29 @@ class CreateCloudTrailLoggingTickets:
             issues = IssueOperations.get_account_not_closed_issues(ddb_table, account_id, CloudTrailIssue)
             for issue in issues:
                 region = issue.issue_id
+
+                in_temp_whitelist = self.config.cloudtrails.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) \
+                            and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"CloudTrail logging issue with '{region}' "
+                                      f"is added to temporary whitelist. ")
+
+                        comment = (f"CloudTrail logging issue with '{region}' "
+                                   f"in '{account_name} / {account_id}' account is added to temporary whitelist.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            account_id=account_id
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} '{region}' CloudTrail logging issue")
 
                         comment = (f"Closing {issue.status.value} issue with '{region}' CloudTrail logging in "
@@ -133,7 +153,7 @@ class CreateCloudTrailLoggingTickets:
                     # try:
                     #     response = jira.add_issue(
                     #         issue_summary=issue_summary, issue_description=issue_description,
-                    #         priority="Major", labels=["cloud-trail-disabled"],
+                    #         priority="Major",
                     #         account_id=account_id,
                     #     )
                     # except Exception:

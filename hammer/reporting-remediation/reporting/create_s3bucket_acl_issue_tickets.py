@@ -33,7 +33,7 @@ class CreateS3BucketsTickets:
 
         main_account = Account(region=self.config.aws.region)
         ddb_table = main_account.resource("dynamodb").Table(table_name)
-        jira = JiraReporting(self.config)
+        jira = JiraReporting(self.config, module='s3acl')
         slack = SlackNotification(self.config)
 
         for account_id, account_name in self.config.s3acl.accounts.items():
@@ -42,13 +42,34 @@ class CreateS3BucketsTickets:
             for issue in issues:
                 bucket_name = issue.issue_id
                 tags = issue.issue_details.tags
+
+                in_temp_whitelist = self.config.s3acl.in_temp_whitelist(account_id, issue.issue_id)
                 # issue has been already reported
                 if issue.timestamps.reported is not None:
                     owner = issue.issue_details.owner
                     bu = issue.jira_details.business_unit
                     product = issue.jira_details.product
 
-                    if issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
+                    if (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]) and issue.timestamps.temp_whitelisted is None:
+                        logging.debug(f"S3 bucket public ACL issue '{bucket_name}' "
+                                      f"is added to temporary whitelist items.")
+
+                        comment = (f"S3 bucket public ACL '{bucket_name}' issue "
+                                   f"in '{account_name} / {account_id}' account is added to temporary whitelist items.")
+                        jira.update_issue(
+                            ticket_id=issue.jira_details.ticket,
+                            comment=comment
+                        )
+
+                        slack.report_issue(
+                            msg=f"{comment}"
+                                f"{' (' + jira.ticket_url(issue.jira_details.ticket) + ')' if issue.jira_details.ticket else ''}",
+                            owner=owner,
+                            account_id=account_id,
+                            bu=bu, product=product,
+                        )
+                        IssueOperations.set_status_temp_whitelisted(ddb_table, issue)
+                    elif issue.status in [IssueStatus.Resolved, IssueStatus.Whitelisted]:
                         logging.debug(f"Closing {issue.status.value} S3 bucket '{bucket_name}' public ACL issue")
 
                         comment = (f"Closing {issue.status.value} S3 bucket '{bucket_name}' public ACL issue "
@@ -118,8 +139,10 @@ class CreateS3BucketsTickets:
                         f"*Bucket Owner*: {owner}\n"
                         f"\n")
 
-                    auto_remediation_date = (self.config.now + self.config.s3acl.issue_retention_date).date()
-                    issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
+                    if self.config.s3acl.remediation \
+                            and not (in_temp_whitelist or issue.status in [IssueStatus.Tempwhitelist]):
+                        auto_remediation_date = (self.config.now + self.config.s3acl.issue_retention_date).date()
+                        issue_description += f"\n{{color:red}}*Auto-Remediation Date*: {auto_remediation_date}{{color}}\n\n"
 
                     issue_description += JiraOperations.build_tags_table(tags)
 
@@ -139,7 +162,7 @@ class CreateS3BucketsTickets:
                     try:
                         response = jira.add_issue(
                             issue_summary=issue_summary, issue_description=issue_description,
-                            priority="Major", labels=["publics3"],
+                            priority="Major",
                             owner=owner,
                             account_id=account_id,
                             bu=bu, product=product,

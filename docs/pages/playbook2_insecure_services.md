@@ -89,6 +89,8 @@ To identify, report, and remediate issues of this type, you should add the follo
 |`reporting`                   |Toggle Dow Jones Hammer reporting functionality for this issue type    |`false`|
 |`remediation`                 |Toggle Dow Jones Hammer automatic remediation functionality for this issue type |`false`|
 |`remediation_retention_period`|The amount of days to pass between issue detection and its automatic remediation. The value `0` denotes that Dow Jones Hammer will remediate the issue at the next remediation job run.|`21`|
+|`topic_name`|Name of the SNS topic to trigger Lambda function from API scan.|`hammer-describe-security-groups-lambda`|
+|`trusted_registrants`         |*Optional*. List of registrants of public IPs that should be excluded from the report. |`[]`|
 
 Sample **secgrp_unrestricted_access** section of the **config.json** file:
 
@@ -99,7 +101,8 @@ Sample **secgrp_unrestricted_access** section of the **config.json** file:
     "restricted_ports": [21, 22, 23, 3389, 1433, 1521, 3306, 5432, 27017],
     "reporting": false,
     "remediation": false,
-    "remediation_retention_period": 21
+    "remediation_retention_period": 21,
+    "topic_name": "hammer-describe-security-groups-lambda"
 }
 ```
 

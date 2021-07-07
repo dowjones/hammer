@@ -20,6 +20,8 @@ class IssueStatus(Enum):
     Resolved = "resolved"
     # set by reporting after closing ticket
     Closed = "closed"
+    # set by identification - issue still exists but was added to temporary whitelist_list for future remediation
+    Tempwhitelist = "tempwhitelist"
 
 
 class Details(object):
@@ -133,6 +135,8 @@ class Issue(object):
     def contains_tags(self, tags):
         if not tags:
             return True
+        if not self.issue_details.tags:
+            return False
         for k in tags:
             if k not in self.issue_details.tags:
                 return False
@@ -234,10 +238,55 @@ class RdsEncryptionIssue(Issue):
 
 
 class PublicAMIIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftEncryptionIssue(Issue):
+   def __init__(self, *args):
+       super().__init__(*args)
+
+
+class RedshiftLoggingIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class RedshiftPublicAccessIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ECSLoggingIssue(Issue):
    def __init__(self, *args):
         super().__init__(*args)
 
 
+class ECSPrivilegedAccessIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ECSExternalImageSourceIssue(Issue):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class ESEncryptionIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ESLoggingIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)
+
+        
+class ESPublicAccessIssue(Issue):
+   def __init__(self, *args):
+        super().__init__(*args)        
+
+        
 class Operations(object):
     @staticmethod
     def find(ddb_table, issue):
@@ -430,4 +479,17 @@ class Operations(object):
         :return: nothing
         """
         issue.timestamps.updated = issue.timestamps.reported
+        cls.put(ddb_table, issue)
+
+    @classmethod
+    def set_status_temp_whitelisted(cls, ddb_table, issue):
+        """
+        Put issue with closed status and updated closed timestamp
+
+        :param ddb_table: boto3 DDB table resource
+        :param issue: Issue instance
+
+        :return: nothing
+        """
+        issue.timestamps.temp_whitelisted = datetime.now(timezone.utc).isoformat()
         cls.put(ddb_table, issue)
