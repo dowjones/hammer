@@ -372,6 +372,13 @@ class JiraOperations(object):
 
         self.session.add_watcher(ticket_id, user)
 
+    def move_to_state(self, issue, transition_name):
+        for transition in self.session.transitions(issue):
+            if transition['name'] == transition_name:
+                self.session.transition_issue(issue.key, transition['id'])
+                return True
+        return False
+
     def close_issue(self, ticket_id):
         """
         Transition of ticket to `Closed` state. It checks if issue can be transitioned to `Closed` state.
@@ -387,15 +394,15 @@ class JiraOperations(object):
         if issue.fields.status.name == "Closed":
             logging.debug(f"{ticket_id} is already closed")
             return
-
-        for transition in self.session.transitions(issue):
-            if transition['name'] == 'Close Issue':
-                self.session.transition_issue(ticket_id, transition['id'])
-                logging.debug(f"Closed {ticket_id}")
-                break
-        else:
+        closed = self.move_to_state(issue, 'Close Issue')
+        if not closed:
+            if self.move_to_state(issue, 'Resolve Issue'):
+                closed = self.move_to_state(issue, 'Close Issue')
+        if not closed:
             logging.error(f"{self.ticket_url(ticket_id)} can't be closed")
-            return
+        else:
+            logging.debug(f"Resolved {ticket_id}")
+        return
 
     def resolve_issue(self, ticket_id):
         """
