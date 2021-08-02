@@ -192,21 +192,21 @@ def scan_account(message, account_num, regions, security_features, tags):
     }
     resp = requests.post(api_url, json=request_body, headers=headers)
     if resp.status_code != 200:
-        message.reply(f'Failed to start scan for account {account_num}, {resp.text}')
+        message.reply(f'Failed to start scan for account {account_num}, {resp.text}', in_thread=True)
         return
     message.reply(f'Scan for account {account_num} has been started. When the scan is finished,'
-                  f'you will be notified with results.')
+                  f'you will be notified with results.', in_thread=True)
     request_id = resp.json()['request_id']
     time_start = time.time()
     while time.time() - time_start < 300:
         resp = requests.get(api_url + '/' + request_id, headers=headers)
         if resp.json()['scan_status'] == 'COMPLETE':
-            message.reply(format_scan_account_result(resp.json()['scan_results']))
+            message.reply(format_scan_account_result(resp.json()['scan_results']), in_thread=True)
             return
         if resp.json()['scan_status'] == 'FAILED':
-            return message.reply(f'Scan of account {account_num} is failed. Please try again later.')
+            return message.reply(f'Scan of account {account_num} is failed. Please try again later.', in_thread=True)
         time.sleep(5)
-    return message.reply('Sorry, but current scan takes too long to finish.')
+    return message.reply('Sorry, but current scan takes too long to finish.', in_thread=True)
 
 
 QUESTION_1 = '''
@@ -305,8 +305,11 @@ def get_current_question(thread):
     return len(DIALOGS[thread]['answers'])
 
 
-@respond_to('^scan account (?P<account_num>.*)$', re.IGNORECASE)
-def start_scan_conversation(message, account_num):
+@respond_to('^scan account (?P<account_num>\d{12}) (?P<all_account>--all)$', re.IGNORECASE)
+@respond_to('^scan account (?P<account_num>\d{12})$', re.IGNORECASE)
+def start_scan_conversation(message, account_num, all_account=None):
+    if all_account:
+        return scan_account(message, account_num, [], [], {})
     try:
         thread_ts = message.body['thread_ts']
     except KeyError:
