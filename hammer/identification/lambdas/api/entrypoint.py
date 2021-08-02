@@ -8,7 +8,7 @@ import boto3
 
 from library.aws.utility import Account, DDB, Sns
 from library.config import Config
-from library.ddb_issues import Operations as IssueOperations
+from library.ddb_issues import Issue, IssueStatus, Operations as IssueOperations
 from library.logger import set_logging
 from library import utility
 from responses import bad_request
@@ -168,6 +168,35 @@ def get_scan_results(request_id):
     }
 
 
+def validate_issues(issues, valid_issue_types):
+    required_parameters = ['issue_id', 'issue_type', 'account_id', 'issue_details']
+    for issue in issues:
+        for required in required_parameters:
+            if required not in issue:
+                raise Exception(f'{required} is required field for issue')
+        if issue['issue_type'] not in valid_issue_types:
+            raise Exception(f'{issue["issue_type"]} is not supported issue type')
+
+
+def add_issues(issues):
+    config = Config()
+    main_account = Account(region=config.aws.region)
+    valid_issue_types = [module.section for module in config.modules]
+    try:
+        validate_issues(issues, valid_issue_types)
+    except Exception as e:
+        return bad_request(text=str(e))
+    for issue in issues:
+        issue_config = config.get_module_config_by_name(issue['issue_type'])
+        ddb_table = main_account.resource("dynamodb").Table(issue_config.ddb_table_name)
+        ddb_issue = Issue(issue['account_id'], issue['issue_id'], issue['issue_details'])
+        ddb_issue.status = IssueStatus.Open
+        IssueOperations.update(ddb_table, ddb_issue)
+    return {
+        'statusCode': 200,
+        'body': 'Successfully imported issues to DDB'
+    }
+
 @logger
 def lambda_handler(event, context):
     try:
@@ -177,21 +206,23 @@ def lambda_handler(event, context):
         logging.exception("failed to parse payload")
         return bad_request(text="malformed payload")
 
-    account_id = payload.get("account_id", None)
-    regions = payload.get("regions", [])
-    security_features = payload.get("security_features", [])
-    tags = payload.get("tags", None)
-    ids = payload.get("ids", None)
-
     action = event.get("path", "")[1:]
     method = event.get("httpMethod")
     # do not forget to allow path in authorizer.py while extending this list
     if action.startswith('identify'):
+        account_id = payload.get("account_id", None)
+        regions = payload.get("regions", [])
+        security_features = payload.get("security_features", [])
+        tags = payload.get("tags", None)
+        ids = payload.get("ids", None)
         if method == "POST":
             return start_scan(account_id, regions, security_features, tags, ids)
         if method == "GET":
             # get request id from url path
             request_id = action.split('/')[1]
             return get_scan_results(request_id)
+    elif action.startswith('import'):
+        issues = payload.get('issues', [])
+        return add_issues(issues)
     else:
         return bad_request(text="wrong action")
